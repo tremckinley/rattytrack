@@ -14,7 +14,7 @@ export default function NavBar() {
         <span className="font-extrabold">CapyTrackAI</span>
             <div className="px-2">
             <Link className="mx-1 rounded-sm p-1 hover:bg-red-600" href="/">Home</Link>
-            <Link className="mx-1 rounded-sm p-1 hover:bg-red-600" href="/latinas">Latinas</Link>
+            <Link className="mx-1 rounded-sm p-1 hover:bg-red-600" href="/memes">Memes</Link>
             </div>
         </nav>
     )
