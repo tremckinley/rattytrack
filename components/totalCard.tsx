@@ -14,7 +14,7 @@ export default function TotalCard({title, total, subtotal, icon}: TotalCardProps
     
     return(
         <div className="bg-card card max-w-64 flex items-center p-6">
-            <div className="h-full p-2">
+            <div className="h-full p-2 flex items-center">
                 <FontAwesomeIcon icon={icon} className="text-3xl" />
             </div>
             <div className="p-2">
