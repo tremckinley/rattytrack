@@ -1,13 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f2f2f2;
   --foreground: #171717;
+  --capyred: #811749;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: color-mix(in srgb, var(--background) 80%, white 20%);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -17,6 +19,17 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+
+  nav {
+    --background: #a9a9a9;
+    --foreground: var(--capyred);
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-gray-200 bg-card shadow-sm text-foreground p-4 m-4;
+  }
 }
 
 body {
@@ -24,3 +37,5 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
