@@ -5,7 +5,7 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 
 const navLinks: {name:string, href: string}[] = [
-    {name: "Dashboard", href: "/dashboard"},
+    {name: "Dashboard", href: "/"},
     {name: "Legislators", href: "/legislators"}
 ];
 
