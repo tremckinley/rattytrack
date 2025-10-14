@@ -20,8 +20,8 @@ export default function NavBar() {
   const pathname = usePathname();
  
   return (
-    <nav className="flex shadow-sm py-4 mb-2 bg-card text-foreground">
-      <Link href="/" className="ml-8 items-center justify-center">
+    <nav className="flex shadow-sm mb-2 bg-card text-foreground">
+      <Link href="/" className="ml-8 my-4 items-center justify-center">
         <Image
           src="/burgundy_logo.png"
           alt="capytrack logo"
@@ -32,11 +32,11 @@ export default function NavBar() {
         <span className="font-extrabold">CapyTrackAI</span>
       </Link>
       <div className="mx-8 flex-1 flex items-end">
-        <ul className="flex w-full justify-around">
+        <ul className="flex w-full justify-around h-full">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
-              <li className="" key={link.name}>
+              <li className="hover:bg-gray-200 self-end pt-4 px-4" key={link.name}>
                 <Link
                   href={link.href}
                   // 3. Conditionally apply a CSS class
