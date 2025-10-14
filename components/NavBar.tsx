@@ -48,13 +48,7 @@ export default function NavBar() {
             );
           })}
         </ul>
-        <input 
-          type="text"
-          placeholder="Search legislator profiles"
-          value={legislatorSearchValue}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLegislatorSearchValue(e.target.value)}
-            
-          />
+       
       </div>
     </nav>
   );
