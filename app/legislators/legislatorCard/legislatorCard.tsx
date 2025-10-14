@@ -23,25 +23,25 @@ export default function LegislatorCard(params: Legislator) {
                 <p className="text-xs text-gray-600">{params.jurisdiction}</p>
                 </div>
             </div>
-            <div className="p-2">
+            <div className="p-2 flex flex-col my-2">
                 <div className="flex justify-between">
                     <span>Party</span>
                     <span>{params.party}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between my-2">
                     <div><FontAwesomeIcon icon={regIcons.faClockFour}/><span className="ml-1">Speaking Time</span></div>
                     <span>{}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between my-2">
                     <div><FontAwesomeIcon icon={regIcons.faFileAlt}/><span className="ml-1">Bills Sponsored</span></div>
                     <span>{}</span>
                 </div>
-                <div>
+                <div className="my-2">
                     <span>Committees</span>
                     <ul className="flex"> 
-                    {params.committees.map((committee) => {
+                    {params.committees.map((committee, idx) => {
                         return (
-                            <li className="border px-1 mr-1 rounded-full">{committee}</li>
+                            <li key={idx} className="border px-1 mr-1 rounded-full">{committee}</li>
                         )
                     })}
                     </ul>
