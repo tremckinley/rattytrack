@@ -1,9 +1,14 @@
 "use client"
+
+import { useState } from "react"
 import LegislatorCard from "./legislatorCard/legislatorCard"
 import legislators from "@/testData/Legislators"
 
+
+
 export default function Legislators() {
 
+    const [ searchVaule, setSearchValue ] = useState("")
     return (
     <>
         <div className="w-6xl mb-8">

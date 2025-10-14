@@ -3,18 +3,24 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+
 
 const navLinks: { name: string; href: string }[] = [
   { name: "Dashboard", href: "/" },
   { name: "Legislators", href: "/legislators" },
 ];
 
+
+
 export default function NavBar() {
+  const [legislatorSearchValue, setLegislatorSearchValue] = useState("");
+
   //Get the current URL pathname
   const pathname = usePathname();
  
   return (
-    <nav className="flex shadow-sm py-4 mb-2 bg-background text-foreground">
+    <nav className="flex shadow-sm py-4 mb-2 bg-card text-foreground">
       <Link href="/" className="ml-8 items-center justify-center">
         <Image
           src="/burgundy_logo.png"
@@ -42,6 +48,13 @@ export default function NavBar() {
             );
           })}
         </ul>
+        <input 
+          type="text"
+          placeholder="Search legislator profiles"
+          value={legislatorSearchValue}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLegislatorSearchValue(e.target.value)}
+            
+          />
       </div>
     </nav>
   );
