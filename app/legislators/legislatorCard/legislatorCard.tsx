@@ -10,10 +10,19 @@ export default function LegislatorCard(params: Legislator) {
     <div className="card p-4 w-full">
       {/*Profile header*/}
       <div className="flex items-center">
-        <UserIcon />
+        {params.avatar_url ? (
+          <Image
+            src={params.avatar_url}
+            alt="avatar for legislator"
+            height={75}
+            width={75}
+          />
+        ) : (
+          <UserIcon />
+        )}
         <div>
-          <h3 className="font-bold text-lg">{params.displayName}</h3>
-          <p className="text-gray-600">{params.position}</p>
+          <h3 className="font-bold text-lg">{params.display_name}</h3>
+          <p className="text-gray-600">{params.title}</p>
           <p className="text-xs text-gray-600">{params.jurisdiction}</p>
         </div>
       </div>

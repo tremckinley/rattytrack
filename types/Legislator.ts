@@ -1,11 +1,11 @@
 export default interface Legislator {
     firstName: string,
     lastName: string,
-    displayName: string,
-    position: string,
+    display_name: string,
+    title: string,
     jurisdiction: string,
     party: string,
     committees: string[],
-    avatarURL?: string | null
+    avatar_url?: string
 
 };
