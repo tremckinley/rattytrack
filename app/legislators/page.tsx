@@ -5,6 +5,7 @@ import LegislatorCard from "./legislatorCard/legislatorCard";
 import legislators from "@/testData/Legislators";
 import { Input } from "@/components/ui/input";
 
+
 export default function Legislators() {
   const [legislatorSearchValue, setLegislatorSearchValue] = useState("");
   function inFilter(value: string, context: string) {
