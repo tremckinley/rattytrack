@@ -1,0 +1,1314 @@
+-- ============================================================================
+-- CAPYTRACK AI - POSTGRESQL DATABASE SCHEMA
+-- Legislative Meeting Analysis Platform
+-- ============================================================================
+
+-- ============================================================================
+-- JURISDICTION & ORGANIZATION
+-- ============================================================================
+
+CREATE TABLE jurisdictions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    jurisdiction_type VARCHAR(50) NOT NULL, -- 'city', 'county', 'state', 'federal'
+    state VARCHAR(2),
+    city VARCHAR(100),
+    timezone VARCHAR(50) NOT NULL DEFAULT 'America/Chicago',
+    is_active BOOLEAN DEFAULT true,
+    metadata JSONB, -- additional jurisdiction-specific data
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE legislative_bodies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    jurisdiction_id UUID REFERENCES jurisdictions(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL, -- 'City Council', 'Planning Commission', etc.
+    description TEXT,
+    body_type VARCHAR(50), -- 'council', 'commission', 'board', 'committee'
+    website_url VARCHAR(500),
+    video_source_url VARCHAR(500), -- YouTube channel, streaming platform
+    meeting_schedule JSONB, -- recurring meeting patterns
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- LEGISLATORS & PEOPLE
+-- ============================================================================
+
+CREATE TABLE legislators (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    legislative_body_id UUID REFERENCES legislative_bodies(id) ON DELETE SET NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    title VARCHAR(100), -- 'Council Member', 'Mayor', 'Commissioner'
+    district VARCHAR(50),
+    party_affiliation VARCHAR(50),
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    office_address TEXT,
+    photo_url VARCHAR(500),
+    website_url VARCHAR(500),
+    social_media JSONB, -- {twitter, facebook, instagram, etc}
+    
+    -- Demographics
+    date_of_birth DATE,
+    gender VARCHAR(50),
+    race_ethnicity VARCHAR(100),
+    education TEXT,
+    occupation TEXT,
+    
+    -- Term information
+    term_start DATE,
+    term_end DATE,
+    is_active BOOLEAN DEFAULT true,
+    
+    -- AI Recognition Data
+    voice_profile_id VARCHAR(255), -- reference to voice recognition model
+    face_profile_id VARCHAR(255), -- reference to face recognition model
+    
+    bio TEXT,
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_legislators_body ON legislators(legislative_body_id);
+CREATE INDEX idx_legislators_active ON legislators(is_active);
+CREATE INDEX idx_legislators_name ON legislators(last_name, first_name);
+
+-- ============================================================================
+-- MEETINGS
+-- ============================================================================
+
+CREATE TABLE meetings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    legislative_body_id UUID REFERENCES legislative_bodies(id) ON DELETE CASCADE,
+    
+    meeting_type VARCHAR(50) NOT NULL, -- 'regular', 'special', 'committee', 'public_hearing'
+    title VARCHAR(500) NOT NULL,
+    description TEXT,
+    
+    -- Scheduling
+    scheduled_start TIMESTAMP WITH TIME ZONE,
+    scheduled_end TIMESTAMP WITH TIME ZONE,
+    actual_start TIMESTAMP WITH TIME ZONE,
+    actual_end TIMESTAMP WITH TIME ZONE,
+    
+    -- Video/Streaming
+    video_url VARCHAR(500), -- YouTube or streaming URL
+    video_platform VARCHAR(50), -- 'youtube', 'vimeo', 'custom'
+    video_id VARCHAR(255), -- platform-specific video ID
+    video_duration_seconds INTEGER,
+    
+    -- Processing Status
+    processing_status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'processing', 'completed', 'failed'
+    transcription_status VARCHAR(50) DEFAULT 'pending',
+    analysis_status VARCHAR(50) DEFAULT 'pending',
+    
+    -- Location
+    location VARCHAR(255),
+    is_virtual BOOLEAN DEFAULT false,
+    
+    -- Metadata
+    agenda_url VARCHAR(500),
+    minutes_url VARCHAR(500),
+    attendance_count INTEGER,
+    
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_meetings_body ON meetings(legislative_body_id);
+CREATE INDEX idx_meetings_date ON meetings(scheduled_start);
+CREATE INDEX idx_meetings_status ON meetings(processing_status);
+
+CREATE TABLE meeting_attendees (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    meeting_id UUID REFERENCES meetings(id) ON DELETE CASCADE,
+    legislator_id UUID REFERENCES legislators(id) ON DELETE CASCADE,
+    attendance_status VARCHAR(50) NOT NULL, -- 'present', 'absent', 'excused', 'late', 'left_early'
+    arrival_time TIMESTAMP WITH TIME ZONE,
+    departure_time TIMESTAMP WITH TIME ZONE,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_attendees_meeting ON meeting_attendees(meeting_id);
+CREATE INDEX idx_attendees_legislator ON meeting_attendees(legislator_id);
+
+-- ============================================================================
+-- TRANSCRIPTION
+-- ============================================================================
+
+CREATE TABLE transcription_segments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    meeting_id UUID REFERENCES meetings(id) ON DELETE CASCADE,
+    
+    -- Timing
+    start_time_seconds DECIMAL(10, 3) NOT NULL,
+    end_time_seconds DECIMAL(10, 3) NOT NULL,
+    
+    -- Speaker Attribution
+    speaker_id UUID REFERENCES legislators(id) ON DELETE SET NULL,
+    speaker_name VARCHAR(255), -- fallback if not matched to legislator
+    speaker_title VARCHAR(100),
+    
+    -- Transcription
+    text TEXT NOT NULL,
+    text_normalized TEXT, -- cleaned version for search/analysis
+    
+    -- AI Confidence & Processing
+    transcription_confidence DECIMAL(5, 4), -- 0.0000 to 1.0000
+    speaker_identification_confidence DECIMAL(5, 4),
+    speaker_identification_method VARCHAR(50), -- 'voice', 'video', 'manual', 'pattern'
+    ai_model_version VARCHAR(50), -- 'whisper-v3', 'gpt-4', etc.
+    
+    -- Manual Override
+    is_manually_verified BOOLEAN DEFAULT false,
+    manually_corrected_by UUID, -- references users table
+    correction_timestamp TIMESTAMP WITH TIME ZONE,
+    
+    -- Search & Analysis
+    language VARCHAR(10) DEFAULT 'en',
+    word_count INTEGER,
+    sentiment_score DECIMAL(5, 4), -- -1 to 1
+    
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_segments_meeting ON transcription_segments(meeting_id);
+CREATE INDEX idx_segments_speaker ON transcription_segments(speaker_id);
+CREATE INDEX idx_segments_time ON transcription_segments(meeting_id, start_time_seconds);
+CREATE INDEX idx_segments_text_search ON transcription_segments USING gin(to_tsvector('english', text));
+
+-- ============================================================================
+-- ISSUES & TOPICS
+-- ============================================================================
+
+CREATE TABLE issues (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    jurisdiction_id UUID REFERENCES jurisdictions(id) ON DELETE CASCADE,
+    
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL, -- URL-friendly version
+    description TEXT,
+    
+    -- Taxonomy
+    parent_issue_id UUID REFERENCES issues(id) ON DELETE SET NULL, -- for hierarchical categories
+    category_level INTEGER DEFAULT 1, -- 1 = top level, 2 = subcategory, etc.
+    
+    -- AI Generation vs Manual
+    is_ai_generated BOOLEAN DEFAULT true,
+    ai_confidence DECIMAL(5, 4),
+    first_detected_at TIMESTAMP WITH TIME ZONE,
+    
+    -- Manual Curation
+    is_approved BOOLEAN DEFAULT false,
+    approved_by UUID, -- references users table
+    approved_at TIMESTAMP WITH TIME ZONE,
+    
+    -- Usage Stats (denormalized for performance)
+    mention_count INTEGER DEFAULT 0,
+    segment_count INTEGER DEFAULT 0,
+    legislator_count INTEGER DEFAULT 0,
+    
+    -- Metadata
+    color_hex VARCHAR(7), -- for UI visualization
+    icon_name VARCHAR(50),
+    keywords TEXT[], -- array of related keywords
+    
+    is_active BOOLEAN DEFAULT true,
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE(jurisdiction_id, slug)
+);
+
+CREATE INDEX idx_issues_jurisdiction ON issues(jurisdiction_id);
+CREATE INDEX idx_issues_parent ON issues(parent_issue_id);
+CREATE INDEX idx_issues_active ON issues(is_active);
+CREATE INDEX idx_issues_name ON issues(name);
+
+CREATE TABLE segment_issues (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    segment_id UUID REFERENCES transcription_segments(id) ON DELETE CASCADE,
+    issue_id UUID REFERENCES issues(id) ON DELETE CASCADE,
+    
+    -- AI Analysis
+    relevance_score DECIMAL(5, 4) NOT NULL, -- 0.0000 to 1.0000
+    sentiment_score DECIMAL(5, 4), -- -1 to 1 (negative to positive)
+    ai_model_version VARCHAR(50),
+    
+    -- Manual Override
+    is_manually_verified BOOLEAN DEFAULT false,
+    manually_added BOOLEAN DEFAULT false,
+    verified_by UUID,
+    verification_timestamp TIMESTAMP WITH TIME ZONE,
+    
+    -- Context
+    key_phrases TEXT[], -- important phrases that triggered this classification
+    
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE(segment_id, issue_id)
+);
+
+CREATE INDEX idx_segment_issues_segment ON segment_issues(segment_id);
+CREATE INDEX idx_segment_issues_issue ON segment_issues(issue_id);
+CREATE INDEX idx_segment_issues_relevance ON segment_issues(relevance_score DESC);
+
+-- ============================================================================
+-- LEGISLATION & BILLS
+-- ============================================================================
+
+CREATE TABLE bills (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    legislative_body_id UUID REFERENCES legislative_bodies(id) ON DELETE CASCADE,
+    
+    -- Identification
+    bill_number VARCHAR(100) NOT NULL, -- 'ORDINANCE-2024-001'
+    title VARCHAR(500) NOT NULL,
+    description TEXT,
+    full_text TEXT,
+    
+    -- Status
+    status VARCHAR(50) NOT NULL, -- 'introduced', 'committee', 'amended', 'passed', 'failed', 'vetoed'
+    current_stage VARCHAR(100),
+    
+    -- Dates
+    introduced_date DATE,
+    last_action_date DATE,
+    passed_date DATE,
+    effective_date DATE,
+    
+    -- Sponsors
+    primary_sponsor_id UUID REFERENCES legislators(id) ON DELETE SET NULL,
+    
+    -- Documents
+    document_url VARCHAR(500),
+    fiscal_note_url VARCHAR(500),
+    
+    -- Vote Results
+    final_vote_yes INTEGER,
+    final_vote_no INTEGER,
+    final_vote_abstain INTEGER,
+    
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_bills_body ON bills(legislative_body_id);
+CREATE INDEX idx_bills_number ON bills(bill_number);
+CREATE INDEX idx_bills_status ON bills(status);
+CREATE INDEX idx_bills_sponsor ON bills(primary_sponsor_id);
+
+CREATE TABLE bill_cosponsors (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    bill_id UUID REFERENCES bills(id) ON DELETE CASCADE,
+    legislator_id UUID REFERENCES legislators(id) ON DELETE CASCADE,
+    added_date DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE(bill_id, legislator_id)
+);
+
+CREATE TABLE bill_issues (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    bill_id UUID REFERENCES bills(id) ON DELETE CASCADE,
+    issue_id UUID REFERENCES issues(id) ON DELETE CASCADE,
+    relevance_score DECIMAL(5, 4),
+    is_primary_issue BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE(bill_id, issue_id)
+);
+
+-- ============================================================================
+-- LEGISLATIVE ACTIONS
+-- ============================================================================
+
+CREATE TABLE legislative_actions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    meeting_id UUID REFERENCES meetings(id) ON DELETE CASCADE,
+    bill_id UUID REFERENCES bills(id) ON DELETE SET NULL,
+    
+    action_type VARCHAR(50) NOT NULL, -- 'motion', 'vote', 'amendment', 'referral', 'discussion'
+    action_description TEXT NOT NULL,
+    
+    -- Timing (linked to video/transcript)
+    occurred_at TIMESTAMP WITH TIME ZONE,
+    video_timestamp_seconds DECIMAL(10, 3),
+    
+    -- Motion/Vote Details
+    moved_by_id UUID REFERENCES legislators(id) ON DELETE SET NULL,
+    seconded_by_id UUID REFERENCES legislators(id) ON DELETE SET NULL,
+    
+    -- Vote Results
+    vote_result VARCHAR(50), -- 'passed', 'failed', 'tabled', 'withdrawn'
+    vote_yes INTEGER,
+    vote_no INTEGER,
+    vote_abstain INTEGER,
+    vote_absent INTEGER,
+    
+    notes TEXT,
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_actions_meeting ON legislative_actions(meeting_id);
+CREATE INDEX idx_actions_bill ON legislative_actions(bill_id);
+CREATE INDEX idx_actions_type ON legislative_actions(action_type);
+
+CREATE TABLE vote_records (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    legislative_action_id UUID REFERENCES legislative_actions(id) ON DELETE CASCADE,
+    legislator_id UUID REFERENCES legislators(id) ON DELETE CASCADE,
+    vote VARCHAR(20) NOT NULL, -- 'yes', 'no', 'abstain', 'absent', 'present'
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE(legislative_action_id, legislator_id)
+);
+
+CREATE INDEX idx_votes_action ON vote_records(legislative_action_id);
+CREATE INDEX idx_votes_legislator ON vote_records(legislator_id);
+
+-- ============================================================================
+-- ANALYTICS & PRE-COMPUTED DATA
+-- ============================================================================
+
+CREATE TABLE legislator_statistics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    legislator_id UUID REFERENCES legislators(id) ON DELETE CASCADE,
+    
+    -- Time Period
+    period_type VARCHAR(20) NOT NULL, -- 'monthly', 'quarterly', 'yearly', 'term'
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    
+    -- Speaking Statistics
+    total_speaking_time_seconds INTEGER DEFAULT 0,
+    total_segments INTEGER DEFAULT 0,
+    average_segment_length_seconds DECIMAL(10, 2),
+    meetings_attended INTEGER DEFAULT 0,
+    meetings_missed INTEGER DEFAULT 0,
+    
+    -- Legislative Activity
+    bills_sponsored INTEGER DEFAULT 0,
+    bills_cosponsored INTEGER DEFAULT 0,
+    motions_made INTEGER DEFAULT 0,
+    votes_cast INTEGER DEFAULT 0,
+    votes_yes INTEGER DEFAULT 0,
+    votes_no INTEGER DEFAULT 0,
+    votes_abstain INTEGER DEFAULT 0,
+    
+    -- Issue Engagement (JSONB for flexibility)
+    top_issues JSONB, -- [{issue_id, issue_name, mention_count, speaking_time}]
+    
+    -- Sentiment Analysis
+    average_sentiment DECIMAL(5, 4),
+    
+    last_calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE(legislator_id, period_type, period_start)
+);
+
+CREATE INDEX idx_leg_stats_legislator ON legislator_statistics(legislator_id);
+CREATE INDEX idx_leg_stats_period ON legislator_statistics(period_type, period_start);
+
+CREATE TABLE issue_statistics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    issue_id UUID REFERENCES issues(id) ON DELETE CASCADE,
+    
+    -- Time Period
+    period_type VARCHAR(20) NOT NULL,
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    
+    -- Discussion Metrics
+    total_mentions INTEGER DEFAULT 0,
+    total_speaking_time_seconds INTEGER DEFAULT 0,
+    unique_legislators_count INTEGER DEFAULT 0,
+    meetings_discussed_count INTEGER DEFAULT 0,
+    
+    -- Sentiment
+    average_sentiment DECIMAL(5, 4),
+    sentiment_trend VARCHAR(20), -- 'improving', 'declining', 'stable'
+    
+    -- Related Bills
+    related_bills_count INTEGER DEFAULT 0,
+    
+    -- Top Contributors (JSONB)
+    top_legislators JSONB, -- [{legislator_id, name, mention_count, speaking_time}]
+    
+    last_calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE(issue_id, period_type, period_start)
+);
+
+CREATE INDEX idx_issue_stats_issue ON issue_statistics(issue_id);
+CREATE INDEX idx_issue_stats_period ON issue_statistics(period_type, period_start);
+
+-- ============================================================================
+-- USER MANAGEMENT & ENGAGEMENT
+-- ============================================================================
+
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(100) UNIQUE,
+    
+    -- Auth (Supabase handles this, but keeping for reference)
+    supabase_user_id UUID UNIQUE NOT NULL,
+    
+    -- Profile
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    avatar_url VARCHAR(500),
+    
+    -- Preferences
+    default_jurisdiction_id UUID REFERENCES jurisdictions(id) ON DELETE SET NULL,
+    notification_preferences JSONB,
+    display_preferences JSONB,
+    
+    -- Roles
+    role VARCHAR(50) DEFAULT 'user', -- 'user', 'moderator', 'admin'
+    
+    is_active BOOLEAN DEFAULT true,
+    email_verified BOOLEAN DEFAULT false,
+    
+    last_login_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_supabase ON users(supabase_user_id);
+
+CREATE TABLE user_bookmarks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    
+    -- Polymorphic bookmarking
+    bookmark_type VARCHAR(50) NOT NULL, -- 'legislator', 'meeting', 'bill', 'issue', 'segment'
+    legislator_id UUID REFERENCES legislators(id) ON DELETE CASCADE,
+    meeting_id UUID REFERENCES meetings(id) ON DELETE CASCADE,
+    bill_id UUID REFERENCES bills(id) ON DELETE CASCADE,
+    issue_id UUID REFERENCES issues(id) ON DELETE CASCADE,
+    segment_id UUID REFERENCES transcription_segments(id) ON DELETE CASCADE,
+    
+    notes TEXT,
+    tags TEXT[],
+    
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    CONSTRAINT chk_bookmark_single_reference CHECK (
+        (legislator_id IS NOT NULL)::int +
+        (meeting_id IS NOT NULL)::int +
+        (bill_id IS NOT NULL)::int +
+        (issue_id IS NOT NULL)::int +
+        (segment_id IS NOT NULL)::int = 1
+    )
+);
+
+CREATE INDEX idx_bookmarks_user ON user_bookmarks(user_id);
+CREATE INDEX idx_bookmarks_type ON user_bookmarks(bookmark_type);
+
+CREATE TABLE user_alerts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    
+    alert_type VARCHAR(50) NOT NULL, -- 'legislator_speaking', 'issue_discussed', 'bill_action', 'new_meeting'
+    alert_name VARCHAR(255) NOT NULL,
+    
+    -- Alert Criteria
+    legislator_id UUID REFERENCES legislators(id) ON DELETE CASCADE,
+    issue_id UUID REFERENCES issues(id) ON DELETE CASCADE,
+    bill_id UUID REFERENCES bills(id) ON DELETE CASCADE,
+    keywords TEXT[],
+    
+    -- Delivery Settings
+    delivery_method VARCHAR(50) NOT NULL, -- 'email', 'in_app', 'both'
+    frequency VARCHAR(50) DEFAULT 'immediate', -- 'immediate', 'daily', 'weekly'
+    
+    is_active BOOLEAN DEFAULT true,
+    last_triggered_at TIMESTAMP WITH TIME ZONE,
+    
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_alerts_user ON user_alerts(user_id);
+CREATE INDEX idx_alerts_active ON user_alerts(is_active);
+
+CREATE TABLE alert_notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    alert_id UUID REFERENCES user_alerts(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    
+    notification_type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    
+    -- Related Content
+    meeting_id UUID REFERENCES meetings(id) ON DELETE SET NULL,
+    segment_id UUID REFERENCES transcription_segments(id) ON DELETE SET NULL,
+    bill_id UUID REFERENCES bills(id) ON DELETE SET NULL,
+    
+    -- Status
+    is_read BOOLEAN DEFAULT false,
+    read_at TIMESTAMP WITH TIME ZONE,
+    sent_at TIMESTAMP WITH TIME ZONE,
+    
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_user ON alert_notifications(user_id);
+CREATE INDEX idx_notifications_read ON alert_notifications(is_read);
+
+-- ============================================================================
+-- SYSTEM & PROCESSING
+-- ============================================================================
+
+CREATE TABLE processing_jobs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    job_type VARCHAR(50) NOT NULL, -- 'transcription', 'speaker_identification', 'issue_extraction', 'sentiment_analysis'
+    status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed', 'cancelled'
+    
+    -- Target
+    meeting_id UUID REFERENCES meetings(id) ON DELETE CASCADE,
+    
+    -- Processing Details
+    ai_model VARCHAR(100),
+    parameters JSONB,
+    
+    -- Progress
+    progress_percentage DECIMAL(5, 2) DEFAULT 0.00,
+    items_processed INTEGER DEFAULT 0,
+    items_total INTEGER,
+    
+    -- Timing
+    started_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    estimated_completion_at TIMESTAMP WITH TIME ZONE,
+    
+    -- Results
+    result_summary JSONB,
+    error_message TEXT,
+    
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_jobs_status ON processing_jobs(status);
+CREATE INDEX idx_jobs_meeting ON processing_jobs(meeting_id);
+CREATE INDEX idx_jobs_type ON processing_jobs(job_type);
+
+CREATE TABLE audit_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Actor
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    user_email VARCHAR(255),
+    
+    -- Action
+    action_type VARCHAR(50) NOT NULL, -- 'create', 'update', 'delete', 'manual_correction'
+    table_name VARCHAR(100) NOT NULL,
+    record_id UUID NOT NULL,
+    
+    -- Changes
+    old_values JSONB,
+    new_values JSONB,
+    
+    -- Context
+    ip_address INET,
+    user_agent TEXT,
+    
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_audit_user ON audit_log(user_id);
+CREATE INDEX idx_audit_table ON audit_log(table_name, record_id);
+CREATE INDEX idx_audit_created ON audit_log(created_at);
+
+-- ============================================================================
+-- VIEWS FOR COMMON QUERIES
+-- ============================================================================
+
+CREATE VIEW meeting_summaries AS
+SELECT 
+    m.id,
+    m.title,
+    m.scheduled_start,
+    m.actual_start,
+    m.meeting_type,
+    lb.name as legislative_body_name,
+    j.name as jurisdiction_name,
+    COUNT(DISTINCT ts.id) as segment_count,
+    COUNT(DISTINCT ts.speaker_id) as unique_speakers,
+    SUM(ts.end_time_seconds - ts.start_time_seconds) as total_speaking_time_seconds,
+    COUNT(DISTINCT si.issue_id) as unique_issues_discussed,
+    m.processing_status,
+    m.transcription_status
+FROM meetings m
+LEFT JOIN legislative_bodies lb ON m.legislative_body_id = lb.id
+LEFT JOIN jurisdictions j ON lb.jurisdiction_id = j.id
+LEFT JOIN transcription_segments ts ON m.id = ts.meeting_id
+LEFT JOIN segment_issues si ON ts.id = si.segment_id
+GROUP BY m.id, lb.name, j.name;
+
+CREATE VIEW legislator_profiles AS
+SELECT 
+    l.id,
+    l.full_name,
+    l.title,
+    l.district,
+    l.party_affiliation,
+    lb.name as legislative_body_name,
+    j.name as jurisdiction_name,
+    COUNT(DISTINCT ts.id) as total_segments,
+    SUM(ts.end_time_seconds - ts.start_time_seconds) as total_speaking_time_seconds,
+    COUNT(DISTINCT b.id) as bills_sponsored,
+    COUNT(DISTINCT ma.meeting_id) as meetings_attended,
+    l.is_active
+FROM legislators l
+LEFT JOIN legislative_bodies lb ON l.legislative_body_id = lb.id
+LEFT JOIN jurisdictions j ON lb.jurisdiction_id = j.id
+LEFT JOIN transcription_segments ts ON l.id = ts.speaker_id
+LEFT JOIN bills b ON l.id = b.primary_sponsor_id
+LEFT JOIN meeting_attendees ma ON l.id = ma.legislator_id AND ma.attendance_status = 'present'
+GROUP BY l.id, lb.name, j.name;
+
+-- ============================================================================
+-- FUNCTIONS & TRIGGERS
+-- ============================================================================
+
+-- Function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply updated_at trigger to relevant tables
+CREATE TRIGGER update_jurisdictions_updated_at BEFORE UPDATE ON jurisdictions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_legislative_bodies_updated_at BEFORE UPDATE ON legislative_bodies
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_legislators_updated_at BEFORE UPDATE ON legislators
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_meetings_updated_at BEFORE UPDATE ON meetings
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_issues_updated_at BEFORE UPDATE ON issues
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_bills_updated_at BEFORE UPDATE ON bills
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Function to update issue mention counts
+CREATE OR REPLACE FUNCTION update_issue_statistics()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE issues 
+        SET mention_count = mention_count + 1,
+            segment_count = segment_count + 1
+        WHERE id = NEW.issue_id;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE issues 
+        SET mention_count = GREATEST(mention_count - 1, 0),
+            segment_count = GREATEST(segment_count - 1, 0)
+        WHERE id = OLD.issue_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_issue_counts AFTER INSERT OR DELETE ON segment_issues
+    FOR EACH ROW EXECUTE FUNCTION update_issue_statistics();
+
+-- ============================================================================
+-- INITIAL DATA / SEED DATA
+-- ============================================================================
+
+-- Insert Memphis jurisdiction
+INSERT INTO jurisdictions (name, jurisdiction_type, state, city, timezone) 
+VALUES ('Memphis', 'city', 'TN', 'Memphis', 'America/Chicago');
+
+-- Insert Memphis City Council
+INSERT INTO legislative_bodies (jurisdiction_id, name, body_type, website_url)
+SELECT id, 'Memphis City Council', 'council', 'https://www.memphistn.gov/government/council/'
+FROM jurisdictions WHERE name = 'Memphis';
+
+-- ============================================================================
+-- ROW LEVEL SECURITY (RLS) POLICIES
+-- ============================================================================
+
+-- Enable RLS on all tables that need access control
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_bookmarks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE alert_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE processing_jobs ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================================
+-- USERS TABLE POLICIES
+-- ============================================================================
+
+-- Users can view their own profile
+CREATE POLICY "Users can view own profile"
+ON users FOR SELECT
+USING (auth.uid() = supabase_user_id);
+
+-- Users can update their own profile
+CREATE POLICY "Users can update own profile"
+ON users FOR UPDATE
+USING (auth.uid() = supabase_user_id)
+WITH CHECK (auth.uid() = supabase_user_id);
+
+-- Users can insert their own profile (during registration)
+CREATE POLICY "Users can insert own profile"
+ON users FOR INSERT
+WITH CHECK (auth.uid() = supabase_user_id);
+
+-- Admins can view all users
+CREATE POLICY "Admins can view all users"
+ON users FOR SELECT
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role = 'admin'
+    )
+);
+
+-- Admins can update any user
+CREATE POLICY "Admins can update any user"
+ON users FOR UPDATE
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role = 'admin'
+    )
+);
+
+-- ============================================================================
+-- USER BOOKMARKS POLICIES
+-- ============================================================================
+
+-- Users can view their own bookmarks
+CREATE POLICY "Users can view own bookmarks"
+ON user_bookmarks FOR SELECT
+USING (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+);
+
+-- Users can insert their own bookmarks
+CREATE POLICY "Users can insert own bookmarks"
+ON user_bookmarks FOR INSERT
+WITH CHECK (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+);
+
+-- Users can update their own bookmarks
+CREATE POLICY "Users can update own bookmarks"
+ON user_bookmarks FOR UPDATE
+USING (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+);
+
+-- Users can delete their own bookmarks
+CREATE POLICY "Users can delete own bookmarks"
+ON user_bookmarks FOR DELETE
+USING (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+);
+
+-- ============================================================================
+-- USER ALERTS POLICIES
+-- ============================================================================
+
+-- Users can view their own alerts
+CREATE POLICY "Users can view own alerts"
+ON user_alerts FOR SELECT
+USING (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+);
+
+-- Users can create their own alerts
+CREATE POLICY "Users can create own alerts"
+ON user_alerts FOR INSERT
+WITH CHECK (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+);
+
+-- Users can update their own alerts
+CREATE POLICY "Users can update own alerts"
+ON user_alerts FOR UPDATE
+USING (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+);
+
+-- Users can delete their own alerts
+CREATE POLICY "Users can delete own alerts"
+ON user_alerts FOR DELETE
+USING (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+);
+
+-- ============================================================================
+-- ALERT NOTIFICATIONS POLICIES
+-- ============================================================================
+
+-- Users can view their own notifications
+CREATE POLICY "Users can view own notifications"
+ON alert_notifications FOR SELECT
+USING (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+);
+
+-- Users can update their own notifications (mark as read)
+CREATE POLICY "Users can update own notifications"
+ON alert_notifications FOR UPDATE
+USING (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+);
+
+-- Users can delete their own notifications
+CREATE POLICY "Users can delete own notifications"
+ON alert_notifications FOR DELETE
+USING (
+    user_id IN (
+        SELECT id FROM users WHERE supabase_user_id = auth.uid()
+    )
+);
+
+-- System can insert notifications (backend service)
+CREATE POLICY "Service role can insert notifications"
+ON alert_notifications FOR INSERT
+WITH CHECK (true);
+
+-- ============================================================================
+-- AUDIT LOG POLICIES
+-- ============================================================================
+
+-- Only admins can view audit logs
+CREATE POLICY "Admins can view audit logs"
+ON audit_log FOR SELECT
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role = 'admin'
+    )
+);
+
+-- System can insert audit logs (backend service)
+CREATE POLICY "Service role can insert audit logs"
+ON audit_log FOR INSERT
+WITH CHECK (true);
+
+-- ============================================================================
+-- PROCESSING JOBS POLICIES
+-- ============================================================================
+
+-- Admins and moderators can view processing jobs
+CREATE POLICY "Staff can view processing jobs"
+ON processing_jobs FOR SELECT
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role IN ('admin', 'moderator')
+    )
+);
+
+-- Admins can manage processing jobs
+CREATE POLICY "Admins can manage processing jobs"
+ON processing_jobs FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role = 'admin'
+    )
+);
+
+-- ============================================================================
+-- PUBLIC READ POLICIES (Legislative Data)
+-- ============================================================================
+-- Most legislative data should be publicly readable
+
+-- Jurisdictions - Public read
+ALTER TABLE jurisdictions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view jurisdictions"
+ON jurisdictions FOR SELECT
+USING (true);
+
+-- Legislative Bodies - Public read
+ALTER TABLE legislative_bodies ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view legislative bodies"
+ON legislative_bodies FOR SELECT
+USING (true);
+
+-- Legislators - Public read
+ALTER TABLE legislators ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view legislators"
+ON legislators FOR SELECT
+USING (true);
+
+-- Meetings - Public read
+ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view meetings"
+ON meetings FOR SELECT
+USING (true);
+
+-- Meeting Attendees - Public read
+ALTER TABLE meeting_attendees ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view meeting attendees"
+ON meeting_attendees FOR SELECT
+USING (true);
+
+-- Transcription Segments - Public read
+ALTER TABLE transcription_segments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view transcription segments"
+ON transcription_segments FOR SELECT
+USING (true);
+
+-- Issues - Public read (only active issues)
+ALTER TABLE issues ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view active issues"
+ON issues FOR SELECT
+USING (is_active = true);
+
+-- Admins can view all issues including inactive
+CREATE POLICY "Admins can view all issues"
+ON issues FOR SELECT
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role = 'admin'
+    )
+);
+
+-- Segment Issues - Public read
+ALTER TABLE segment_issues ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view segment issues"
+ON segment_issues FOR SELECT
+USING (true);
+
+-- Bills - Public read
+ALTER TABLE bills ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view bills"
+ON bills FOR SELECT
+USING (true);
+
+-- Bill Cosponsors - Public read
+ALTER TABLE bill_cosponsors ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view bill cosponsors"
+ON bill_cosponsors FOR SELECT
+USING (true);
+
+-- Bill Issues - Public read
+ALTER TABLE bill_issues ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view bill issues"
+ON bill_issues FOR SELECT
+USING (true);
+
+-- Legislative Actions - Public read
+ALTER TABLE legislative_actions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view legislative actions"
+ON legislative_actions FOR SELECT
+USING (true);
+
+-- Vote Records - Public read
+ALTER TABLE vote_records ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view vote records"
+ON vote_records FOR SELECT
+USING (true);
+
+-- Legislator Statistics - Public read
+ALTER TABLE legislator_statistics ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view legislator statistics"
+ON legislator_statistics FOR SELECT
+USING (true);
+
+-- Issue Statistics - Public read
+ALTER TABLE issue_statistics ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view issue statistics"
+ON issue_statistics FOR SELECT
+USING (true);
+
+-- ============================================================================
+-- ADMIN/MODERATOR WRITE POLICIES (Legislative Data)
+-- ============================================================================
+
+-- Admins can insert/update/delete jurisdictions
+CREATE POLICY "Admins can manage jurisdictions"
+ON jurisdictions FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role = 'admin'
+    )
+);
+
+-- Admins can manage legislative bodies
+CREATE POLICY "Admins can manage legislative bodies"
+ON legislative_bodies FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role = 'admin'
+    )
+);
+
+-- Admins and moderators can manage legislators
+CREATE POLICY "Staff can manage legislators"
+ON legislators FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role IN ('admin', 'moderator')
+    )
+);
+
+-- Admins and moderators can manage meetings
+CREATE POLICY "Staff can manage meetings"
+ON meetings FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role IN ('admin', 'moderator')
+    )
+);
+
+-- Admins and moderators can manage transcription segments
+CREATE POLICY "Staff can manage transcription segments"
+ON transcription_segments FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role IN ('admin', 'moderator')
+    )
+);
+
+-- Admins and moderators can manage issues
+CREATE POLICY "Staff can manage issues"
+ON issues FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role IN ('admin', 'moderator')
+    )
+);
+
+-- Admins and moderators can manage segment issues
+CREATE POLICY "Staff can manage segment issues"
+ON segment_issues FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role IN ('admin', 'moderator')
+    )
+);
+
+-- Admins and moderators can manage bills
+CREATE POLICY "Staff can manage bills"
+ON bills FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role IN ('admin', 'moderator')
+    )
+);
+
+-- Admins and moderators can manage legislative actions
+CREATE POLICY "Staff can manage legislative actions"
+ON legislative_actions FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role IN ('admin', 'moderator')
+    )
+);
+
+-- Admins and moderators can manage vote records
+CREATE POLICY "Staff can manage vote records"
+ON vote_records FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE supabase_user_id = auth.uid()
+        AND role IN ('admin', 'moderator')
+    )
+);
+
+-- ============================================================================
+-- SERVICE ROLE POLICIES (Backend Processing)
+-- ============================================================================
+-- Note: These policies allow the service role to write AI-generated data
+-- In Supabase, you'll use the service role key for backend processing
+
+-- Service role can insert meeting attendees
+CREATE POLICY "Service role can manage meeting attendees"
+ON meeting_attendees FOR ALL
+WITH CHECK (true);
+
+-- Service role can insert/update statistics
+CREATE POLICY "Service role can manage legislator statistics"
+ON legislator_statistics FOR ALL
+WITH CHECK (true);
+
+CREATE POLICY "Service role can manage issue statistics"
+ON issue_statistics FOR ALL
+WITH CHECK (true);
+
+-- Service role can manage bill relationships
+CREATE POLICY "Service role can manage bill cosponsors"
+ON bill_cosponsors FOR ALL
+WITH CHECK (true);
+
+CREATE POLICY "Service role can manage bill issues"
+ON bill_issues FOR ALL
+WITH CHECK (true);
+
+-- ============================================================================
+-- HELPER FUNCTION FOR CHECKING USER ROLES
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION auth.user_role()
+RETURNS TEXT AS $
+BEGIN
+    RETURN (
+        SELECT role
+        FROM users
+        WHERE supabase_user_id = auth.uid()
+    );
+END;
+$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================================
+-- FUNCTION TO LOG USER ACTIONS
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION log_user_action()
+RETURNS TRIGGER AS $
+DECLARE
+    current_user_id UUID;
+    current_user_email TEXT;
+BEGIN
+    -- Get current user info
+    SELECT id, email INTO current_user_id, current_user_email
+    FROM users
+    WHERE supabase_user_id = auth.uid();
+    
+    -- Only log if user is authenticated
+    IF current_user_id IS NOT NULL THEN
+        INSERT INTO audit_log (
+            user_id,
+            user_email,
+            action_type,
+            table_name,
+            record_id,
+            old_values,
+            new_values
+        ) VALUES (
+            current_user_id,
+            current_user_email,
+            TG_OP,
+            TG_TABLE_NAME,
+            COALESCE(NEW.id, OLD.id),
+            CASE WHEN TG_OP = 'DELETE' THEN row_to_json(OLD) ELSE NULL END,
+            CASE WHEN TG_OP IN ('INSERT', 'UPDATE') THEN row_to_json(NEW) ELSE NULL END
+        );
+    END IF;
+    
+    RETURN COALESCE(NEW, OLD);
+END;
+$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Apply audit logging to critical tables
+CREATE TRIGGER audit_transcription_segments
+    AFTER INSERT OR UPDATE OR DELETE ON transcription_segments
+    FOR EACH ROW EXECUTE FUNCTION log_user_action();
+
+CREATE TRIGGER audit_segment_issues
+    AFTER INSERT OR UPDATE OR DELETE ON segment_issues
+    FOR EACH ROW EXECUTE FUNCTION log_user_action();
+
+CREATE TRIGGER audit_issues
+    AFTER INSERT OR UPDATE OR DELETE ON issues
+    FOR EACH ROW EXECUTE FUNCTION log_user_action();
+
+CREATE TRIGGER audit_legislators
+    AFTER INSERT OR UPDATE OR DELETE ON legislators
+    FOR EACH ROW EXECUTE FUNCTION log_user_action();
