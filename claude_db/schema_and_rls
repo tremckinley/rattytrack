@@ -43,7 +43,7 @@ CREATE TABLE legislators (
     legislative_body_id UUID REFERENCES legislative_bodies(id) ON DELETE SET NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    full_name VARCHAR(255) NOT NULL,
+    display_name VARCHAR(255) NOT NULL,
     title VARCHAR(100), -- 'Council Member', 'Mayor', 'Commissioner'
     district VARCHAR(50),
     party_affiliation VARCHAR(50),
@@ -672,7 +672,7 @@ GROUP BY m.id, lb.name, j.name;
 CREATE VIEW legislator_profiles AS
 SELECT 
     l.id,
-    l.full_name,
+    l.display_name,
     l.title,
     l.district,
     l.party_affiliation,
@@ -760,6 +760,23 @@ VALUES ('Memphis', 'city', 'TN', 'Memphis', 'America/Chicago');
 INSERT INTO legislative_bodies (jurisdiction_id, name, body_type, website_url)
 SELECT id, 'Memphis City Council', 'council', 'https://www.memphistn.gov/government/council/'
 FROM jurisdictions WHERE name = 'Memphis';
+
+INSERT INTO legislators (legislative_body_id, first_name, last_name, display_name, title, district, party_affiliation)
+VALUES ((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'J. Ford', 'Canale', 'J. Ford Canale', 'Council Member', 'District 1', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'JB', 'Smiley Jr.', 'JB Smiley Jr.', 'Council Member', 'District 2', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Lowery', 'Leggett', 'Lowery Leggett', 'Council Member', 'District 3', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Rhonda', 'Logan', 'Rhonda Logan', 'Council Member', 'District 4', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Worth', 'Morgan', 'Worth Morgan', 'Council Member', 'District 5', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Benniefield', 'Robinson', 'Benniefield Robinson', 'Council Member', 'District 6', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Johnathan', 'Joyner', 'Johnathan Joyner', 'Council Member', 'District 7', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Shaundra', 'Moore', 'Shaundra Moore', 'Council Member', 'Super District 8 Position 1', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Chase', 'Carlisle', 'Chase Carlisle', 'Council Member', 'Super District 8 Position 2', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Cheyenne', 'Johnson', 'Cheyenne Johnson', 'Council Member', 'Super District 8 Position 3', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Carla', 'Catron', 'Carla Catron', 'Council Member', 'Super District 9 Position 1', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Alvin', 'Jackson', 'Alvin Jackson', 'Council Member', 'Super District 9 Position 2', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Patrice', 'Robinson', 'Patrice Robinson', 'Council Member', 'Super District 9 Position 3', 'Nonpartisan'),
+((SELECT id FROM legislative_bodies WHERE name = 'Memphis City Council'), 'Paul', 'Young', 'Paul Young', 'Mayor', NULL, 'Nonpartisan');
+
 
 -- ============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
@@ -1245,35 +1262,54 @@ WITH CHECK (true);
 -- HELPER FUNCTION FOR CHECKING USER ROLES
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION auth.user_role()
-RETURNS TEXT AS $
+CREATE OR REPLACE FUNCTION public.user_role()
+RETURNS TEXT 
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
 BEGIN
     RETURN (
         SELECT role
-        FROM users
+        FROM public.users
         WHERE supabase_user_id = auth.uid()
     );
 END;
-$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
+
+-- Grant execute permissions to authenticated users
+GRANT EXECUTE ON FUNCTION public.user_role() TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.user_role() FROM anon;
 
 -- ============================================================================
 -- FUNCTION TO LOG USER ACTIONS
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION log_user_action()
-RETURNS TRIGGER AS $
+CREATE OR REPLACE FUNCTION public.log_user_action()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
 DECLARE
     current_user_id UUID;
     current_user_email TEXT;
+    rec_id UUID;
 BEGIN
     -- Get current user info
-    SELECT id, email INTO current_user_id, current_user_email
-    FROM users
+    SELECT id, email
+    INTO current_user_id, current_user_email
+    FROM public.users
     WHERE supabase_user_id = auth.uid();
-    
+
+    -- Determine record id (if present in NEW or OLD)
+    IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+        rec_id := NEW.id;
+    ELSE
+        rec_id := OLD.id;
+    END IF;
+
     -- Only log if user is authenticated
     IF current_user_id IS NOT NULL THEN
-        INSERT INTO audit_log (
+        INSERT INTO public.audit_log (
             user_id,
             user_email,
             action_type,
@@ -1286,29 +1322,31 @@ BEGIN
             current_user_email,
             TG_OP,
             TG_TABLE_NAME,
-            COALESCE(NEW.id, OLD.id),
+            rec_id,
             CASE WHEN TG_OP = 'DELETE' THEN row_to_json(OLD) ELSE NULL END,
             CASE WHEN TG_OP IN ('INSERT', 'UPDATE') THEN row_to_json(NEW) ELSE NULL END
         );
     END IF;
-    
+
     RETURN COALESCE(NEW, OLD);
 END;
-$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
+
+-- No need to grant execute on trigger functions - they run automatically
 
 -- Apply audit logging to critical tables
 CREATE TRIGGER audit_transcription_segments
     AFTER INSERT OR UPDATE OR DELETE ON transcription_segments
-    FOR EACH ROW EXECUTE FUNCTION log_user_action();
+    FOR EACH ROW EXECUTE FUNCTION public.log_user_action();
 
 CREATE TRIGGER audit_segment_issues
     AFTER INSERT OR UPDATE OR DELETE ON segment_issues
-    FOR EACH ROW EXECUTE FUNCTION log_user_action();
+    FOR EACH ROW EXECUTE FUNCTION public.log_user_action();
 
 CREATE TRIGGER audit_issues
     AFTER INSERT OR UPDATE OR DELETE ON issues
-    FOR EACH ROW EXECUTE FUNCTION log_user_action();
+    FOR EACH ROW EXECUTE FUNCTION public.log_user_action();
 
 CREATE TRIGGER audit_legislators
     AFTER INSERT OR UPDATE OR DELETE ON legislators
-    FOR EACH ROW EXECUTE FUNCTION log_user_action();
+    FOR EACH ROW EXECUTE FUNCTION public.log_user_action();

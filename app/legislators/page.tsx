@@ -4,27 +4,19 @@ import { useState } from "react";
 import LegislatorCard from "./legislatorCard/legislatorCard";
 import legislators from "@/testData/Legislators";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/utils/supabase";
+//import { supabase } from "@/lib/utils/supabase";
+import { getLegislators } from "@/lib/data/legislator_profile";
 
-const {data, error} = await supabase
-  .from('legislators')
-  .select();
+// const {data, error} = await supabase
+//   .from('legislators')
+//   .select();
 
+const legislatorData = getLegislators();
 
 export default function Legislators() {
   const [legislatorSearchValue, setLegislatorSearchValue] = useState("");
   function inFilter(value: string, context: string) {
     return context.toLowerCase().includes(value.toLowerCase());
-  }
-
-  if (error) {
-    // You should use a dedicated error boundary component for production,
-    // but throwing here works for simple cases or testing.
-    throw new Error("Error getting legislator data: " + error.message);
-  }
-
-  if (!data) {
-    return <div>Loading legislators...</div>; // Render a loading state
   }
 
   return (
@@ -47,7 +39,7 @@ export default function Legislators() {
       </div>
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         { 
-        data
+        legislatorData
           .filter((leg: any) => inFilter(legislatorSearchValue, leg.display_name))
           .map((leg: any) => {
             return <LegislatorCard key={leg.id} {...leg} />;
