@@ -4,20 +4,19 @@ import { useState } from "react";
 import LegislatorCard from "./legislatorCard/legislatorCard";
 import legislators from "@/testData/Legislators";
 import { Input } from "@/components/ui/input";
-//import { supabase } from "@/lib/utils/supabase";
 import { getLegislators } from "@/lib/data/legislator_profile";
 
-// const {data, error} = await supabase
-//   .from('legislators')
-//   .select();
 
-const legislatorData = getLegislators();
 
-export default function Legislators() {
+
+export default async function Legislators() {
   const [legislatorSearchValue, setLegislatorSearchValue] = useState("");
   function inFilter(value: string, context: string) {
     return context.toLowerCase().includes(value.toLowerCase());
   }
+  const legislatorData = await getLegislators();
+  
+  
 
   return (
     <>
@@ -44,7 +43,7 @@ export default function Legislators() {
           .map((leg: any) => {
             return <LegislatorCard key={leg.id} {...leg} />;
           }) 
-        }
+        } 
       </section>
     </>
   );

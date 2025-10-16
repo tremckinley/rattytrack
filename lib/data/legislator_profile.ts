@@ -1,14 +1,15 @@
 // src/lib/data/legislator_profile.ts info for legislator cards
 
-import supabase from '../utils/supabase';
+import Legislator from '@/types/Legislator';
+import { supabase } from '../utils/supabase';
 
-export async function getLegislators() {
+export async function getLegislators(): Promise<any[]> {
   
   // This is a server-side call, safe from exposing credentials
   const { data, error } = await supabase
     .from('legislator_profiles')
     .select('*')
-    .order('lastName', { ascending: true });
+    .order('display_name', { ascending: true });
 
   if (error) {
     console.error('Error fetching legislators:', error);
@@ -16,5 +17,5 @@ export async function getLegislators() {
     throw new Error('Failed to fetch legislator data.'); 
   }
 
-  return data;
+  return data
 }
