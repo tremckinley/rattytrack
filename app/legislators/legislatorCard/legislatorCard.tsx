@@ -8,7 +8,7 @@ import Link from "next/link";
 
 export default function LegislatorCard(params: Legislator) {
   return (
-    <div className="card p-4 w-full">
+    <div className="card m-0 p-4 w-full">
       {/*Profile header*/}
       <div className="flex items-center">
         {params.photo_url ? (
