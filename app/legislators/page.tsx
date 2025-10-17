@@ -1,23 +1,13 @@
-"use client";
-
-import { useState } from "react";
 import LegislatorCard from "./legislatorCard/legislatorCard";
-import legislators from "@/testData/Legislators";
-import { Input } from "@/components/ui/input";
-import { getLegislators } from "@/lib/data/legislator_profile";
-
-
-
-
+import { getLegislators } from "@/lib/data/legislator_card";
+import SearchableLegislators from "./searchableLegislators";
+import Legislator from "@/types/Legislator";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faQuestion, faSpinner, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 export default async function Legislators() {
-  const [legislatorSearchValue, setLegislatorSearchValue] = useState("");
-  function inFilter(value: string, context: string) {
-    return context.toLowerCase().includes(value.toLowerCase());
-  }
-  const legislatorData = await getLegislators();
+  // Server-side data fetching
+  const legislators = await getLegislators();
   
-  
-
   return (
     <>
       <div className="w-6xl mb-8">
@@ -26,25 +16,16 @@ export default async function Legislators() {
           Discover individual legislator activity, issue focus, and legislative
           history.
         </p>
-        <Input
-          type="text"
-          
-          placeholder="Search legislator profiles"
-          value={legislatorSearchValue}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setLegislatorSearchValue(e.target.value)
-          }
-        />
       </div>
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        { 
-        legislatorData
-          .filter((leg: any) => inFilter(legislatorSearchValue, leg.display_name))
-          .map((leg: any) => {
-            return <LegislatorCard key={leg.id} {...leg} />;
-          }) 
-        } 
-      </section>
+      {legislators.length === 0 ? (
+        <div className="card text-center py-12">
+           <FontAwesomeIcon icon={faTriangleExclamation} className="text-capyred text-4xl mb-4 animate-bounce-once" />
+          <p className="text-foreground text-lg mb-4">Unable to load legislator data at this time.</p>
+          <p className="">Please try refreshing the page or contact support if the issue persists.</p>
+        </div>
+      ) : (
+        <SearchableLegislators legislators={legislators} />
+      )}
     </>
   );
 }

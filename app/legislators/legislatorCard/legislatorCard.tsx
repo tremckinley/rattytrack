@@ -4,15 +4,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as solidIcons from "@fortawesome/free-solid-svg-icons";
 import * as regIcons from "@fortawesome/free-regular-svg-icons";
 import UserIcon from "@/components/userIcon";
+import Link from "next/link";
 
 export default function LegislatorCard(params: Legislator) {
   return (
     <div className="card p-4 w-full">
       {/*Profile header*/}
       <div className="flex items-center">
-        {params.avatar_url ? (
+        {params.photo_url ? (
           <Image
-            src={params.avatar_url}
+            src={params.photo_url}
             alt="avatar for legislator"
             height={75}
             width={75}
@@ -23,13 +24,13 @@ export default function LegislatorCard(params: Legislator) {
         <div>
           <h3 className="font-bold text-lg">{params.display_name}</h3>
           <p className="text-gray-600">{params.title}</p>
-          <p className="text-xs text-gray-600">{params.jurisdiction}</p>
+          <p className="text-xs text-gray-600">{params.district}</p>
         </div>
       </div>
       <div className="p-2 flex flex-col my-2">
         <div className="flex justify-between">
           <span>Party</span>
-          <span>{params.party}</span>
+          <span>{params.party_affiliation}</span>
         </div>
         <div className="flex justify-between my-2">
           <div>
@@ -48,7 +49,7 @@ export default function LegislatorCard(params: Legislator) {
         <div className="my-2">
           <span>Committees</span>
           <ul className="flex">
-            {params.committees.map((committee, idx) => {
+            {params.committees?.map((committee, idx) => {
               return (
                 <li key={idx} className="border px-1 mr-1 rounded-full">
                   {committee}
@@ -56,7 +57,9 @@ export default function LegislatorCard(params: Legislator) {
               );
             })}
           </ul>
+          
         </div>
+        <Link href={`/legislators/${params.id}`} className="link-button">View Profile</Link>
       </div>
     </div>
   );

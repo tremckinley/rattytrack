@@ -96,8 +96,23 @@
   .active-link {
     @apply underline text-capyred font-bold underline-offset-6 decoration-2;
   }
+
+  .link-button {
+    @apply rounded border border-foreground bg-card shadow-sm text-foreground text-center font-bold p-2 mt-4 hover:bg-capyred hover:text-background transition-colors;
+  }
 }
 
+@keyframes bounce-once {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
 h2 {
   font-size: 2rem;
   font-weight: bold;
@@ -143,5 +158,23 @@ h2 {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .animate-bounce-once {
+    animation: bounce-once 1s ease-in-out;
+  }
+}
+
+@keyframes bounce-once {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
   }
 }
