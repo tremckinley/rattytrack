@@ -3,6 +3,8 @@
 import Legislator from "@/types/Legislator";
 import { useState } from "react";
 import LegislatorCard from "./legislatorCard/legislatorCard";
+import { Input } from "@/components/ui/input";
+import { Label } from "@radix-ui/react-label";
 
 interface SearchableLegislatorsProps {
     legislators: Legislator[];
@@ -28,13 +30,14 @@ export default function SearchableLegislators({ legislators }: SearchableLegisla
     
     return (
         <>
-            <div className="mt-4">
-                <input
+            <div className="w-lg ">
+                <Label className="ml-3" htmlFor="legislator_search">Filter profiles</Label>
+                <Input
+                    id="legislator_search"
                     type="text"
-                    placeholder="Search legislator profiles"
+                    placeholder="Search by name, position, etc."
                     value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => setSearchValue(e.target.value)}   
                 />
             </div>
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">

@@ -10,7 +10,7 @@ export default async function Legislators() {
   
   return (
     <>
-      <div className="w-6xl mb-8">
+      <div className="w-6xl mb-4">
         <h2>Legislators</h2>
         <p>
           Discover individual legislator activity, issue focus, and legislative
