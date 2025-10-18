@@ -11,14 +11,18 @@ interface SearchableLegislatorsProps {
 }
 
 function isIncluded(value: string, context: Legislator) {
-    if (value.length <= 2 ||(value.length > 2 && context.display_name?.toLowerCase().includes(value.toLowerCase())
-        || context.first_name?.toLowerCase().includes(value.toLowerCase())
-        || context.last_name?.toLowerCase().includes(value.toLowerCase())
-        || context.title?.toLowerCase().includes(value.toLowerCase())
-        || context.district?.toLowerCase().includes(value.toLowerCase())
-        || context.party_affiliation?.toLowerCase().includes(value.toLowerCase())
-        || context.committees?.some((committee) => committee.toLowerCase().includes(value.toLowerCase())))
-    ) {
+if (value.length <= 2 || (value.length > 2 && (
+    context.display_name?.toLowerCase().split(/[\s-]+/).some(word => word.startsWith(value.toLowerCase()))
+    || context.first_name?.toLowerCase().split(/[\s-]+/).some(word => word.startsWith(value.toLowerCase()))
+    || context.last_name?.toLowerCase().split(/[\s-]+/).some(word => word.startsWith(value.toLowerCase()))
+    || context.title?.toLowerCase().split(/[\s-]+/).some(word => word.startsWith(value.toLowerCase()))
+    || context.district?.toLowerCase().split(/[\s-]+/).some(word => word.startsWith(value.toLowerCase()))
+    || context.party_affiliation?.toLowerCase().split(/[\s-]+/).some(word => word.startsWith(value.toLowerCase()))
+    || context.committees?.some((committee) => 
+        committee.toLowerCase().split(/[\s-]+/).some(word => word.startsWith(value.toLowerCase()))
+    )
+)))
+    {
         return true;
     }
     return false;
