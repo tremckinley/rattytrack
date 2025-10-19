@@ -7,7 +7,7 @@
 :root {
   --capyred: #811749;
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --background: oklch(96.045% 0.02014 57.906 / 0.925);
   --foreground: oklch(0.13 0.028 261.692);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.13 0.028 261.692);

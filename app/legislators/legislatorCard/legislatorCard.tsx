@@ -22,7 +22,7 @@ export default function LegislatorCard(params: Legislator) {
           <UserIcon />
         )}
         <div>
-          <h3 className="font-bold text-lg">{params.display_name}</h3>
+          <h3 className="font-bold text-lg h-">{params.display_name}</h3>
           <p className="text-gray-600">{params.title}</p>
           <p className="text-xs text-gray-600">{params.district}</p>
         </div>

@@ -1,7 +1,7 @@
 import { getLegislator } from "@/lib/data/legislator"
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as regIcons from "@fortawesome/free-regular-svg-icons";
+import { faComments, faUserPen } from "@fortawesome/free-solid-svg-icons";
 import UserIcon from "@/components/userIcon";
 import { notFound } from "next/navigation";
 
@@ -17,10 +17,10 @@ export default async function LegislatorPage({ params }: Props) {
     }
 
     return (
-        <main className="grid grid-cols-[1fr_2fr]">
-            <section id="profile-card" className="card py-8 flex flex-col items-center">
+        <main className="grid grid-cols-[1fr_2fr] h-screen">
+            <section id="profile-card" className="card h-full py-8 flex flex-col items-center bg-sidebar border border-sidebar-border">
                 {/*Profile header*/}
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center mb-4">
                     {legislator.photo_url ? (
                         <Image
                             src={legislator.photo_url}
@@ -36,9 +36,20 @@ export default async function LegislatorPage({ params }: Props) {
                     <p className="text-xs text-gray-600">{legislator.district}</p>
                 </div>
 
-
+                <div id="legislator-stats" className="w-3/4 text-center">
+                    <div id="tracked-comments" className="bg-sidebar-foreground/10 background rounded-lg p-3 m-1 border border-accent-foreground/30">
+                        <p ><FontAwesomeIcon icon={faComments} className="mr-2" />Tracked Statements</p>
+                        <p className="text-xl font-bold">{legislator.website_url || 0}</p>
+                    </div>
+                    <div id="bills-sponsored" className="bg-sidebar-foreground/10 background rounded-lg p-3 m-1 border border-accent-foreground/30">
+                        <p><FontAwesomeIcon icon={faUserPen} className="mr-2" />Bills Sponsored</p>
+                        <p className="text-xl font-bold">{legislator.website_url || 0}</p>
+                    </div>
+                </div>
 
             </section>
+
+
         </main>
     );
 }
