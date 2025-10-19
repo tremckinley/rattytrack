@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Legislator from "@/types/Legislator";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as solidIcons from "@fortawesome/free-solid-svg-icons";
 import * as regIcons from "@fortawesome/free-regular-svg-icons";
+import { faClockFour, faFileAlt } from "@fortawesome/free-regular-svg-icons"
 import UserIcon from "@/components/userIcon";
 import Link from "next/link";
 
@@ -34,14 +34,14 @@ export default function LegislatorCard(params: Legislator) {
         </div>
         <div className="flex justify-between my-2">
           <div>
-            <FontAwesomeIcon icon={regIcons.faClockFour} />
+            <FontAwesomeIcon icon={faClockFour} />
             <span className="ml-1">Speaking Time</span>
           </div>
           <span>{}</span>
         </div>
         <div className="flex justify-between my-2">
           <div>
-            <FontAwesomeIcon icon={regIcons.faFileAlt} />
+            <FontAwesomeIcon icon={faFileAlt} />
             <span className="ml-1">Bills Sponsored</span>
           </div>
           <span>{}</span>

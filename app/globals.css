@@ -3,6 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
+
 :root {
   --capyred: #811749;
   --radius: 0.625rem;

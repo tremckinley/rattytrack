@@ -1,23 +1,21 @@
-export default function UserIcon() {
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUser, faUserAlt } from "@fortawesome/free-regular-svg-icons";
+import clsx from "clsx";
+
+interface UserIconProps {
+  height?: number | undefined;
+  width?: number | undefined;
+}
+
+//Figure out media sizes
+
+export default function UserIcon({ height, width }: UserIconProps) {
+  const heightValue = height ? "h-"+height : "auto";
+  const widthValue = width ? "w-"+width : "auto";
+
   return (
-    <div className="rounded-full p-3 mr-2 bg-gray-300">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="lucide lucide-users h-6 w-6 text-capyred"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-      <circle cx="9" cy="7" r="4"></circle>
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-    </svg>
+    <div className={clsx("flex justify-center items-center rounded-full p-3 bg-gray-300", heightValue, widthValue)}>
+      <FontAwesomeIcon icon={faUserAlt} className="text-3xl text-capyred"/>
     </div>
   );
 }

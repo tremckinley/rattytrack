@@ -20,7 +20,7 @@ export default function NavBar() {
   const pathname = usePathname();
  
   return (
-    <nav className="flex shadow-sm mb-2 bg-card text-foreground">
+    <nav className="flex shadow-sm mb-2 bg-card text-foreground w-full">
       <Link href="/" className="ml-8 my-4 items-center justify-center">
         <Image
           src="/burgundy_logo.png"
