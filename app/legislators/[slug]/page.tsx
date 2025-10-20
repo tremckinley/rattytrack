@@ -19,7 +19,7 @@ export default async function LegislatorPage({ params }: Props) {
     if (!legislator) {
         notFound();
     }
-    
+
     return (
         <main className="grid grid-cols-[1fr_2fr] h-screen">
             <section id="profile-card" className="card h-full py-8 flex flex-col items-center bg-sidebar border border-sidebar-border">
@@ -52,7 +52,7 @@ export default async function LegislatorPage({ params }: Props) {
                 </div>
                 <div className="mt-8">
                     <p className="font-bold">Committees</p>
-                    {legislator.committees?.map( (committee) =>( <span className="mx-2">{committee}</span>)) }
+                    {legislator.committees?.map( (committee, idx) =>( <span key={idx} className="mx-2">{committee}</span>)) }
                 </div>
 
                 

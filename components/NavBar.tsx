@@ -34,7 +34,7 @@ export default function NavBar() {
       <div className="mx-8 flex-1 flex items-end">
         <ul className="flex w-full justify-around h-full">
           {navLinks.map((link) => {
-            const isActive = pathname === link.href;
+            const isActive = pathname.split("/")[1] === link.href.split("/")[1];
             return (
               <li className="hover:bg-gray-200 self-end pt-4 px-4" key={link.name}>
                 <Link
