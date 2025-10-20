@@ -1,7 +1,7 @@
 import LegislatorCard from "./legislatorCard/legislatorCard";
 import { getLegislators } from "@/lib/data/legislator_card";
 import SearchableLegislators from "./searchableLegislators";
-import Legislator from "@/types/Legislator";
+import { Legislator }from "@/types/Legislator";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faQuestion, faSpinner, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 export default async function Legislators() {

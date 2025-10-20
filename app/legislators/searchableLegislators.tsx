@@ -1,6 +1,6 @@
 "use client"
 
-import Legislator from "@/types/Legislator";
+import { Legislator } from "@/types/Legislator";
 import { useState } from "react";
 import LegislatorCard from "./legislatorCard/legislatorCard";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ interface SearchableLegislatorsProps {
 }
 
 function isIncluded(value: string, context: Legislator) {
-if (value.length <= 2 || (value.length > 2 && (
+if (value.length < 2 || (value.length >= 2 && (
     context.display_name?.toLowerCase().split(/[\s-]+/).some(word => word.startsWith(value.toLowerCase()))
     || context.first_name?.toLowerCase().split(/[\s-]+/).some(word => word.startsWith(value.toLowerCase()))
     || context.last_name?.toLowerCase().split(/[\s-]+/).some(word => word.startsWith(value.toLowerCase()))
