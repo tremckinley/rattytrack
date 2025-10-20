@@ -1,8 +1,10 @@
 import { getLegislatorProfile } from "@/lib/data/legislator_profile"
+import { getLegislatorStatements } from "@/lib/data/legislator_statements"
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faComments, faUserPen } from "@fortawesome/free-solid-svg-icons";
 import UserIcon from "@/components/userIcon";
+import StatementCard from "@/components/statementCard";
 import { notFound } from "next/navigation";
 import { Legislator } from "@/types/Legislator";
 
@@ -19,6 +21,8 @@ export default async function LegislatorPage({ params }: Props) {
     if (!legislator) {
         notFound();
     }
+
+    const statements = await getLegislatorStatements(legislator.id);
 
     return (
         <main className="grid grid-cols-[1fr_2fr] h-screen">
@@ -59,6 +63,9 @@ export default async function LegislatorPage({ params }: Props) {
 
             </section>
 
+            <section id="statements-section" className="h-full overflow-hidden">
+                <StatementCard statements={statements} />
+            </section>
 
         </main>
     );
