@@ -12,7 +12,7 @@ export type Stat = {
   votes_yes: number;
   created_at: string; // ISO timestamp
   period_end: string; // ISO date (YYYY-MM-DD)
-  top_issues: TopIssue[] | null;
+  top_issues: string[] | null;
   votes_cast: number;
   period_type: 'all_time' | 'year' | 'session' | string;
   motions_made: number;

@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { Legislator } from "@/types/Legislator";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as regIcons from "@fortawesome/free-regular-svg-icons";
 import { faClockFour, faFileAlt } from "@fortawesome/free-regular-svg-icons"
 import UserIcon from "@/components/userIcon";
 import Link from "next/link";

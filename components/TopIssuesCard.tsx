@@ -1,8 +1,8 @@
-import { TopIssue } from "@/types/Legislator";
 import { Progress } from "@/components/ui/progress";
+import { getIssueById } from "@/lib/data/issues";
 
 type TopIssuesCardProps = {
-  topIssues: TopIssue[];
+  topIssues: string[];
 };
 
 export default function TopIssuesCard({ topIssues }: TopIssuesCardProps) {
@@ -15,7 +15,7 @@ export default function TopIssuesCard({ topIssues }: TopIssuesCardProps) {
     );
   }
 
-  const maxScore = Math.max(...topIssues.map(issue => issue.score || 0));
+  //const maxScore = Math.max(...topIssues.map(issue => issue.score || 0));
 
   const formatIssueName = (name: string) => {
     return name
@@ -29,20 +29,14 @@ export default function TopIssuesCard({ topIssues }: TopIssuesCardProps) {
       <h2 className="text-lg font-bold mb-6">Top Issue Areas</h2>
       <div className="space-y-5">
         {topIssues.map((issue, index) => {
-          const score = issue.score || 0;
-          const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
-          
           return (
             <div key={index} className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-foreground">
-                  {formatIssueName(issue.name)}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {score} {score === 1 ? 'mention' : 'mentions'}
-                </span>
+                  {getIssueById(issue)}
+                </span>            
               </div>
-              <Progress value={percentage} className="h-2" />
+              {/*<Progress value={percentage} className="h-2" />*/}
             </div>
           );
         })}

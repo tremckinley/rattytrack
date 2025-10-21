@@ -1,5 +1,5 @@
-import { getLegislatorProfile } from "@/lib/data/legislator_profile"
-import { getLegislatorStatements } from "@/lib/data/legislator_statements"
+import { getLegislatorProfile } from "@/lib/data/legislators/legislator_profile"
+import { getLegislatorStatements } from "@/lib/data/legislators/legislator_statements"
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faComments, faUserPen } from "@fortawesome/free-solid-svg-icons";
