@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faComments, faUserPen } from "@fortawesome/free-solid-svg-icons";
 import UserIcon from "@/components/userIcon";
 import StatementCard from "@/components/statementCard";
+import TopIssuesCard from "@/components/TopIssuesCard";
 import { notFound } from "next/navigation";
 import { Legislator } from "@/types/Legislator";
 
@@ -23,6 +24,7 @@ export default async function LegislatorPage({ params }: Props) {
     }
 
     const statements = await getLegislatorStatements(legislator.id);
+    const topIssues = legislator.stats?.[0]?.top_issues || [];
 
     return (
         <main className="grid grid-cols-[1fr_2fr] h-screen">
@@ -63,7 +65,8 @@ export default async function LegislatorPage({ params }: Props) {
 
             </section>
 
-            <section id="statements-section">
+            <section id="statements-section" className="overflow-y-auto">
+                <TopIssuesCard topIssues={topIssues} />
                 <StatementCard statements={statements} />
             </section>
 
