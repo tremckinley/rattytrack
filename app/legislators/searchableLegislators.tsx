@@ -34,7 +34,7 @@ export default function SearchableLegislators({ legislators }: SearchableLegisla
     
     return (
         <>
-            <div className="w-lg ">
+            <div className="max-w-90">
                 <Label className="ml-3" htmlFor="legislator_search">Filter profiles</Label>
                 <Input
                     id="legislator_search"

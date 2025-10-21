@@ -31,7 +31,7 @@ export default function StatementCard({ statements }: StatementCardProps) {
   }
 
   return (
-    <div className="card h-full overflow-y-auto">
+    <div className="card overflow-y-auto">
       <h2 className="text-lg font-bold mb-4">Recent Statements</h2>
       <div className="space-y-4">
         {statements.map((statement) => (

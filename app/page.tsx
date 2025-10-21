@@ -6,7 +6,7 @@ import * as solidIcons from "@fortawesome/free-solid-svg-icons";
 
 export default function Dashboard() {
     return (
-        <div className="">
+        <div className="max-w-screen">
             <section className="flex flex-wrap justify-center">
                 <TotalCard title="Active Streams" total={99} subtotal="420 active now" icon={solidIcons.faPlay} />
                 <TotalCard title="Legislators Tracked" total={14} subtotal="3 active today" icon={solidIcons.faUsers} />

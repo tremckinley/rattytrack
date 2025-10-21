@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHome } from "@fortawesome/free-solid-svg-icons";
 
 
 const navLinks: { name: string; href: string }[] = [
@@ -21,16 +23,19 @@ export default function NavBar() {
  
   return (
     <nav className="flex shadow-sm mb-2 bg-card text-foreground w-full">
+      
       <Link href="/" className="ml-8 my-4 items-center justify-center">
         <Image
           src="/burgundy_logo.png"
           alt="capytrack logo"
           width={100}
           height={50}
+          className="hidden md:inline-block"
           priority
         />
-        <span className="font-extrabold">CapyTrackAI</span>
+        <span className="font-extrabold hidden md:block">CapyTrackAI</span>
       </Link>
+      <Link href="/" className="md:hidden inline-block mt-4 text-capyred"><FontAwesomeIcon icon={faHome} /></Link>
       <div className="mx-8 flex-1 flex items-end">
         <ul className="flex w-full justify-around h-full">
           {navLinks.map((link) => {
