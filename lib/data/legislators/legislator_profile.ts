@@ -2,7 +2,7 @@
 
 //import Legislator from '@/types/Legislator';
 import { Legislator } from '@/types/Legislator';
-import { supabase } from '../utils/supabase';
+import { supabase } from '../../utils/supabase';
 
 export async function getLegislatorProfile(id: string): Promise<Legislator | null> {
   try {

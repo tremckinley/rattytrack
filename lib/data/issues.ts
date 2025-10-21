@@ -1,6 +1,6 @@
 import { supabase } from '../utils/supabase';
 
-export async function getIssuesbyId(id: string) {
+export async function getIssueById(id: string): Promise<string | null> {
       const { data, error } = await supabase
       .from('issues')
       .select('*')
@@ -10,6 +10,6 @@ export async function getIssuesbyId(id: string) {
       console.error('Error fetching issue:', error);
       return null;
   }
-  return data || null;;
+  return data.name || null;;
 }
   

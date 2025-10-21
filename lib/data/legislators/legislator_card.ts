@@ -1,7 +1,7 @@
 // lib/data/legislator_card.ts info for legislator cards
 
 //import Legislator from '@/types/Legislator';
-import { supabase } from '../utils/supabase';
+import { supabase } from '../../utils/supabase';
 
 export async function getLegislators(): Promise<any[]> {
   try {

@@ -29,14 +29,13 @@ export default function TopIssuesCard({ topIssues }: TopIssuesCardProps) {
       <h2 className="text-lg font-bold mb-6">Top Issue Areas</h2>
       <div className="space-y-5">
         {topIssues.map((issue, index) => {
+          const issueName = formatIssueName(issue);
+          const score = 100; // Replace with actual score if available
           return (
-            <div key={index} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-foreground">
-                  {getIssueById(issue)}
-                </span>            
-              </div>
-              {/*<Progress value={percentage} className="h-2" />*/}
+            <div key={index} className="flex items-center justify-between">
+              <span className="text-sm font-medium">{issueName}</span>
+              <span className="text-sm font-medium">{score}%</span>
+              <Progress value={score} className="w-full ml-4" />
             </div>
           );
         })}
