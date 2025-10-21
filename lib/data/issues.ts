@@ -1,15 +1,20 @@
 import { supabase } from '../utils/supabase';
 
-export async function getIssueById(id: string): Promise<string | null> {
+
+export async function getIssueIds(): Promise<Map<string, string> | null> {
       const { data, error } = await supabase
       .from('issues')
-      .select('*')
-      .eq('id', id)
-      .single()
+      .select('id, name')
+
   if (error) {
-      console.error('Error fetching issue:', error);
+      console.error('Error fetching issue IDs:', error);
       return null;
   }
-  return data.name || null;;
+
+  const issueIds = new Map<string, string>();
+  data?.forEach((issue) => {
+      issueIds.set(issue.id, issue.name);
+  });
+  return issueIds.size > 0 ? issueIds : null;
 }
   

@@ -1,11 +1,18 @@
 import { Progress } from "@/components/ui/progress";
-import { getIssueById } from "@/lib/data/issues";
+import { getIssueIds } from "@/lib/data/issues";
 
 type TopIssuesCardProps = {
   topIssues: string[];
 };
 
-export default function TopIssuesCard({ topIssues }: TopIssuesCardProps) {
+const formatIssueName = (name: string) => {
+  return name
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+export default async function TopIssuesCard({ topIssues }: TopIssuesCardProps) {
   if (!topIssues || topIssues.length === 0) {
     return (
       <div className="card">
@@ -15,27 +22,25 @@ export default function TopIssuesCard({ topIssues }: TopIssuesCardProps) {
     );
   }
 
-  //const maxScore = Math.max(...topIssues.map(issue => issue.score || 0));
-
-  const formatIssueName = (name: string) => {
-    return name
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
+  const issueIdsMap = await getIssueIds();
+  const issueNames: Record<string, string> = {};
+  
+  if (issueIdsMap) {
+    issueIdsMap.forEach((name, id) => {
+      issueNames[id] = name;
+    });
+  }
   return (
     <div className="card">
       <h2 className="text-lg font-bold mb-6">Top Issue Areas</h2>
       <div className="space-y-5">
-        {topIssues.map((issue, index) => {
-          const issueName = formatIssueName(issue);
-          const score = 100; // Replace with actual score if available
+        {topIssues.map((issue, idx) => {
+          const issueName = issueNames[issue] || issue;
           return (
-            <div key={index} className="flex items-center justify-between">
-              <span className="text-sm font-medium">{issueName}</span>
-              <span className="text-sm font-medium">{score}%</span>
-              <Progress value={score} className="w-full ml-4" />
+            <div key={idx} className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">
+                {formatIssueName(issueName)}
+              </span>
             </div>
           );
         })}

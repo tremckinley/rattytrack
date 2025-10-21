@@ -1,4 +1,4 @@
-import { StatementWithIssue } from "@/lib/data/legislator_statements";
+import { StatementWithIssue } from "@/lib/data/legislators/legislator_statements";
 
 type StatementCardProps = {
   statements: StatementWithIssue[];
