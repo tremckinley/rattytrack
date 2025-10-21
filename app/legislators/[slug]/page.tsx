@@ -63,7 +63,7 @@ export default async function LegislatorPage({ params }: Props) {
 
             </section>
 
-            <section id="statements-section" className="h-full overflow-hidden">
+            <section id="statements-section">
                 <StatementCard statements={statements} />
             </section>
 

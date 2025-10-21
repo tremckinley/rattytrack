@@ -52,7 +52,7 @@ export default function StatementCard({ statements }: StatementCardProps) {
               <span className="font-semibold text-gray-700">{statement.meeting_title}</span>
             </div>
 
-            <p className="text-sm text-foreground mb-2 line-clamp-3">
+            <p className="text-sm text-foreground mb-2 line-clamp-3 hover:line-clamp-none active:line-clamp-none">
               {statement.text}
             </p>
 

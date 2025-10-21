@@ -49,13 +49,17 @@ export default function LegislatorCard(params: Legislator) {
         <div className="my-2">
           <span>Committees</span>
           <ul className="flex">
-            {params.committees?.map((committee, idx) => {
-              return (
-                <li key={idx} className="border px-1 mr-1 rounded-full">
-                  {committee}
-                </li>
-              );
-            })}
+            {params.committees?.length ? (
+              params.committees.map((committee, idx) => {
+                return (
+                  <li key={idx} className="border px-1 mr-1 rounded-full">
+                    {committee}
+                  </li>
+                );
+              })
+            ) : (
+              <p>-</p>
+            )}
           </ul>
           
         </div>
