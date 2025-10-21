@@ -1,5 +1,6 @@
 import { getLegislatorProfile } from "@/lib/data/legislators/legislator_profile"
 import { getLegislatorStatements } from "@/lib/data/legislators/legislator_statements"
+import { getLegislatorIssueMetricsDirect } from "@/lib/data/legislator_issue_metrics"
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faComments, faUserPen } from "@fortawesome/free-solid-svg-icons";
@@ -24,7 +25,27 @@ export default async function LegislatorPage({ params }: Props) {
     }
 
     const statements = await getLegislatorStatements(legislator.id);
-    const topIssues = legislator.stats?.[0]?.top_issues || [];
+    
+    // Try to get sentiment-enhanced issue metrics (requires schema improvements to be applied)
+    let issueMetrics = await getLegislatorIssueMetricsDirect(legislator.id, 5);
+    
+    // Fallback to legacy top_issues JSONB if new schema not applied yet
+    if (issueMetrics.length === 0 && legislator.stats?.[0]?.top_issues) {
+      const topIssues = legislator.stats[0].top_issues;
+      // Convert legacy format to new format (without sentiment data)
+      if (Array.isArray(topIssues) && topIssues.length > 0) {
+        issueMetrics = topIssues.slice(0, 5).map((issueId: string) => ({
+          issue_id: issueId,
+          issue_name: issueId, // Will be formatted by component
+          total_mentions: 0,
+          positive_mentions: 0,
+          negative_mentions: 0,
+          neutral_mentions: 0,
+          average_sentiment_score: 0,
+          total_speaking_time_seconds: 0,
+        }));
+      }
+    }
 
     return (
         <main className="grid grid-cols-[1fr_2fr] h-screen">
@@ -66,7 +87,7 @@ export default async function LegislatorPage({ params }: Props) {
             </section>
 
             <section id="statements-section" className="overflow-y-auto">
-                <TopIssuesCard topIssues={topIssues} />
+                <TopIssuesCard issueMetrics={issueMetrics} />
                 <StatementCard statements={statements} />
             </section>
 

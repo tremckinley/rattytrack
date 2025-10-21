@@ -6,6 +6,17 @@ export type TopIssue = {
   [key: string]: any;
 };
 
+export type LegislatorIssueMetric = {
+  issue_id: string;
+  issue_name: string;
+  total_mentions: number;
+  positive_mentions: number;
+  negative_mentions: number;
+  neutral_mentions: number;
+  average_sentiment_score: number;
+  total_speaking_time_seconds: number;
+};
+
 export type Stat = {
   id: string;
   votes_no: number;
