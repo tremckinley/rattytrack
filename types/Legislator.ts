@@ -6,13 +6,24 @@ export type TopIssue = {
   [key: string]: any;
 };
 
+export type LegislatorIssueMetric = {
+  issue_id: string;
+  issue_name: string;
+  total_mentions: number;
+  positive_mentions: number;
+  negative_mentions: number;
+  neutral_mentions: number;
+  average_sentiment_score: number;
+  total_speaking_time_seconds: number;
+};
+
 export type Stat = {
   id: string;
   votes_no: number;
   votes_yes: number;
   created_at: string; // ISO timestamp
   period_end: string; // ISO date (YYYY-MM-DD)
-  top_issues: TopIssue[] | null;
+  top_issues: string[] | null;
   votes_cast: number;
   period_type: 'all_time' | 'year' | 'session' | string;
   motions_made: number;

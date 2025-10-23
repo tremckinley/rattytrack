@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { Legislator } from "@/types/Legislator";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as regIcons from "@fortawesome/free-regular-svg-icons";
 import { faClockFour, faFileAlt } from "@fortawesome/free-regular-svg-icons"
 import UserIcon from "@/components/userIcon";
 import Link from "next/link";
@@ -49,13 +48,17 @@ export default function LegislatorCard(params: Legislator) {
         <div className="my-2">
           <span>Committees</span>
           <ul className="flex">
-            {params.committees?.map((committee, idx) => {
-              return (
-                <li key={idx} className="border px-1 mr-1 rounded-full">
-                  {committee}
-                </li>
-              );
-            })}
+            {params.committees?.length ? (
+              params.committees.map((committee, idx) => {
+                return (
+                  <li key={idx} className="border px-1 mr-1 rounded-full">
+                    {committee}
+                  </li>
+                );
+              })
+            ) : (
+              <p>-</p>
+            )}
           </ul>
           
         </div>

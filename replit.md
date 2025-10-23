@@ -16,8 +16,12 @@ Preferred communication style: Simple, everyday language.
 
 ## UI Component Strategy
 - **shadcn/ui** - Accessible component library built on Radix UI primitives
+  - Progress component for visualizing data (installed 2025-10-21)
 - **FontAwesome** - Icon library for consistent visual elements
-- **Custom components** in `/components` for reusable UI elements (NavBar, UserIcon, TotalCard, etc.)
+- **Custom components** in `/components` for reusable UI elements:
+  - NavBar, UserIcon, TotalCard - Global navigation and UI elements
+  - StatementCard - Displays legislator statements chronologically with meeting info and issue tags
+  - TopIssuesCard - Shows legislator's top issue areas with progress bars indicating relative mention frequency
 - Client-side interactivity separated from server components (e.g., SearchableLegislators)
 
 ## Styling Architecture
@@ -34,6 +38,7 @@ Preferred communication style: Simple, everyday language.
   - `legislator.ts` - Individual legislator details
   - `legislator_card.ts` - List view data
   - `legislator_profile.ts` - Full profile with statistics
+  - `legislator_statements.ts` - Legislator statements with issues from transcription segments
 - Supabase client configured in `lib/utils/supabase.ts` using environment variables
 
 ## Database Design Principles
@@ -87,10 +92,13 @@ Preferred communication style: Simple, everyday language.
   - Configured for Row Level Security (RLS) policies
 
 ## UI Libraries
-- **Radix UI** (`@radix-ui/react-label`) - Unstyled, accessible UI primitives
+- **Radix UI** - Unstyled, accessible UI primitives
+  - `@radix-ui/react-label` - Label component
+  - `@radix-ui/react-progress` - Progress/loading bar component
 - **shadcn/ui** - Pre-built accessible components with Radix UI foundation
   - Configuration in `components.json` with "new-york" style
   - Components stored in `@/components/ui`
+  - Installed components: Label, Input, Progress
 - **FontAwesome** (multiple packages) - Comprehensive icon library
   - Core package with React bindings
   - Solid, regular, and brand icon sets

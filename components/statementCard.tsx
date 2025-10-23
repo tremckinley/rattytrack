@@ -1,4 +1,4 @@
-import { StatementWithIssue } from "@/lib/data/legislator_statements";
+import { StatementWithIssue } from "@/lib/data/legislators/legislator_statements";
 
 type StatementCardProps = {
   statements: StatementWithIssue[];
@@ -31,7 +31,7 @@ export default function StatementCard({ statements }: StatementCardProps) {
   }
 
   return (
-    <div className="card h-full overflow-y-auto">
+    <div className="card overflow-y-auto">
       <h2 className="text-lg font-bold mb-4">Recent Statements</h2>
       <div className="space-y-4">
         {statements.map((statement) => (
@@ -52,7 +52,7 @@ export default function StatementCard({ statements }: StatementCardProps) {
               <span className="font-semibold text-gray-700">{statement.meeting_title}</span>
             </div>
 
-            <p className="text-sm text-foreground mb-2 line-clamp-3">
+            <p className="text-sm text-foreground mb-2 line-clamp-3 hover:line-clamp-none active:line-clamp-none">
               {statement.text}
             </p>
 

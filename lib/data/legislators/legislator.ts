@@ -1,7 +1,7 @@
 // lib/data/legislator.ts infor for individual legislator profiles
 
 import { Legislator } from '@/types/Legislator';
-import { supabase } from '../utils/supabase';
+import { supabase } from '../../utils/supabase';
 
 // Import a singlar legislator by ID from the Supabase 'legislators' table
 export async function getLegislator(id: string): Promise<Legislator | null> {

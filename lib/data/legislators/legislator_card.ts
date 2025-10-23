@@ -1,31 +1,26 @@
-// lib/data/legislator_profile.ts info for legislator profile
+// lib/data/legislator_card.ts info for legislator cards
 
 //import Legislator from '@/types/Legislator';
-import { Legislator } from '@/types/Legislator';
-import { supabase } from '../utils/supabase';
+import { supabase } from '../../utils/supabase';
 
-export async function getLegislatorProfile(id: string): Promise<Legislator | null> {
+export async function getLegislators(): Promise<any[]> {
   try {
     // This is a server-side call, safe from exposing credentials
     const { data, error } = await supabase
-    .from('legislators')
-    .select(`
-        *,
-        stats:legislator_statistics(*) 
-    `)
-    .eq('id', id)
-    .single();
+      .from('legislator_cards')
+      .select('*')
+      .order('display_name', { ascending: true });
 
     if (error) {
       console.error('Error fetching legislators:', error);
       // Return empty array to prevent UI crashes
-      return null;
+      return [];
     }
 
     return data || [];
   } catch (error) {
     console.error('Unexpected error fetching legislators:', error);
     // Return empty array to prevent UI crashes
-    return null;
+    return [];
   }
 }
