@@ -2,8 +2,9 @@ import { getLegislatorProfile } from "@/lib/data/legislators/legislator_profile"
 import { getLegislatorStatements } from "@/lib/data/legislators/legislator_statements"
 import { getLegislatorIssueMetricsDirect } from "@/lib/data/legislator_issue_metrics"
 import Image from "next/image";
+import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faComments, faUserPen } from "@fortawesome/free-solid-svg-icons";
+import { faComments, faUserPen, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import UserIcon from "@/components/userIcon";
 import StatementCard from "@/components/statementCard";
 import TopIssuesCard from "@/components/TopIssuesCard";
@@ -48,10 +49,14 @@ export default async function LegislatorPage({ params }: Props) {
     }
 
     return (
-        <main className="grid grid-cols-[1fr_2fr] h-screen">
-            <section id="profile-card" className="card h-full py-8 flex flex-col items-center bg-sidebar border border-sidebar-border">
+        <main className="md:grid md:grid-cols-[1fr_2fr] h-screen">
+            <div>
+            <Link href="./" className="ml-4">
+                <FontAwesomeIcon icon={faArrowLeft} />Back</Link>
+            <section id="profile-card" className="card md:h-full py-8 flex flex-col items-center bg-sidebar border border-sidebar-border">
+                
                 {/*Profile header*/}
-                <div className="flex flex-col items-center mb-4">
+                <div className="flex flex-col text-center md:items-center md:mb-4">
                     {false ? (
                         <Image
                             src={"hi"}
@@ -67,13 +72,15 @@ export default async function LegislatorPage({ params }: Props) {
                     <p className="text-xs text-gray-600">{legislator.district}</p>
                 </div>
 
-                <div id="legislator-stats" className="w-3/4 text-center">
-                    <div id="tracked-comments" className="bg-sidebar-foreground/10 background rounded-lg p-3 m-1 border border-accent-foreground/30">
-                        <p ><FontAwesomeIcon icon={faComments} className="mr-2" />Tracked Statements</p>
+                <div id="legislator-stats" className="flex w-1/4 justify-center md:inline-block md:w-3/4 text-center">
+                    <div id="tracked-comments" 
+                        className="bg-sidebar-foreground/10 background rounded-lg p-3 m-1 border border-accent-foreground/30"
+                    >
+                        <FontAwesomeIcon icon={faComments} className="mr-2" /><br className="md:hidden"/><span>Tracked Statements</span>
                         <p className="text-xl font-bold">{legislator.stats?.[0].total_segments || 0 }</p>
                     </div>
                     <div id="bills-sponsored" className="bg-sidebar-foreground/10 background rounded-lg p-3 m-1 border border-accent-foreground/30">
-                        <p><FontAwesomeIcon icon={faUserPen} className="mr-2" />Bills Sponsored</p>
+                        <FontAwesomeIcon icon={faUserPen} className="mr-2 w-full"/><br className="md:hidden"/><span>Bills Sponsored</span>
                         <p className="text-xl font-bold">{ legislator.stats?.[0].bills_sponsored || 0 }</p>
                     </div>
                 </div>
@@ -85,8 +92,8 @@ export default async function LegislatorPage({ params }: Props) {
                 
 
             </section>
-
-            <section id="statements-section" className="overflow-y-auto">
+            </div>
+            <section id="statements-section" className="">
                 <TopIssuesCard issueMetrics={issueMetrics} />
                 <StatementCard statements={statements} />
             </section>
