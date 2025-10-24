@@ -22,6 +22,8 @@ interface TranscriptionResponse {
 
 export default function VideoTranscriber() {
   const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
   const [transcription, setTranscription] = useState<TranscriptionResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +90,8 @@ export default function VideoTranscriber() {
 
     const formData = new FormData();
     formData.append('audio', file);
+    if (title) formData.append('title', title);
+    if (description) formData.append('description', description);
 
     try {
       const response = await fetch('/api/transcribe', {
@@ -101,6 +105,12 @@ export default function VideoTranscriber() {
         setError(data.error || 'Transcription failed');
       } else {
         setTranscription(data);
+        // Reset form after successful transcription
+        setFile(null);
+        setTitle('');
+        setDescription('');
+        // Refresh page to show new transcript in saved list
+        window.location.reload();
       }
     } catch (err) {
       setError('Failed to connect to transcription service');
@@ -111,7 +121,8 @@ export default function VideoTranscriber() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="space-y-6">
+      <h2 className="text-2xl font-semibold">Upload New Video</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div
           className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
@@ -156,7 +167,38 @@ export default function VideoTranscriber() {
         </div>
 
         {file && (
-          <button
+          <>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="meeting-title" className="block text-sm font-medium mb-1">
+                  Meeting Title (Optional)
+                </label>
+                <input
+                  id="meeting-title"
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g., City Council Meeting - Oct 2025"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="meeting-description" className="block text-sm font-medium mb-1">
+                  Description (Optional)
+                </label>
+                <textarea
+                  id="meeting-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Add notes or context about this meeting..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                />
+              </div>
+            </div>
+
+            <button
             type="submit"
             disabled={loading}
             className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -173,8 +215,29 @@ export default function VideoTranscriber() {
               </>
             )}
           </button>
+          </>
         )}
       </form>
+      
+      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+        <h3 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">
+          📌 Large File Support
+        </h3>
+        <p className="text-sm text-foreground/80">
+          <strong>Current limit:</strong> 25MB per file (OpenAI Whisper API restriction)
+        </p>
+        <p className="text-sm text-foreground/80 mt-2">
+          <strong>For city council meetings (typically 2+ hours):</strong>
+        </p>
+        <ul className="text-sm text-foreground/80 mt-1 ml-4 list-disc space-y-1">
+          <li>Compress video before uploading (use tools like HandBrake)</li>
+          <li>Extract audio only (smaller file size)</li>
+          <li>Split into segments if needed</li>
+        </ul>
+        <p className="text-xs text-muted-foreground mt-2 italic">
+          Automatic large file segmentation coming soon!
+        </p>
+      </div>
 
       {error && (
         <div className="mt-6 p-4 bg-destructive/10 border border-destructive rounded-lg flex items-start gap-3">
