@@ -41,15 +41,13 @@ export default function NavBar() {
           {navLinks.map((link) => {
             const isActive = pathname.split("/")[1] === link.href.split("/")[1];
             return (
-              <Link href={link.href}>
-                <li
-                  className={
-                    isActive
-                      ? "hover:bg-gray-200 self-end pt-4 px-4 pb-1 active-nav-link"
-                      : "hover:bg-gray-200 self-end pt-4 px-4 pb-1"
-                  }
-                  key={link.name}
-                >
+              <Link href={link.href}
+                className={
+                  isActive
+                    ? "hover:bg-gray-200 self-end pt-4 px-4 pb-1 active-nav-link"
+                    : "hover:bg-gray-200 self-end pt-4 px-4 pb-1"
+                }>
+                <li key={link.name}>
                   {link.name}
                 </li>
               </Link>
