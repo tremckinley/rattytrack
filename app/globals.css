@@ -104,8 +104,8 @@
     @apply rounded-lg border border-foreground bg-card shadow-sm text-foreground text-sm p-4 m-4;
   }
 
-  .active-link {
-    @apply underline text-capyred font-bold underline-offset-6 decoration-2;
+  .active-nav-link {
+    @apply border-b-2 border-capyred text-capyred font-bold;
   }
 
   .link-button {
