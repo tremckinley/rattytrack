@@ -96,10 +96,11 @@ Preferred communication style: Simple, everyday language.
 ## YouTube Video Transcription (2025-11-01)
 - **Complete feature** for transcribing YouTube videos using OpenAI Whisper
 - **Database**: Extended `uploaded_meetings` table with `youtube_video_id` column (requires schema migration)
-- **Audio Download**: Uses `ytdl-core` library to download audio from YouTube
-- **Audio Processing**: Compresses audio to 16kHz mono at 64k bitrate for optimal Whisper performance
+- **Audio Recording**: Uses `puppeteer-stream` to record audio directly from YouTube playback (no download required)
+- **Why Puppeteer**: YouTube has blocked yt-dlp and similar downloaders; recording browser audio is more reliable
+- **Audio Processing**: Compresses WebM to MP3 at 16kHz mono, 64k bitrate for optimal Whisper performance
 - **Chunking**: Automatically splits videos >25MB into 10-minute chunks to fit OpenAI limits
-- **Whisper Integration**: Transcribes audio with segment-level timestamps
+- **Whisper Integration**: Transcribes audio with segment-level timestamps and speaker diarization
 - **Shared Transcriptions**: Once transcribed, available to all users (no duplication)
 - **Warning Modal**: Shows cost warning for videos <1 hour before transcription
 - **Button States**: "Transcribe" for new videos, "Get Transcription" for already-transcribed videos
@@ -107,7 +108,7 @@ Preferred communication style: Simple, everyday language.
 - **Transcript Page**: `/transcripts/[videoId]` displays video embed and timestamped transcript
 - **Cleanup**: Automatically removes temporary audio files after transcription
 - **Error Handling**: Comprehensive error handling with status tracking in database
-- **Dependencies**: puppeteer, ytdl-core, fluent-ffmpeg, ffmpeg system package
+- **Dependencies**: puppeteer, puppeteer-stream, fluent-ffmpeg, ffmpeg system package
 
 **Setup Required**: User must apply `claude_db/meeting_uploads_schema_youtube.sql` to Supabase database
 **Instructions**: See `SETUP_INSTRUCTIONS_YOUTUBE.md` for complete setup guide

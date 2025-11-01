@@ -17,10 +17,12 @@ export interface AudioChunk {
 
 /**
  * Compress audio file to reduce size
+ * Converts WebM to MP3 if needed
  * Returns path to compressed file
  */
 export async function compressAudio(inputPath: string): Promise<string> {
-  const outputPath = inputPath.replace('.mp3', '_compressed.mp3');
+  const ext = path.extname(inputPath);
+  const outputPath = inputPath.replace(ext, '_compressed.mp3');
   
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
