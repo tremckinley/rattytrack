@@ -39,11 +39,20 @@ Make sure these secrets are set:
 1. User clicks "Transcribe" on a YouTube video
 2. System checks if video is already transcribed in database
 3. If not, shows warning modal for videos <1 hour
-4. Downloads audio using Puppeteer (headless browser)
-5. Compresses/chunks audio to fit OpenAI's 25MB limit
-6. Transcribes using Whisper API
+4. **Records audio using Puppeteer browser automation** (opens YouTube video in browser, captures audio stream)
+   - Uses `puppeteer-stream` library to record audio directly from playback
+   - Runs in headful mode (browser window opens during recording)
+   - Monitors video playback to stop when video ends (supports 4+ hour videos)
+5. Compresses WebM audio to MP3 and chunks if needed to fit OpenAI's 25MB limit
+6. Transcribes using Whisper API with speaker diarization
 7. Saves transcript with timestamps to database
 8. All users can then view the transcript (shared resource)
+
+## Important Notes
+
+- **Browser Window**: During transcription, a browser window will open to play the YouTube video. This is required for audio capture and will close automatically when done.
+- **Long Videos**: The system supports videos up to 4 hours long. Recording stops automatically when video playback ends.
+- **Audio Quality**: Recorded at 128kbps, then compressed to 64kbps mono at 16kHz for Whisper (optimal for speech recognition).
 
 ## Admin Re-transcription
 
