@@ -89,10 +89,28 @@ Preferred communication style: Simple, everyday language.
 - Added YouTube Data API v3 integration using direct API key (not Replit connector per user preference)
 - Created `/youtube` page to display latest 5 Memphis City Council videos
 - Fetches videos using channel uploads playlist (efficient 1 quota unit vs 100 for search)
-- Added `YouTubeVideoCard` component with "Watch on YouTube" and "Transcribe" buttons
-- Transcribe functionality is placeholder for future implementation
+- Fetches video durations and parses ISO 8601 format to seconds
+- Checks transcription status for all videos and displays appropriate button state
 - API key stored as `YOUTUBE_API_KEY` secret
-- Note: User declined Replit YouTube connector, using direct API approach instead
+
+## YouTube Video Transcription (2025-11-01)
+- **Complete feature** for transcribing YouTube videos using OpenAI Whisper
+- **Database**: Extended `uploaded_meetings` table with `youtube_video_id` column (requires schema migration)
+- **Audio Download**: Uses `ytdl-core` library to download audio from YouTube
+- **Audio Processing**: Compresses audio to 16kHz mono at 64k bitrate for optimal Whisper performance
+- **Chunking**: Automatically splits videos >25MB into 10-minute chunks to fit OpenAI limits
+- **Whisper Integration**: Transcribes audio with segment-level timestamps
+- **Shared Transcriptions**: Once transcribed, available to all users (no duplication)
+- **Warning Modal**: Shows cost warning for videos <1 hour before transcription
+- **Button States**: "Transcribe" for new videos, "Get Transcription" for already-transcribed videos
+- **Admin System**: Simple email-based admin authentication for re-transcription (ADMIN_EMAILS env var)
+- **Transcript Page**: `/transcripts/[videoId]` displays video embed and timestamped transcript
+- **Cleanup**: Automatically removes temporary audio files after transcription
+- **Error Handling**: Comprehensive error handling with status tracking in database
+- **Dependencies**: puppeteer, ytdl-core, fluent-ffmpeg, ffmpeg system package
+
+**Setup Required**: User must apply `claude_db/meeting_uploads_schema_youtube.sql` to Supabase database
+**Instructions**: See `SETUP_INSTRUCTIONS_YOUTUBE.md` for complete setup guide
 
 # External Dependencies
 

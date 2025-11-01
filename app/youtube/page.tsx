@@ -1,14 +1,22 @@
 import { getMemphisCityCouncilVideos } from '@/lib/data/youtube';
+import { checkMultipleTranscriptions } from '@/lib/data/youtube_transcriptions';
 import YouTubeVideoCard from '@/components/YouTubeVideoCard';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faYoutube } from '@fortawesome/free-brands-svg-icons';
 
 export default async function YouTubePage() {
   let videos;
+  let transcriptionStatus: Map<string, boolean> = new Map();
   let error = null;
 
   try {
     videos = await getMemphisCityCouncilVideos(5);
+    
+    // Check which videos have been transcribed
+    if (videos && videos.length > 0) {
+      const videoIds = videos.map(v => v.id);
+      transcriptionStatus = await checkMultipleTranscriptions(videoIds);
+    }
   } catch (err) {
     error = err instanceof Error ? err.message : 'Failed to load videos';
     console.error('Error loading YouTube videos:', err);
@@ -43,7 +51,12 @@ export default async function YouTubePage() {
         {videos && videos.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {videos.map((video) => (
-              <YouTubeVideoCard key={video.id} video={video} />
+              <YouTubeVideoCard 
+                key={video.id} 
+                video={video}
+                isTranscribed={transcriptionStatus.get(video.id) || false}
+                videoDuration={video.duration}
+              />
             ))}
           </div>
         ) : !error && (
@@ -60,8 +73,9 @@ export default async function YouTubePage() {
           <ul className="text-sm text-foreground/80 space-y-2">
             <li>• Shows the latest 5 videos from @MemphisCityCouncil</li>
             <li>• Click "Watch on YouTube" to view the full video</li>
-            <li>• Click "Transcribe" to generate AI transcripts (coming soon)</li>
-            <li>• Videos include committee meetings and regular council sessions</li>
+            <li>• Click "Transcribe" to generate AI-powered transcripts using OpenAI Whisper</li>
+            <li>• Once transcribed, all users can access the transcript</li>
+            <li>• Videos under 1 hour will show a cost warning before transcription</li>
           </ul>
         </div>
       </div>

@@ -4,6 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
+packages = ["ffmpeg"]
 
 [workflows]
 runButton = "Project"
@@ -68,6 +69,10 @@ externalPort = 3001
 [[ports]]
 localPort = 40011
 externalPort = 3003
+
+[[ports]]
+localPort = 42981
+externalPort = 8008
 
 [[ports]]
 localPort = 43259

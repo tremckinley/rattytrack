@@ -1,13 +1,16 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faClosedCaptioning } from '@fortawesome/free-solid-svg-icons';
+import { faPlay } from '@fortawesome/free-solid-svg-icons';
 import { faYoutube } from '@fortawesome/free-brands-svg-icons';
 import type { YouTubeVideo } from '@/lib/data/youtube';
+import YouTubeTranscribeButton from './YouTubeTranscribeButton';
 
 interface YouTubeVideoCardProps {
   video: YouTubeVideo;
+  isTranscribed: boolean;
+  videoDuration: number; // Duration in seconds
 }
 
-export default function YouTubeVideoCard({ video }: YouTubeVideoCardProps) {
+export default function YouTubeVideoCard({ video, isTranscribed, videoDuration }: YouTubeVideoCardProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -64,13 +67,12 @@ export default function YouTubeVideoCard({ video }: YouTubeVideoCardProps) {
             Watch on YouTube
           </a>
           
-          <button
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-            title="Transcribe functionality coming soon"
-          >
-            <FontAwesomeIcon icon={faClosedCaptioning} />
-            Transcribe
-          </button>
+          <YouTubeTranscribeButton
+            videoId={video.id}
+            videoTitle={video.title}
+            durationSeconds={videoDuration}
+            isTranscribed={isTranscribed}
+          />
         </div>
       </div>
     </div>
