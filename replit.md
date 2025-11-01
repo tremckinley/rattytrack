@@ -83,6 +83,17 @@ Preferred communication style: Simple, everyday language.
 - Server-first architecture with client components only where interactive
 - Progressive enhancement approach
 
+# Recent Changes
+
+## YouTube Integration (2025-11-01)
+- Added YouTube Data API v3 integration using direct API key (not Replit connector per user preference)
+- Created `/youtube` page to display latest 5 Memphis City Council videos
+- Fetches videos using channel uploads playlist (efficient 1 quota unit vs 100 for search)
+- Added `YouTubeVideoCard` component with "Watch on YouTube" and "Transcribe" buttons
+- Transcribe functionality is placeholder for future implementation
+- API key stored as `YOUTUBE_API_KEY` secret
+- Note: User declined Replit YouTube connector, using direct API approach instead
+
 # External Dependencies
 
 ## Database & Backend Services
