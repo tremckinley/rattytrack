@@ -89,8 +89,13 @@ export async function downloadYouTubeAudio(videoId: string): Promise<string> {
     const videoDuration = videoInfo.duration;
     const maxRecordingTime = Math.max(videoDuration * 1000 + 60000, 14400000); // Video duration + 1min buffer, max 4 hours
     
+    // Get Chromium path from puppeteer package (ESM import)
+    const { executablePath: getExecutablePath } = await import('puppeteer');
+    const executablePath = getExecutablePath();
+    
     // Launch Puppeteer in headful mode (required for audio capture)
     browser = await launch({
+      executablePath, // CRITICAL: puppeteer-stream uses puppeteer-core, needs explicit path
       headless: false, // CRITICAL: puppeteer-stream requires headful mode for audio
       defaultViewport: {
         width: 1920,

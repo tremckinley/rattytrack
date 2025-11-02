@@ -7,13 +7,13 @@ import { faYoutube } from '@fortawesome/free-brands-svg-icons';
 import { notFound } from 'next/navigation';
 
 interface TranscriptPageProps {
-  params: {
+  params: Promise<{
     videoId: string;
-  };
+  }>;
 }
 
 export default async function TranscriptPage({ params }: TranscriptPageProps) {
-  const { videoId } = params;
+  const { videoId } = await params;
   
   // Fetch transcription
   const transcription = await getYouTubeTranscription(videoId);
@@ -127,7 +127,15 @@ export default async function TranscriptPage({ params }: TranscriptPageProps) {
               Transcription Status: {transcription.transcription_status}
             </h3>
             {transcription.transcription_error && (
-              <p className="text-sm">{transcription.transcription_error}</p>
+              <p className="text-sm mb-3">{transcription.transcription_error}</p>
+            )}
+            {transcription.transcription_status === 'error' && (
+              <a
+                href={`/youtube?retry=${videoId}`}
+                className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              >
+                Retry Transcription
+              </a>
             )}
           </div>
         )}
