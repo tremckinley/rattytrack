@@ -93,23 +93,60 @@ export async function downloadYouTubeAudio(videoId: string): Promise<string> {
     const { executablePath: getExecutablePath } = await import('puppeteer');
     const executablePath = getExecutablePath();
     
-    // Launch Puppeteer in headful mode (required for audio capture)
-    browser = await launch({
-      executablePath, // CRITICAL: puppeteer-stream uses puppeteer-core, needs explicit path
-      headless: false, // CRITICAL: puppeteer-stream requires headful mode for audio
-      defaultViewport: {
-        width: 1920,
-        height: 1080,
-      },
-      args: [
-        '--autoplay-policy=no-user-gesture-required',
-        '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-      ],
-      ignoreDefaultArgs: ['--mute-audio'],
-    });
+    // Try new headless mode first (works without display)
+    let launchError: Error | null = null;
+    try {
+      browser = await launch({
+        executablePath,
+        headless: 'shell' as any, // New headless mode - supports audio
+        defaultViewport: {
+          width: 1920,
+          height: 1080,
+        },
+        args: [
+          '--autoplay-policy=no-user-gesture-required',
+          '--disable-web-security',
+          '--disable-features=IsolateOrigins,site-per-process',
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+        ],
+        ignoreDefaultArgs: ['--mute-audio'],
+      });
+    } catch (error) {
+      launchError = error as Error;
+      console.log('New headless mode failed, trying headful with Xvfb...');
+      
+      // Fallback: Start Xvfb and use headful mode
+      const { spawn } = await import('child_process');
+      const xvfb = spawn('Xvfb', [':99', '-screen', '0', '1920x1080x24', '-ac', '-nolisten', 'tcp']);
+      
+      // Wait for Xvfb to start
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      browser = await launch({
+        executablePath,
+        headless: false,
+        defaultViewport: {
+          width: 1920,
+          height: 1080,
+        },
+        args: [
+          '--autoplay-policy=no-user-gesture-required',
+          '--disable-web-security',
+          '--disable-features=IsolateOrigins,site-per-process',
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+        ],
+        ignoreDefaultArgs: ['--mute-audio'],
+        env: {
+          ...process.env,
+          DISPLAY: ':99',
+        },
+      });
+    }
 
     const page = await browser.newPage();
     

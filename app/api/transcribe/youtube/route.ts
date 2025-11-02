@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin
         .from('uploaded_meetings')
         .update({
-          transcription_status: 'failed',
+          transcription_status: 'error',
           transcription_error: error instanceof Error ? error.message : 'Unknown error',
         })
         .eq('id', meetingId);
