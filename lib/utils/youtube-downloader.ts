@@ -80,6 +80,7 @@ export async function downloadYouTubeAudio(videoId: string): Promise<string> {
   
   let browser;
   let streamInstance;
+  let xvfbProcess: any = null;
   
   try {
     console.log(`Starting audio recording for video: ${videoId}`);
@@ -113,16 +114,37 @@ export async function downloadYouTubeAudio(videoId: string): Promise<string> {
         ],
         ignoreDefaultArgs: ['--mute-audio'],
       });
+      console.log('Browser launched in new headless mode');
     } catch (error) {
       launchError = error as Error;
       console.log('New headless mode failed, trying headful with Xvfb...');
       
       // Fallback: Start Xvfb and use headful mode
       const { spawn } = await import('child_process');
-      const xvfb = spawn('Xvfb', [':99', '-screen', '0', '1920x1080x24', '-ac', '-nolisten', 'tcp']);
       
-      // Wait for Xvfb to start
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Use random display to avoid conflicts
+      const displayNum = Math.floor(Math.random() * 1000) + 100;
+      const display = `:${displayNum}`;
+      
+      xvfbProcess = spawn('Xvfb', [display, '-screen', '0', '1920x1080x24', '-ac', '-nolisten', 'tcp']);
+      
+      // Wait for Xvfb to start and check for errors
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => resolve(), 2000);
+        
+        xvfbProcess.on('error', (err: Error) => {
+          clearTimeout(timeout);
+          reject(new Error(`Xvfb failed to start: ${err.message}`));
+        });
+        
+        xvfbProcess.stderr.on('data', (data: Buffer) => {
+          const msg = data.toString();
+          if (msg.includes('Fatal')) {
+            clearTimeout(timeout);
+            reject(new Error(`Xvfb error: ${msg}`));
+          }
+        });
+      });
       
       browser = await launch({
         executablePath,
@@ -143,9 +165,10 @@ export async function downloadYouTubeAudio(videoId: string): Promise<string> {
         ignoreDefaultArgs: ['--mute-audio'],
         env: {
           ...process.env,
-          DISPLAY: ':99',
+          DISPLAY: display,
         },
       });
+      console.log(`Browser launched in headful mode with Xvfb on ${display}`);
     }
 
     const page = await browser.newPage();
@@ -243,6 +266,16 @@ export async function downloadYouTubeAudio(videoId: string): Promise<string> {
         await browser.close();
       } catch (e) {
         console.error('Error closing browser:', e);
+      }
+    }
+    
+    // Kill Xvfb process if started
+    if (xvfbProcess) {
+      try {
+        xvfbProcess.kill('SIGTERM');
+        console.log('Xvfb process terminated');
+      } catch (e) {
+        console.error('Error killing Xvfb:', e);
       }
     }
     
