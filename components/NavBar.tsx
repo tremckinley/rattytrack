@@ -50,6 +50,7 @@ export default function NavBar() {
                   }
                   key={link.name}
                 >
+
                   {link.name}
                 </li>
               </Link>
