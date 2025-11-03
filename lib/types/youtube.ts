@@ -22,3 +22,5 @@ export interface VideoTranscript {
   segments: TranscriptSegment[];
   language?: string;
 }
+
+export type TranscriptionStatus = 'idle' | 'downloading' | 'transcribing' | 'completed' | 'error';
