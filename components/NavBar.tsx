@@ -3,10 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHome } from "@fortawesome/free-solid-svg-icons";
-import clsx from "clsx";
 
 const navLinks: { name: string; href: string }[] = [
   { name: "Dashboard", href: "/" },
@@ -16,8 +14,6 @@ const navLinks: { name: string; href: string }[] = [
 ];
 
 export default function NavBar() {
-  const [legislatorSearchValue, setLegislatorSearchValue] = useState("");
-
   //Get the current URL pathname
   const pathname = usePathname();
 

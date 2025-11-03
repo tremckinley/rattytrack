@@ -87,13 +87,22 @@ export async function getUploadedMeetingWithSegments(
   }
 }
 
+type TranscriptSearchResult = {
+  uploaded_meeting_id: string;
+  segment_text: string;
+  start_time_seconds: number;
+  end_time_seconds: number;
+  meeting_title: string;
+  uploaded_at: string;
+};
+
 /**
  * Search uploaded meeting transcripts
  */
 export async function searchUploadedTranscripts(
   searchQuery: string,
   limit: number = 20
-): Promise<any[]> {
+): Promise<TranscriptSearchResult[]> {
   try {
     const { data, error } = await supabase.rpc('search_uploaded_transcripts', {
       search_query: searchQuery,

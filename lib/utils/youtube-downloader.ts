@@ -1,7 +1,7 @@
 // YouTube audio recording using puppeteer-stream
 // Critical: Handles browser cleanup and Xvfb process management
 
-import puppeteer, { Browser } from 'puppeteer';
+import puppeteer, { Browser, Page } from 'puppeteer';
 import { getStream } from 'puppeteer-stream';
 import fs from 'fs';
 import { spawn, ChildProcess } from 'child_process';
@@ -104,7 +104,7 @@ async function launchBrowserWithAudio(): Promise<{ browser: Browser; xvfbProcess
 /**
  * Wait for video element to be ready and get duration
  */
-async function waitForVideo(page: any): Promise<number> {
+async function waitForVideo(page: Page): Promise<number> {
   await page.waitForSelector('video', { timeout: 30000 });
   
   // Wait for video to load metadata
@@ -131,7 +131,7 @@ async function waitForVideo(page: any): Promise<number> {
 /**
  * Monitor video playback and stop when ended
  */
-async function monitorVideoEnd(page: any, onProgress?: (seconds: number) => void): Promise<void> {
+async function monitorVideoEnd(page: Page, onProgress?: (seconds: number) => void): Promise<void> {
   return new Promise((resolve) => {
     const checkInterval = setInterval(async () => {
       try {
