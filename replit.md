@@ -83,36 +83,6 @@ Preferred communication style: Simple, everyday language.
 - Server-first architecture with client components only where interactive
 - Progressive enhancement approach
 
-# Recent Changes
-
-## YouTube Integration (2025-11-01)
-- Added YouTube Data API v3 integration using direct API key (not Replit connector per user preference)
-- Created `/youtube` page to display latest 5 Memphis City Council videos
-- Fetches videos using channel uploads playlist (efficient 1 quota unit vs 100 for search)
-- Fetches video durations and parses ISO 8601 format to seconds
-- Checks transcription status for all videos and displays appropriate button state
-- API key stored as `YOUTUBE_API_KEY` secret
-
-## YouTube Video Transcription (2025-11-01)
-- **Complete feature** for transcribing YouTube videos using OpenAI Whisper
-- **Database**: Extended `uploaded_meetings` table with `youtube_video_id` column (requires schema migration)
-- **Audio Recording**: Uses `puppeteer-stream` to record audio directly from YouTube playback (no download required)
-- **Why Puppeteer**: YouTube has blocked yt-dlp and similar downloaders; recording browser audio is more reliable
-- **Audio Processing**: Compresses WebM to MP3 at 16kHz mono, 64k bitrate for optimal Whisper performance
-- **Chunking**: Automatically splits videos >25MB into 10-minute chunks to fit OpenAI limits
-- **Whisper Integration**: Transcribes audio with segment-level timestamps and speaker diarization
-- **Shared Transcriptions**: Once transcribed, available to all users (no duplication)
-- **Warning Modal**: Shows cost warning for videos <1 hour before transcription
-- **Button States**: "Transcribe" for new videos, "Get Transcription" for already-transcribed videos
-- **Admin System**: Simple email-based admin authentication for re-transcription (ADMIN_EMAILS env var)
-- **Transcript Page**: `/transcripts/[videoId]` displays video embed and timestamped transcript
-- **Cleanup**: Automatically removes temporary audio files after transcription
-- **Error Handling**: Comprehensive error handling with status tracking in database
-- **Dependencies**: puppeteer, puppeteer-stream, fluent-ffmpeg, ffmpeg system package
-
-**Setup Required**: User must apply `claude_db/meeting_uploads_schema_youtube.sql` to Supabase database
-**Instructions**: See `SETUP_INSTRUCTIONS_YOUTUBE.md` for complete setup guide
-
 # External Dependencies
 
 ## Database & Backend Services

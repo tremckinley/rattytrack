@@ -2,11 +2,10 @@ export type UploadedMeeting = {
   id: string;
   title: string | null;
   description: string | null;
-  video_filename: string | null; // Nullable for YouTube videos
-  video_size_bytes: number | null; // Nullable for YouTube videos
+  video_filename: string;
+  video_size_bytes: number;
   video_duration_seconds: number | null;
   video_language: string | null;
-  youtube_video_id: string | null; // YouTube video ID (e.g., 'dQw4w9WgXcQ')
   full_transcript: string | null;
   transcription_status: 'pending' | 'processing' | 'completed' | 'failed';
   transcription_error: string | null;
