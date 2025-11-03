@@ -12,9 +12,12 @@ export interface YouTubeVideo {
 }
 
 export interface TranscriptSegment {
+  id: number;
+  video_id: string;
+  start_time: number;
+  end_time: number;
   text: string;
-  start: number;
-  duration: number;
+  created_at: string;
 }
 
 export interface VideoTranscript {
