@@ -115,8 +115,32 @@ Preferred communication style: Simple, everyday language.
 - Network binding to 0.0.0.0 for external access
 - No specific deployment platform lock-in (can deploy to Vercel, Netlify, or custom hosting)
 
+## YouTube Transcription Pipeline
+- **Puppeteer** - Headless browser automation for YouTube audio recording
+  - System dependency: Chromium installed via Nix package manager
+  - Configured via `CHROMIUM_PATH` environment variable (required for deployment)
+  - Falls back to Puppeteer's bundled Chrome if `CHROMIUM_PATH` not set
+  - Location: `/nix/store/.../bin/chromium` (path varies by Nix version)
+- **Puppeteer-stream** - Audio capture from browser sessions
+- **fluent-ffmpeg** - Audio processing and format conversion
+- **OpenAI Whisper API** - Speech-to-text transcription ($0.006/minute)
+  - Requires `OPENAI_API_KEY` environment variable
+- **API Route**: `/api/transcribe/youtube` handles video processing workflow
+  - Dynamic import of youtube-downloader prevents webpack bundling in prerendered pages
+  - Background processing with cleanup of temporary audio files
+
+## Required Environment Variables
+- `DATABASE_URL` - PostgreSQL connection string (auto-configured by Replit)
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (for database writes)
+- `OPENAI_API_KEY` - OpenAI API key for Whisper transcription
+- `CHROMIUM_PATH` - Path to system Chromium executable (deployment only)
+  - Set to: `/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium`
+  - Or run `which chromium` to get current path after Chromium installation
+
 ## Future Integration Points
-- AI/ML services for transcript processing and issue categorization (not yet implemented)
+- AI/ML services for issue categorization (not yet implemented)
 - Video streaming services for live meeting feeds (architecture prepared)
 - Full-text search capabilities (PostgreSQL built-in support available)
 - Vector embeddings for semantic search (PostgreSQL pgvector extension ready)
