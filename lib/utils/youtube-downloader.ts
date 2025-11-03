@@ -2,7 +2,7 @@
 // Critical: Handles browser cleanup and Xvfb process management
 
 import puppeteer, { Browser } from 'puppeteer';
-import { launch, getStream } from 'puppeteer-stream';
+import { getStream } from 'puppeteer-stream';
 import fs from 'fs';
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
@@ -26,10 +26,10 @@ interface RecordingResult {
 function startXvfb(): ChildProcess | null {
   try {
     const xvfb = spawn('Xvfb', [':99', '-screen', '0', '1280x720x24', '-ac', '-nolisten', 'tcp']);
-
+    
     // Set DISPLAY environment variable for browser
     process.env.DISPLAY = ':99';
-
+    
     console.log('Started Xvfb virtual display on :99');
     return xvfb;
   } catch (error) {
@@ -48,12 +48,14 @@ async function launchBrowserWithAudio(): Promise<{ browser: Browser; xvfbProcess
   try {
     // Try headless shell mode first (works without display)
     console.log('Attempting headless shell mode...');
-    const browser = await launch({
+    const browser = await puppeteer.launch({
       headless: 'shell',
       args: [
         '--autoplay-policy=no-user-gesture-required',
         '--disable-web-security',
         '--disable-features=IsolateOrigins,site-per-process',
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
       ],
       ignoreDefaultArgs: ['--mute-audio'],
       defaultViewport: {
@@ -65,11 +67,11 @@ async function launchBrowserWithAudio(): Promise<{ browser: Browser; xvfbProcess
     console.log('Browser launched in headless shell mode');
     return { browser, xvfbProcess: null };
   } catch (error) {
-    console.log('Headless shell failed, trying Xvfb fallback...');
-
+    console.log('Headless shell failed, trying Xvfb fallback...', error);
+    
     // Start Xvfb virtual display
     xvfbProcess = startXvfb();
-
+    
     if (!xvfbProcess) {
       throw new Error('Failed to start Xvfb - cannot record audio');
     }
@@ -78,12 +80,14 @@ async function launchBrowserWithAudio(): Promise<{ browser: Browser; xvfbProcess
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Launch browser with Xvfb display
-    const browser = await launch({
+    const browser = await puppeteer.launch({
       headless: false, // Must be headful with Xvfb
       args: [
         '--autoplay-policy=no-user-gesture-required',
         '--disable-web-security',
         '--disable-features=IsolateOrigins,site-per-process',
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
       ],
       ignoreDefaultArgs: ['--mute-audio'],
       defaultViewport: {
@@ -102,7 +106,7 @@ async function launchBrowserWithAudio(): Promise<{ browser: Browser; xvfbProcess
  */
 async function waitForVideo(page: any): Promise<number> {
   await page.waitForSelector('video', { timeout: 30000 });
-
+  
   // Wait for video to load metadata
   await page.evaluate(() => {
     return new Promise<void>((resolve) => {
@@ -169,7 +173,7 @@ async function monitorVideoEnd(page: any, onProgress?: (seconds: number) => void
  */
 export async function recordYouTubeAudio(options: RecordingOptions): Promise<RecordingResult> {
   const { videoId, outputPath, onProgress } = options;
-
+  
   let browser: Browser | null = null;
   let xvfbProcess: ChildProcess | null = null;
   let writeStream: fs.WriteStream | null = null;
@@ -233,7 +237,7 @@ export async function recordYouTubeAudio(options: RecordingOptions): Promise<Rec
     };
   } catch (error) {
     console.error('Error recording YouTube audio:', error);
-
+    
     // Clean up partial file
     if (outputPath && fs.existsSync(outputPath)) {
       try {
@@ -253,7 +257,7 @@ export async function recordYouTubeAudio(options: RecordingOptions): Promise<Rec
       if (writeStream) {
         writeStream.end();
       }
-
+      
       if (browser) {
         await browser.close();
         console.log('Browser closed');
@@ -263,10 +267,10 @@ export async function recordYouTubeAudio(options: RecordingOptions): Promise<Rec
       if (xvfbProcess) {
         xvfbProcess.kill('SIGTERM');
         console.log('Xvfb process terminated');
-
+        
         // Wait for process to exit
         await new Promise(resolve => setTimeout(resolve, 1000));
-
+        
         // Force kill if still running
         if (!xvfbProcess.killed) {
           xvfbProcess.kill('SIGKILL');
