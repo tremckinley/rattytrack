@@ -11,6 +11,7 @@ interface YouTubeSearchResponse {
     snippet: {
       title: string;
       channelTitle: string;
+      channelId: string;
       publishedAt: string;
       thumbnails: {
         high: { url: string };
@@ -111,10 +112,12 @@ export async function fetchLatestVideos(maxResults: number = 5): Promise<YouTube
         videoId: item.id.videoId,
         title: item.snippet.title,
         channelTitle: item.snippet.channelTitle,
+        channelId: item.snippet.channelId,
         publishedAt: item.snippet.publishedAt,
-        duration,
+        duration: duration.toString(),
         thumbnailUrl: item.snippet.thumbnails.high.url,
         description: item.snippet.description,
+        url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
       };
     });
 
@@ -152,10 +155,12 @@ export async function getVideoDetails(videoId: string): Promise<YouTubeVideo | n
       videoId: item.id,
       title: item.snippet.title,
       channelTitle: item.snippet.channelTitle,
+      channelId: item.snippet.channelId,
       publishedAt: item.snippet.publishedAt,
-      duration: parseDuration(item.contentDetails.duration),
+      duration: parseDuration(item.contentDetails.duration).toString(),
       thumbnailUrl: item.snippet.thumbnails.high.url,
       description: item.snippet.description,
+      url: `https://www.youtube.com/watch?v=${item.id}`,
     };
   } catch (error) {
     console.error('Error fetching video details:', error);

@@ -38,10 +38,10 @@ export default function NavBar() {
       </Link>
       <div className="mx-8 flex-1 flex items-end">
         <ul className="flex w-full justify-around h-full">
-          {navLinks.map((link) => {
+          {navLinks.map((link, idx) => {
             const isActive = pathname.split("/")[1] === link.href.split("/")[1];
             return (
-              <Link href={link.href}>
+              <Link key={idx} href={link.href}>
                 <li
                   className={
                     isActive
