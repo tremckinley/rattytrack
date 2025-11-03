@@ -21,6 +21,17 @@ interface RecordingResult {
 }
 
 /**
+ * Find system Chromium executable path
+ * Returns null to use Puppeteer's bundled Chrome
+ * TODO: Implement runtime Chromium detection after resolving build issues
+ */
+function findChromiumExecutable(): string | null {
+  // For now, return null and let Puppeteer use its bundled Chrome
+  // System Chromium detection will be implemented via environment variable
+  return process.env.CHROMIUM_PATH || null;
+}
+
+/**
  * Start Xvfb virtual display (fallback for headless mode failure)
  */
 function startXvfb(): ChildProcess | null {
@@ -41,27 +52,39 @@ function startXvfb(): ChildProcess | null {
 /**
  * Launch browser with proper audio configuration
  * Two-tier approach: headless shell first, then Xvfb fallback
+ * Uses system Chromium in deployment environments
  */
 async function launchBrowserWithAudio(): Promise<{ browser: Browser; xvfbProcess: ChildProcess | null }> {
   let xvfbProcess: ChildProcess | null = null;
+
+  // Find system Chromium executable (required for deployment)
+  const chromiumPath = findChromiumExecutable();
+  
+  // Base browser launch configuration
+  const baseLaunchConfig = {
+    args: [
+      '--autoplay-policy=no-user-gesture-required',
+      '--disable-web-security',
+      '--disable-features=IsolateOrigins,site-per-process',
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage', // Overcome limited shared memory
+      '--disable-gpu',
+    ],
+    ignoreDefaultArgs: ['--mute-audio'],
+    defaultViewport: {
+      width: 1280,
+      height: 720,
+    },
+    ...(chromiumPath && { executablePath: chromiumPath }), // Use system Chromium if found
+  };
 
   try {
     // Try headless shell mode first (works without display)
     console.log('Attempting headless shell mode...');
     const browser = await puppeteer.launch({
+      ...baseLaunchConfig,
       headless: 'shell',
-      args: [
-        '--autoplay-policy=no-user-gesture-required',
-        '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-      ],
-      ignoreDefaultArgs: ['--mute-audio'],
-      defaultViewport: {
-        width: 1280,
-        height: 720,
-      },
     });
 
     console.log('Browser launched in headless shell mode');
@@ -81,19 +104,8 @@ async function launchBrowserWithAudio(): Promise<{ browser: Browser; xvfbProcess
 
     // Launch browser with Xvfb display
     const browser = await puppeteer.launch({
+      ...baseLaunchConfig,
       headless: false, // Must be headful with Xvfb
-      args: [
-        '--autoplay-policy=no-user-gesture-required',
-        '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-      ],
-      ignoreDefaultArgs: ['--mute-audio'],
-      defaultViewport: {
-        width: 1280,
-        height: 720,
-      },
     });
 
     console.log('Browser launched with Xvfb virtual display');

@@ -10,7 +10,6 @@ import {
   saveTranscriptSegments,
   deleteTranscription,
 } from '@/lib/data/youtube_transcriptions';
-import { recordYouTubeAudio } from '@/lib/utils/youtube-downloader';
 import { processAudioForWhisper, cleanupAudioFiles } from '@/lib/utils/audio-processor';
 import { transcribeWithAutoChunking } from '@/lib/utils/whisper-client';
 import path from 'path';
@@ -143,6 +142,9 @@ async function processTranscription(videoId: string): Promise<void> {
     fs.mkdirSync(workDir, { recursive: true });
 
     // Step 1: Record audio from YouTube
+    // Dynamic import to prevent bundling in prerendered pages
+    const { recordYouTubeAudio } = await import('@/lib/utils/youtube-downloader');
+    
     const webmPath = path.join(workDir, 'audio.webm');
     const recordingResult = await recordYouTubeAudio({
       videoId,
