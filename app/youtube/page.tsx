@@ -48,7 +48,7 @@ export default async function YouTubePage() {
       const transcription = await getTranscription(video.videoId);
       return {
         ...video,
-        transcriptionStatus: transcription?.status || 'pending',
+        transcriptionStatus: transcription?.status || ('idle' as const),
       };
     })
   ) : [];
@@ -107,7 +107,7 @@ export default async function YouTubePage() {
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                        {formatDuration(video.duration)}
+                        {formatDuration(parseInt(video.duration))}
                       </div>
                     </a>
                   </div>
@@ -123,7 +123,7 @@ export default async function YouTubePage() {
                         <span>•</span>
                         <span>{formatDate(video.publishedAt)}</span>
                         <span>•</span>
-                        <span>{formatDuration(video.duration)}</span>
+                        <span>{formatDuration(parseInt(video.duration))}</span>
                       </div>
                       {video.description && (
                         <p className="text-gray-700 text-sm line-clamp-2 mb-4">

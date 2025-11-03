@@ -2,7 +2,7 @@
 
 import OpenAI from 'openai';
 import fs from 'fs';
-import { WhisperResponse, WhisperSegment } from '../lib/types/youtube';
+import { WhisperResponse, WhisperSegment } from '@/types/youtube';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

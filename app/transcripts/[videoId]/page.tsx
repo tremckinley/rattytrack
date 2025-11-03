@@ -7,9 +7,7 @@ import Link from 'next/link';
 import TranscriptPlayer from '@/components/TranscriptPlayer';
 
 interface PageProps {
-  params: {
-    videoId: string;
-  };
+  params: Promise<{ videoId: string }>;
 }
 
 /**
@@ -26,7 +24,7 @@ function formatDate(dateString: string): string {
 }
 
 export default async function TranscriptPage({ params }: PageProps) {
-  const { videoId } = params;
+  const { videoId } = await params;
 
   const { transcription, segments } = await getTranscriptionWithSegments(videoId);
 

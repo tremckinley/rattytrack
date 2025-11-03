@@ -12,7 +12,7 @@ import { notFound } from "next/navigation";
 import { Legislator } from "@/types/Legislator";
 
 type Props = {
-    params: { slug: string }
+    params: Promise<{ slug: string }>
 }
 
 

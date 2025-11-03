@@ -104,7 +104,7 @@ export async function fetchLatestVideos(maxResults: number = 5): Promise<YouTube
     const detailsData: YouTubeVideoDetailsResponse = await detailsResponse.json();
 
     // Combine search results with video details
-    const videos: YouTubeVideo[] = searchData.items.map((item, index) => {
+    const videos: YouTubeVideo[] = searchData.items.map((item) => {
       const details = detailsData.items.find(d => d.id === item.id.videoId);
       const duration = details ? parseDuration(details.contentDetails.duration) : 0;
 
