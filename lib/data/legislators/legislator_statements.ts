@@ -15,6 +15,27 @@ export type StatementWithIssue = {
   }>;
 };
 
+type SegmentIssueRow = {
+  segment_id: string;
+  relevance_score: number;
+  issue: Array<{
+    name: string;
+    slug: string;
+  }> | null;
+};
+
+type TranscriptionSegmentRow = {
+  id: string;
+  text: string;
+  start_time_seconds: number;
+  end_time_seconds: number;
+  meeting: Array<{
+    id: string;
+    title: string;
+    scheduled_start: string;
+  }> | null;
+};
+
 export async function getLegislatorStatements(legislatorId: string): Promise<StatementWithIssue[]> {
   try {
     const { data: segments, error } = await supabase
@@ -63,26 +84,26 @@ export async function getLegislatorStatements(legislatorId: string): Promise<Sta
     const issuesBySegment = new Map<string, Array<{ issue_name: string; issue_slug: string; relevance_score: number }>>();
     
     if (segmentIssues) {
-      segmentIssues.forEach((si: any) => {
+      segmentIssues.forEach((si: SegmentIssueRow) => {
         if (!issuesBySegment.has(si.segment_id)) {
           issuesBySegment.set(si.segment_id, []);
         }
         issuesBySegment.get(si.segment_id)!.push({
-          issue_name: si.issue?.name || 'Unknown',
-          issue_slug: si.issue?.slug || '',
+          issue_name: si.issue?.[0]?.name || 'Unknown',
+          issue_slug: si.issue?.[0]?.slug || '',
           relevance_score: si.relevance_score || 0
         });
       });
     }
 
-    const statements: StatementWithIssue[] = segments.map((segment: any) => ({
+    const statements: StatementWithIssue[] = segments.map((segment: TranscriptionSegmentRow) => ({
       id: segment.id,
       text: segment.text,
       start_time_seconds: segment.start_time_seconds,
       end_time_seconds: segment.end_time_seconds,
-      meeting_date: segment.meeting?.scheduled_start || '',
-      meeting_title: segment.meeting?.title || 'Unknown Meeting',
-      meeting_id: segment.meeting?.id || '',
+      meeting_date: segment.meeting?.[0]?.scheduled_start || '',
+      meeting_title: segment.meeting?.[0]?.title || 'Unknown Meeting',
+      meeting_id: segment.meeting?.[0]?.id || '',
       issues: issuesBySegment.get(segment.id) || []
     }));
 

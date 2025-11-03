@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faUserAlt } from "@fortawesome/free-regular-svg-icons";
+import { faUserAlt } from "@fortawesome/free-regular-svg-icons";
 import clsx from "clsx";
 
 interface UserIconProps {

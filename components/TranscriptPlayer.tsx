@@ -174,7 +174,7 @@ export default function TranscriptPlayer({
             ) : (
               <div className="text-center text-gray-500 py-8">
                 {searchQuery ? (
-                  <p>No segments found matching "{searchQuery}"</p>
+                  <p>No segments found matching &quot;{searchQuery}&quot;</p>
                 ) : (
                   <p>No transcript segments available</p>
                 )}

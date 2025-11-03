@@ -11,6 +11,19 @@ export type LegislatorIssueMetric = {
   total_speaking_time_seconds: number;
 };
 
+type LegislatorTopIssueRow = {
+  issue_id: string;
+  mention_count: number;
+  total_speaking_time_seconds: number;
+  avg_sentiment: number;
+  positive_count: number;
+  negative_count: number;
+  neutral_count: number;
+  issues: Array<{
+    name: string;
+  }> | null;
+};
+
 /**
  * Fetches legislator issue metrics from the legislator_top_issues materialized view
  * This provides sentiment breakdown per issue for a given legislator
@@ -45,9 +58,9 @@ export async function getLegislatorIssueMetrics(legislatorId: string, limit: num
     }
 
     // Transform the data to match our type
-    return data.map((row: any) => ({
+    return data.map((row: LegislatorTopIssueRow) => ({
       issue_id: row.issue_id,
-      issue_name: row.issues?.name || 'Unknown Issue',
+      issue_name: row.issues?.[0]?.name || 'Unknown Issue',
       total_mentions: row.mention_count || 0,
       positive_mentions: row.positive_count || 0,
       negative_mentions: row.negative_count || 0,
