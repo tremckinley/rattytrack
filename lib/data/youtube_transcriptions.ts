@@ -17,14 +17,14 @@ export async function getTranscription(videoId: string): Promise<YouTubeTranscri
     .from('youtube_transcriptions')
     .select('*')
     .eq('video_id', videoId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error fetching transcription:', error);
     return null;
   }
 
-  return data as YouTubeTranscription;
+  return data as YouTubeTranscription | null;
 }
 
 /**
@@ -38,6 +38,13 @@ export async function createTranscription(data: {
   duration: number;
   thumbnailUrl: string;
 }): Promise<YouTubeTranscription | null> {
+  // Check if already exists first
+  const existing = await getTranscription(data.videoId);
+  if (existing) {
+    console.log(`Transcription already exists for ${data.videoId}, returning existing record`);
+    return existing;
+  }
+
   const { data: transcription, error } = await supabase
     .from('youtube_transcriptions')
     .insert({
@@ -50,14 +57,14 @@ export async function createTranscription(data: {
       status: 'processing',
     })
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error creating transcription:', error);
     return null;
   }
 
-  return transcription as YouTubeTranscription;
+  return transcription as YouTubeTranscription | null;
 }
 
 /**

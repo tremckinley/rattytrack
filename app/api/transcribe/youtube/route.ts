@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       title: videoDetails.title,
       channelTitle: videoDetails.channelTitle,
       publishedAt: videoDetails.publishedAt,
-      duration: videoDetails.duration,
+      duration: parseInt(videoDetails.duration, 10),
       thumbnailUrl: videoDetails.thumbnailUrl,
     });
 

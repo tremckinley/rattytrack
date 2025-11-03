@@ -4,7 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
-packages = ["ffmpeg", "xorg.xorgserver"]
+packages = ["ffmpeg", "xorg.xorgserver", "chromium"]
 
 [workflows]
 runButton = "Project"
@@ -71,7 +71,7 @@ localPort = 43259
 externalPort = 6000
 
 [[ports]]
-localPort = 55200
+localPort = 44971
 externalPort = 8000
 
 [deployment]

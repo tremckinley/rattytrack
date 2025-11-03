@@ -23,4 +23,18 @@ export interface VideoTranscript {
   language?: string;
 }
 
-export type TranscriptionStatus = 'idle' | 'downloading' | 'transcribing' | 'completed' | 'error';
+export type TranscriptionStatus = 'idle' | 'processing' | 'downloading' | 'transcribing' | 'completed' | 'error';
+
+export interface YouTubeTranscription {
+  video_id: string;
+  title: string;
+  channel_title: string;
+  published_at: string;
+  duration: number;
+  thumbnail_url: string;
+  status: TranscriptionStatus;
+  error_message?: string;
+  transcription_cost?: number;
+  created_at: string;
+  updated_at: string;
+}
