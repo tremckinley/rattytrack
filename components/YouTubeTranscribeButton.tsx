@@ -17,14 +17,14 @@ export default function YouTubeTranscribeButton({
   initialStatus,
   onStatusChange,
 }: TranscribeButtonProps) {
-  const [status, setStatus] = useState<TranscriptionStatus>(initialStatus || 'pending');
+  const [status, setStatus] = useState<TranscriptionStatus>(initialStatus || 'idle');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Poll for status updates when processing
   useEffect(() => {
-    if (status === 'processing') {
+    if (status === 'transcribing') {
       const interval = setInterval(async () => {
         try {
           const response = await fetch(`/api/transcribe/youtube?videoId=${videoId}`);
@@ -86,8 +86,8 @@ export default function YouTubeTranscribeButton({
         setStatus('completed');
         onStatusChange?.('completed');
       } else if (data.processing) {
-        setStatus('processing');
-        onStatusChange?.('processing');
+        setStatus('transcribing');
+        onStatusChange?.('transcribing');
       }
     } catch (err) {
       console.error('Error starting transcription:', err);
@@ -115,7 +115,7 @@ export default function YouTubeTranscribeButton({
     );
   }
 
-  if (status === 'processing') {
+  if (status === 'transcribing') {
     return (
       <button
         disabled
