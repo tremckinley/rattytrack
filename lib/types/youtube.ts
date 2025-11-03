@@ -1,5 +1,5 @@
 export interface YouTubeVideo {
-  id: string;
+  videoId: string;
   title: string;
   description: string;
   thumbnailUrl: string;
