@@ -12,6 +12,7 @@ const navLinks: { name: string; href: string }[] = [
   { name: "Dashboard", href: "/" },
   { name: "Legislators", href: "/legislators" },
   { name: "Meetings", href: "/meetings" },
+  { name: "Youtube", href: "/youtube" }
 ];
 
 export default function NavBar() {
