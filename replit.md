@@ -36,10 +36,16 @@ Preferred communication style: Simple, everyday language.
 - Server-side data fetching using async Server Components
 - Data access layer organized in `lib/data/` with separate modules for different data concerns:
   - `legislator.ts` - Individual legislator details
-  - `legislator_card.ts` - List view data
+  - `legislator_card.ts` - List view data with active/inactive filtering support
   - `legislator_profile.ts` - Full profile with statistics
   - `legislator_statements.ts` - Legislator statements with issues from transcription segments
 - Supabase client configured in `lib/utils/supabase.ts` using environment variables
+- **Active/Inactive Legislator Tracking** (added 2025-11-15):
+  - Legislators have `is_active`, `term_start`, and `term_end` fields
+  - Data layer supports filtering by status: 'active', 'inactive', or 'all'
+  - UI displays "Former" badges for inactive legislators
+  - Legislators list page includes filter controls (Current/Former/All)
+  - Defaults to showing only active legislators for better UX
 
 ## Database Design Principles
 - Multi-jurisdiction support from the start (scalable beyond Memphis)

@@ -69,7 +69,7 @@ export default async function LegislatorPage({ params }: Props) {
                     )}
                     <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-bold text-lg">{legislator.display_name}</h3>
-                        {!legislator.is_active && (
+                        {legislator.is_active === false && (
                             <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full">
                                 Former
                             </span>

@@ -16,8 +16,29 @@ export default async function Legislators({ searchParams }: LegislatorsPageProps
     'active';
   
   // Server-side data fetching with status filter
-  const legislators = await getLegislators(status);
+  const result = await getLegislators(status);
   
+  const getEmptyStateMessage = () => {
+    if (status === 'inactive') {
+      return {
+        title: 'No former legislators found',
+        message: 'There are currently no inactive legislators in the system.'
+      };
+    } else if (status === 'all') {
+      return {
+        title: 'No legislators found',
+        message: 'The legislators database is currently empty.'
+      };
+    } else {
+      return {
+        title: 'No current legislators found',
+        message: 'There are no active legislators at this time. Try viewing "All" or "Former" legislators.'
+      };
+    }
+  };
+
+  const emptyState = getEmptyStateMessage();
+
   return (
     <>
       <div className="mb-4">
@@ -27,14 +48,19 @@ export default async function Legislators({ searchParams }: LegislatorsPageProps
           history.
         </p>
       </div>
-      {legislators.length === 0 ? (
+      {result.error ? (
         <div className="card text-center py-12">
-           <FontAwesomeIcon icon={faTriangleExclamation} className="text-capyred text-4xl mb-4 animate-bounce-once" />
+          <FontAwesomeIcon icon={faTriangleExclamation} className="text-capyred text-4xl mb-4 animate-bounce-once" />
           <p className="text-foreground text-lg mb-4">Unable to load legislator data at this time.</p>
           <p className="">Please try refreshing the page or contact support if the issue persists.</p>
         </div>
+      ) : result.data.length === 0 ? (
+        <div className="card text-center py-12">
+          <p className="text-foreground text-lg mb-2">{emptyState.title}</p>
+          <p className="text-muted-foreground">{emptyState.message}</p>
+        </div>
       ) : (
-        <SearchableLegislators legislators={legislators} initialStatus={status} />
+        <SearchableLegislators legislators={result.data} initialStatus={status} />
       )}
     </>
   );
