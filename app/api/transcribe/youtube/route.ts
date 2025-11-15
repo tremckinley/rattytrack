@@ -10,7 +10,7 @@ import {
   saveTranscriptSegments,
   deleteTranscription,
 } from '@/lib/data/youtube_transcriptions';
-import { processAudioForWhisper, cleanupAudioFiles } from '@/lib/utils/audio-processor';
+import { cleanupAudioFiles } from '@/lib/utils/audio-processor';
 import { transcribeWithAutoChunking } from '@/lib/utils/whisper-client';
 import path from 'path';
 import fs from 'fs';
@@ -141,29 +141,39 @@ async function processTranscription(videoId: string): Promise<void> {
     // Create work directory
     fs.mkdirSync(workDir, { recursive: true });
 
-    // Step 1: Record audio from YouTube
+    // Step 1: Download MP3 from YouTube using ytmp3.as
     // Dynamic import to prevent bundling in prerendered pages
     const { recordYouTubeAudio } = await import('@/lib/utils/youtube-downloader');
     
-    const webmPath = path.join(workDir, 'audio.webm');
-    const recordingResult = await recordYouTubeAudio({
+    const mp3Path = path.join(workDir, 'audio.mp3');
+    const downloadResult = await recordYouTubeAudio({
       videoId,
-      outputPath: webmPath,
-      onProgress: (seconds) => {
-        console.log(`Recording progress: ${seconds}s`);
-      },
+      outputPath: mp3Path,
     });
 
-    if (!recordingResult.success) {
-      throw new Error(recordingResult.error || 'Recording failed');
+    if (!downloadResult.success) {
+      throw new Error(downloadResult.error || 'Download failed');
     }
 
-    // Step 2: Process audio (convert to MP3, split if needed)
-    console.log('Processing audio...');
-    const processResult = await processAudioForWhisper(webmPath, workDir);
-    audioChunks = processResult.chunks;
+    // Step 2: Check if file needs chunking (if over 25MB)
+    console.log('Checking if audio needs chunking...');
+    const { exceedsFileSizeLimit, splitAudioIntoChunks } = await import('@/lib/utils/audio-processor');
+    
+    if (exceedsFileSizeLimit(mp3Path, 25)) {
+      console.log('File exceeds 25MB, splitting into chunks...');
+      const chunksDir = path.join(workDir, 'chunks');
+      audioChunks = await splitAudioIntoChunks({
+        inputPath: mp3Path,
+        outputDir: chunksDir,
+        chunkDuration: 600, // 10 minutes per chunk
+      });
+      // Delete the large MP3 file
+      fs.unlinkSync(mp3Path);
+    } else {
+      audioChunks = [mp3Path];
+    }
 
-    console.log(`Audio processed: ${audioChunks.length} chunk(s)`);
+    console.log(`Audio ready: ${audioChunks.length} chunk(s)`);
 
     // Step 3: Transcribe using Whisper API
     console.log('Transcribing with Whisper API...');
@@ -174,14 +184,28 @@ async function processTranscription(videoId: string): Promise<void> {
 
     console.log(`Transcription completed: ${transcribeResult.segments.length} segments`);
 
-    // Step 4: Save to database
-    await saveTranscriptSegments(
-      videoId,
-      transcribeResult.segments,
-      transcribeResult.cost
-    );
-
-    console.log(`Successfully transcribed video ${videoId}`);
+    // Step 4: Save to database and mark as completed
+    // Wrap in try-catch to ensure status is updated even if partial save occurs
+    try {
+      await saveTranscriptSegments(
+        videoId,
+        transcribeResult.segments,
+        transcribeResult.cost
+      );
+      
+      // Mark as completed only after successful save
+      await updateTranscriptionStatus(videoId, 'completed');
+      console.log(`Successfully transcribed video ${videoId}`);
+    } catch (dbError) {
+      console.error('Database save failed:', dbError);
+      // Even if save fails, mark as error so it's not stuck in processing
+      await updateTranscriptionStatus(
+        videoId,
+        'error',
+        `Database error: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`
+      );
+      throw dbError; // Re-throw to trigger outer error handler
+    }
   } catch (error) {
     console.error(`Transcription failed for ${videoId}:`, error);
 

@@ -1,197 +1,40 @@
-// YouTube audio recording using puppeteer-stream
-// Critical: Handles browser cleanup and Xvfb process management
+// YouTube MP3 download using ytmp3.as automation
+// Uses Puppeteer's native download handling for reliability
 
-import puppeteer, { Browser, Page } from 'puppeteer';
-import { getStream } from 'puppeteer-stream';
+import puppeteer, { Browser } from 'puppeteer';
 import fs from 'fs';
-import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 
-interface RecordingOptions {
+interface DownloadOptions {
   videoId: string;
   outputPath: string;
-  onProgress?: (seconds: number) => void;
 }
 
-interface RecordingResult {
+interface DownloadResult {
   success: boolean;
   filePath?: string;
-  duration?: number;
   error?: string;
 }
 
 /**
  * Find system Chromium executable path
- * Returns null to use Puppeteer's bundled Chrome
- * TODO: Implement runtime Chromium detection after resolving build issues
+ * Falls back to Puppeteer's bundled Chrome if not set
  */
-function findChromiumExecutable(): string | null {
-  // For now, return null and let Puppeteer use its bundled Chrome
-  // System Chromium detection will be implemented via environment variable
-  return process.env.CHROMIUM_PATH || null;
+function findChromiumExecutable(): string | undefined {
+  return process.env.CHROMIUM_PATH || undefined;
 }
 
 /**
- * Start Xvfb virtual display (fallback for headless mode failure)
+ * Download MP3 from YouTube using ytmp3.as
+ * Uses Puppeteer's native download API for reliable file handling
  */
-function startXvfb(): ChildProcess | null {
-  try {
-    const xvfb = spawn('Xvfb', [':99', '-screen', '0', '1280x720x24', '-ac', '-nolisten', 'tcp']);
-    
-    // Set DISPLAY environment variable for browser
-    process.env.DISPLAY = ':99';
-    
-    console.log('Started Xvfb virtual display on :99');
-    return xvfb;
-  } catch (error) {
-    console.error('Failed to start Xvfb:', error);
-    return null;
-  }
-}
-
-/**
- * Launch browser with proper audio configuration
- * Two-tier approach: headless shell first, then Xvfb fallback
- * Uses system Chromium in deployment environments
- */
-async function launchBrowserWithAudio(): Promise<{ browser: Browser; xvfbProcess: ChildProcess | null }> {
-  let xvfbProcess: ChildProcess | null = null;
-
-  // Find system Chromium executable (required for deployment)
-  const chromiumPath = findChromiumExecutable();
-  
-  // Base browser launch configuration
-  const baseLaunchConfig = {
-    args: [
-      '--autoplay-policy=no-user-gesture-required',
-      '--disable-web-security',
-      '--disable-features=IsolateOrigins,site-per-process',
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage', // Overcome limited shared memory
-      '--disable-gpu',
-    ],
-    ignoreDefaultArgs: ['--mute-audio'],
-    defaultViewport: {
-      width: 1280,
-      height: 720,
-    },
-    ...(chromiumPath && { executablePath: chromiumPath }), // Use system Chromium if found
-  };
-
-  try {
-    // Try headless shell mode first (works without display)
-    console.log('Attempting headless shell mode...');
-    const browser = await puppeteer.launch({
-      ...baseLaunchConfig,
-      headless: 'shell',
-    });
-
-    console.log('Browser launched in headless shell mode');
-    return { browser, xvfbProcess: null };
-  } catch (error) {
-    console.log('Headless shell failed, trying Xvfb fallback...', error);
-    
-    // Start Xvfb virtual display
-    xvfbProcess = startXvfb();
-    
-    if (!xvfbProcess) {
-      throw new Error('Failed to start Xvfb - cannot record audio');
-    }
-
-    // Wait for Xvfb to initialize
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Launch browser with Xvfb display
-    const browser = await puppeteer.launch({
-      ...baseLaunchConfig,
-      headless: false, // Must be headful with Xvfb
-    });
-
-    console.log('Browser launched with Xvfb virtual display');
-    return { browser, xvfbProcess };
-  }
-}
-
-/**
- * Wait for video element to be ready and get duration
- */
-async function waitForVideo(page: Page): Promise<number> {
-  await page.waitForSelector('video', { timeout: 30000 });
-  
-  // Wait for video to load metadata
-  await page.evaluate(() => {
-    return new Promise<void>((resolve) => {
-      const video = document.querySelector('video') as HTMLVideoElement;
-      if (video.readyState >= 1) {
-        resolve();
-      } else {
-        video.addEventListener('loadedmetadata', () => resolve(), { once: true });
-      }
-    });
-  });
-
-  // Get video duration
-  const duration = await page.evaluate(() => {
-    const video = document.querySelector('video') as HTMLVideoElement;
-    return video.duration;
-  });
-
-  return Math.floor(duration);
-}
-
-/**
- * Monitor video playback and stop when ended
- */
-async function monitorVideoEnd(page: Page, onProgress?: (seconds: number) => void): Promise<void> {
-  return new Promise((resolve) => {
-    const checkInterval = setInterval(async () => {
-      try {
-        const status = await page.evaluate(() => {
-          const video = document.querySelector('video') as HTMLVideoElement;
-          return {
-            ended: video.ended,
-            currentTime: Math.floor(video.currentTime),
-            paused: video.paused,
-          };
-        });
-
-        if (onProgress) {
-          onProgress(status.currentTime);
-        }
-
-        // If video is paused, try to play it
-        if (status.paused && !status.ended) {
-          await page.evaluate(() => {
-            const video = document.querySelector('video') as HTMLVideoElement;
-            video.play().catch(() => {});
-          });
-        }
-
-        if (status.ended) {
-          clearInterval(checkInterval);
-          resolve();
-        }
-      } catch (error) {
-        console.error('Error monitoring video:', error);
-      }
-    }, 5000); // Check every 5 seconds
-  });
-}
-
-/**
- * Record audio from YouTube video
- * CRITICAL: Always cleans up browser and Xvfb process
- */
-export async function recordYouTubeAudio(options: RecordingOptions): Promise<RecordingResult> {
-  const { videoId, outputPath, onProgress } = options;
+export async function recordYouTubeAudio(options: DownloadOptions): Promise<DownloadResult> {
+  const { videoId, outputPath } = options;
   
   let browser: Browser | null = null;
-  let xvfbProcess: ChildProcess | null = null;
-  let writeStream: fs.WriteStream | null = null;
 
   try {
-    console.log(`Starting audio recording for video ${videoId}`);
+    console.log(`Starting MP3 download for video ${videoId}`);
 
     // Ensure output directory exists
     const outputDir = path.dirname(outputPath);
@@ -199,58 +42,194 @@ export async function recordYouTubeAudio(options: RecordingOptions): Promise<Rec
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    // Launch browser with audio enabled
-    const launchResult = await launchBrowserWithAudio();
-    browser = launchResult.browser;
-    xvfbProcess = launchResult.xvfbProcess;
+    // Configure browser
+    const chromiumPath = findChromiumExecutable();
+    
+    browser = await puppeteer.launch({
+      headless: true,
+      executablePath: chromiumPath,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+      ],
+    });
 
     const page = await browser.newPage();
 
-    // Navigate to YouTube video
-    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    console.log(`Navigating to ${videoUrl}`);
-    await page.goto(videoUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-
-    // Wait for video to be ready
-    const duration = await waitForVideo(page);
-    console.log(`Video duration: ${duration} seconds`);
-
-    // Click play button (in case it's not auto-playing)
-    await page.evaluate(() => {
-      const video = document.querySelector('video') as HTMLVideoElement;
-      video.play().catch(() => {});
+    // Set download behavior
+    const client = await page.createCDPSession();
+    await client.send('Browser.setDownloadBehavior', {
+      behavior: 'allow',
+      downloadPath: outputDir,
     });
 
-    // Start recording audio stream
-    console.log('Starting audio stream recording...');
-    const stream = await getStream(page, { audio: true, video: false });
-    writeStream = fs.createWriteStream(outputPath);
-    stream.pipe(writeStream);
+    // Navigate to ytmp3.as converter
+    const converterUrl = 'https://ytmp3.as/AOPR/';
+    console.log(`Navigating to ${converterUrl}`);
+    await page.goto(converterUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-    // Monitor video until it ends
-    console.log('Monitoring video playback...');
-    await monitorVideoEnd(page, onProgress);
+    // Wait for page to be interactive
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Stop recording
-    console.log('Video ended, stopping recording...');
-    stream.destroy();
-    await new Promise(resolve => writeStream?.end(resolve));
+    // Enter YouTube URL
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    console.log(`Entering YouTube URL: ${youtubeUrl}`);
+    
+    const inputFilled = await page.evaluate((url) => {
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+      if (!input) return false;
+      
+      input.focus();
+      input.value = url;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
+    }, youtubeUrl);
 
-    // Verify file was created
-    if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
-      throw new Error('Recording failed - output file is empty or missing');
+    if (!inputFilled) {
+      throw new Error('Could not find URL input field on ytmp3.as');
     }
 
-    console.log(`Recording completed: ${outputPath}`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Click convert button or press Enter
+    console.log('Starting conversion...');
+    const buttonClicked = await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const convertButton = buttons.find(btn => 
+        btn.textContent?.toLowerCase().includes('convert') ||
+        btn.textContent?.toLowerCase().includes('submit') ||
+        btn.type === 'submit'
+      );
+      
+      if (convertButton) {
+        (convertButton as HTMLButtonElement).click();
+        return true;
+      }
+      return false;
+    });
+
+    if (!buttonClicked) {
+      await page.keyboard.press('Enter');
+    }
+
+    // Wait for conversion to complete
+    console.log('Waiting for conversion to complete (up to 2 minutes)...');
+    
+    // Poll for download link with retries
+    let downloadLinkFound = false;
+    const maxAttempts = 24; // 2 minutes with 5 second intervals
+    
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      downloadLinkFound = await page.evaluate(() => {
+        const links = Array.from(document.querySelectorAll('a'));
+        return links.some(link => 
+          link.href.toLowerCase().includes('.mp3') ||
+          (link.textContent?.toLowerCase().includes('download') && link.href)
+        );
+      });
+      
+      if (downloadLinkFound) {
+        console.log(`Download link found after ${(attempt + 1) * 5} seconds`);
+        break;
+      }
+      
+      if (attempt % 6 === 5) {
+        console.log(`Still waiting for conversion... (${(attempt + 1) * 5}s elapsed)`);
+      }
+    }
+
+    if (!downloadLinkFound) {
+      throw new Error('Conversion timed out - no download link found after 2 minutes');
+    }
+
+    // Wait a bit more for any final DOM updates
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Initiate download by clicking the link
+    console.log('Clicking download link...');
+    
+    const downloadClicked = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('a'));
+      const downloadLink = links.find(link => 
+        link.href.toLowerCase().includes('.mp3') ||
+        (link.textContent?.toLowerCase().includes('download') && link.href)
+      );
+      
+      if (downloadLink) {
+        (downloadLink as HTMLAnchorElement).click();
+        return true;
+      }
+      return false;
+    });
+
+    if (!downloadClicked) {
+      throw new Error('Failed to click download link');
+    }
+
+    // Wait for download to complete
+    console.log('Waiting for download to complete (up to 3 minutes)...');
+    
+    // Poll for downloaded file
+    const downloadStartTime = Date.now();
+    const downloadTimeout = 180000; // 3 minutes
+    let downloadedFile: string | null = null;
+    
+    while (Date.now() - downloadStartTime < downloadTimeout) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const files = fs.readdirSync(outputDir);
+      const mp3File = files.find(f => f.endsWith('.mp3'));
+      
+      if (mp3File) {
+        const filePath = path.join(outputDir, mp3File);
+        const stats = fs.statSync(filePath);
+        
+        // Make sure file has content and isn't still being written
+        if (stats.size > 0) {
+          // Wait a bit to ensure write is complete
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          const newStats = fs.statSync(filePath);
+          
+          // If size hasn't changed, download is complete
+          if (newStats.size === stats.size) {
+            downloadedFile = mp3File;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!downloadedFile) {
+      throw new Error('Download timed out - no MP3 file found after 3 minutes');
+    }
+
+    const downloadedPath = path.join(outputDir, downloadedFile);
+    
+    // Rename to expected output path if different
+    if (downloadedPath !== outputPath) {
+      fs.renameSync(downloadedPath, outputPath);
+      console.log(`Renamed ${downloadedFile} to ${path.basename(outputPath)}`);
+    }
+
+    // Final verification
+    if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+      throw new Error('Downloaded file is empty or missing');
+    }
+
+    console.log(`Download completed successfully: ${outputPath}`);
     return {
       success: true,
       filePath: outputPath,
-      duration,
     };
   } catch (error) {
-    console.error('Error recording YouTube audio:', error);
+    console.error('Error downloading YouTube MP3:', error);
     
-    // Clean up partial file
+    // Clean up partial file if exists
     if (outputPath && fs.existsSync(outputPath)) {
       try {
         fs.unlinkSync(outputPath);
@@ -264,32 +243,10 @@ export async function recordYouTubeAudio(options: RecordingOptions): Promise<Rec
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   } finally {
-    // CRITICAL: Clean up resources
-    try {
-      if (writeStream) {
-        writeStream.end();
-      }
-      
-      if (browser) {
-        await browser.close();
-        console.log('Browser closed');
-      }
-
-      // Kill Xvfb process if it was started
-      if (xvfbProcess) {
-        xvfbProcess.kill('SIGTERM');
-        console.log('Xvfb process terminated');
-        
-        // Wait for process to exit
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Force kill if still running
-        if (!xvfbProcess.killed) {
-          xvfbProcess.kill('SIGKILL');
-        }
-      }
-    } catch (cleanupError) {
-      console.error('Error during cleanup:', cleanupError);
+    // Clean up browser
+    if (browser) {
+      await browser.close();
+      console.log('Browser closed');
     }
   }
 }
