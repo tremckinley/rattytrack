@@ -3,13 +3,24 @@
 import { supabase } from '../../utils/supabase';
 import { Legislator } from '@/types/Legislator';
 
-export async function getLegislators(): Promise<Legislator[]> {
+export type LegislatorStatusFilter = 'active' | 'inactive' | 'all';
+
+export async function getLegislators(status: LegislatorStatusFilter = 'active'): Promise<Legislator[]> {
   try {
     // This is a server-side call, safe from exposing credentials
-    const { data, error } = await supabase
+    let query = supabase
       .from('legislators')
-      .select('*')
-      .order('display_name', { ascending: true });
+      .select('*');
+    
+    // Apply status filter
+    if (status === 'active') {
+      query = query.eq('is_active', true);
+    } else if (status === 'inactive') {
+      query = query.eq('is_active', false);
+    }
+    // For 'all', don't add any filter
+    
+    const { data, error } = await query.order('display_name', { ascending: true });
 
     if (error) {
       console.error('Error fetching legislators:', error);

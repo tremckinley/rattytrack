@@ -20,8 +20,15 @@ export default function LegislatorCard(params: Legislator) {
         ) : (
           <UserIcon />
         )}
-        <div>
-          <h3 className="font-bold text-lg h-">{params.display_name}</h3>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-lg">{params.display_name}</h3>
+            {!params.is_active && (
+              <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full">
+                Former
+              </span>
+            )}
+          </div>
           <p className="text-gray-600">{params.title}</p>
           <p className="text-xs text-gray-600">{params.district}</p>
         </div>

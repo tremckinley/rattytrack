@@ -67,9 +67,21 @@ export default async function LegislatorPage({ params }: Props) {
                     ) : (
                         <UserIcon height={24} width={24} />
                     )}
-                    <h3 className="font-bold text-lg">{legislator.display_name}</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-lg">{legislator.display_name}</h3>
+                        {!legislator.is_active && (
+                            <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full">
+                                Former
+                            </span>
+                        )}
+                    </div>
                     <p className="text-gray-600">{legislator.title}</p>
                     <p className="text-xs text-gray-600">{legislator.district}</p>
+                    {legislator.term_start && legislator.term_end && (
+                        <p className="text-xs text-gray-500 mt-2">
+                            Term: {new Date(legislator.term_start).getFullYear()} - {new Date(legislator.term_end).getFullYear()}
+                        </p>
+                    )}
                 </div>
 
                 <div id="legislator-stats" className="flex w-1/4 justify-center md:inline-block md:w-3/4 text-center">

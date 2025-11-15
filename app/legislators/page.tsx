@@ -1,10 +1,22 @@
-import { getLegislators } from "@/lib/data/legislators/legislator_card";
+import { getLegislators, LegislatorStatusFilter } from "@/lib/data/legislators/legislator_card";
 import SearchableLegislators from "./searchableLegislators";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
-export default async function Legislators() {
-  // Server-side data fetching
-  const legislators = await getLegislators();
+
+type LegislatorsPageProps = {
+  searchParams: Promise<{ status?: string }>;
+};
+
+export default async function Legislators({ searchParams }: LegislatorsPageProps) {
+  const params = await searchParams;
+  const statusParam = params.status;
+  const status: LegislatorStatusFilter = 
+    statusParam === 'inactive' ? 'inactive' : 
+    statusParam === 'all' ? 'all' : 
+    'active';
+  
+  // Server-side data fetching with status filter
+  const legislators = await getLegislators(status);
   
   return (
     <>
@@ -22,7 +34,7 @@ export default async function Legislators() {
           <p className="">Please try refreshing the page or contact support if the issue persists.</p>
         </div>
       ) : (
-        <SearchableLegislators legislators={legislators} />
+        <SearchableLegislators legislators={legislators} initialStatus={status} />
       )}
     </>
   );
