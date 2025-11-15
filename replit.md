@@ -116,18 +116,22 @@ Preferred communication style: Simple, everyday language.
 - No specific deployment platform lock-in (can deploy to Vercel, Netlify, or custom hosting)
 
 ## YouTube Transcription Pipeline
-- **Puppeteer** - Headless browser automation for YouTube audio recording
+- **Puppeteer** - Headless browser automation for ytmp3.as converter
   - System dependency: Chromium installed via Nix package manager
   - Configured via `CHROMIUM_PATH` environment variable (required for deployment)
   - Falls back to Puppeteer's bundled Chrome if `CHROMIUM_PATH` not set
   - Location: `/nix/store/.../bin/chromium` (path varies by Nix version)
-- **Puppeteer-stream** - Audio capture from browser sessions
-- **fluent-ffmpeg** - Audio processing and format conversion
+- **ytmp3.as** - Third-party YouTube to MP3 converter service
+  - Automated via Puppeteer: navigates to converter, enters URL, waits for conversion, downloads MP3
+  - Replaces previous audio stream recording approach for simpler, more reliable MVP
+  - Polling-based download detection (checks for MP3 file in output directory)
+- **fluent-ffmpeg** - Audio processing for chunking large files (>25MB)
 - **OpenAI Whisper API** - Speech-to-text transcription ($0.006/minute)
   - Requires `OPENAI_API_KEY` environment variable
 - **API Route**: `/api/transcribe/youtube` handles video processing workflow
   - Dynamic import of youtube-downloader prevents webpack bundling in prerendered pages
   - Background processing with cleanup of temporary audio files
+  - Robust error handling ensures transcriptions never stuck in 'processing' state
 
 ## Required Environment Variables
 - `DATABASE_URL` - PostgreSQL connection string (auto-configured by Replit)
