@@ -198,21 +198,22 @@ export async function saveTranscriptSegments(
 }
 
 /**
- * Get transcript segments for a video
+ * Get transcript segments for a video using direct PostgreSQL
  */
 export async function getTranscriptSegments(videoId: string): Promise<TranscriptSegment[]> {
-  const { data, error } = await supabase
-    .from('youtube_transcript_segments')
-    .select('*')
-    .eq('video_id', videoId)
-    .order('start_time', { ascending: true });
-
-  if (error) {
+  const pool = getPgPool();
+  
+  try {
+    const result = await pool.query(
+      'SELECT * FROM youtube_transcript_segments WHERE video_id = $1 ORDER BY start_time ASC',
+      [videoId]
+    );
+    
+    return result.rows as TranscriptSegment[];
+  } catch (error) {
     console.error('Error fetching segments:', error);
     return [];
   }
-
-  return data as TranscriptSegment[];
 }
 
 /**
