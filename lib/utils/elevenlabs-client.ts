@@ -32,7 +32,7 @@ interface TranscribeResult {
   cost: number;
 }
 
-const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/audio/speech-to-text';
+const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/speech-to-text';
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 
 function calculateCost(durationSeconds: number): number {
