@@ -12,6 +12,7 @@ interface TranscriptPlayerProps {
   channelTitle: string;
   publishedAt: string;
   segments: TranscriptSegment[];
+  legislatorMap?: Record<string, { display_name: string }>;
 }
 
 /**
@@ -47,6 +48,7 @@ export default function TranscriptPlayer({
   channelTitle,
   publishedAt,
   segments,
+  legislatorMap = {},
 }: TranscriptPlayerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentTime, setCurrentTime] = useState(0);
@@ -157,7 +159,9 @@ export default function TranscriptPlayer({
                               : 'bg-gray-100 text-gray-600'
                           }`}
                         >
-                          {segment.speaker_name}
+                          {segment.speaker_id && legislatorMap[segment.speaker_id]
+                            ? legislatorMap[segment.speaker_id].display_name
+                            : segment.speaker_name}
                         </span>
                       )}
                     </div>

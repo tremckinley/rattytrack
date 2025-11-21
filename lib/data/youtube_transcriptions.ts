@@ -270,77 +270,81 @@ export async function getAllTranscriptions(limit: number = 50, offset: number = 
 }
 
 /**
- * Update speaker IDs for segments with matching speaker label
+ * Update speaker IDs for segments with matching speaker label using direct PostgreSQL
  */
 export async function updateSpeakerMapping(
   videoId: string,
   speakerLabel: string,
   legislatorId: string | null
 ): Promise<{ success: boolean; error?: string }> {
-  const { error } = await supabase
-    .from('youtube_transcript_segments')
-    .update({ speaker_id: legislatorId })
-    .eq('video_id', videoId)
-    .eq('speaker_name', speakerLabel);
-
-  if (error) {
+  const pool = getPgPool();
+  
+  try {
+    await pool.query(
+      'UPDATE youtube_transcript_segments SET speaker_id = $1 WHERE video_id = $2 AND speaker_name = $3',
+      [legislatorId, videoId, speakerLabel]
+    );
+    return { success: true };
+  } catch (error) {
     console.error('Error updating speaker mapping:', error);
-    return { success: false, error: error.message };
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
   }
-
-  return { success: true };
 }
 
 /**
- * Get unique speaker labels from a video's transcript
+ * Get unique speaker labels from a video's transcript using direct PostgreSQL
  */
 export async function getSpeakerLabels(videoId: string): Promise<{
   labels: Array<{ label: string; segmentCount: number; legislatorId: string | null }>;
   total: number;
 }> {
-  const { data, error } = await supabase
-    .from('youtube_transcript_segments')
-    .select('speaker_name, speaker_id')
-    .eq('video_id', videoId)
-    .not('speaker_name', 'is', null);
+  const pool = getPgPool();
+  
+  try {
+    const result = await pool.query(
+      'SELECT speaker_name, speaker_id FROM youtube_transcript_segments WHERE video_id = $1 AND speaker_name IS NOT NULL',
+      [videoId]
+    );
 
-  if (error) {
+    if (result.rows.length === 0) {
+      return { labels: [], total: 0 };
+    }
+
+    // Group by speaker label
+    const labelMap = new Map<string, { count: number; legislatorId: string | null }>();
+    
+    result.rows.forEach((seg: any) => {
+      const label = seg.speaker_name;
+      const existing = labelMap.get(label);
+      
+      if (existing) {
+        existing.count++;
+        if (seg.speaker_id && !existing.legislatorId) {
+          existing.legislatorId = seg.speaker_id;
+        }
+      } else {
+        labelMap.set(label, {
+          count: 1,
+          legislatorId: seg.speaker_id,
+        });
+      }
+    });
+
+    const labels = Array.from(labelMap.entries()).map(([label, info]) => ({
+      label,
+      segmentCount: info.count,
+      legislatorId: info.legislatorId,
+    }));
+
+    // Sort by segment count
+    labels.sort((a, b) => b.segmentCount - a.segmentCount);
+
+    return { labels, total: result.rows.length };
+  } catch (error) {
     console.error('Error fetching speaker labels:', error);
     return { labels: [], total: 0 };
   }
-
-  if (!data || data.length === 0) {
-    return { labels: [], total: 0 };
-  }
-
-  // Group by speaker label
-  const labelMap = new Map<string, { count: number; legislatorId: string | null }>();
-  
-  data.forEach(seg => {
-    const label = seg.speaker_name!;
-    const existing = labelMap.get(label);
-    
-    if (existing) {
-      existing.count++;
-      if (seg.speaker_id && !existing.legislatorId) {
-        existing.legislatorId = seg.speaker_id;
-      }
-    } else {
-      labelMap.set(label, {
-        count: 1,
-        legislatorId: seg.speaker_id,
-      });
-    }
-  });
-
-  const labels = Array.from(labelMap.entries()).map(([label, info]) => ({
-    label,
-    segmentCount: info.count,
-    legislatorId: info.legislatorId,
-  }));
-
-  // Sort by segment count
-  labels.sort((a, b) => b.segmentCount - a.segmentCount);
-
-  return { labels, total: data.length };
 }
