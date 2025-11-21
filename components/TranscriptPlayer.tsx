@@ -139,15 +139,28 @@ export default function TranscriptPlayer({
                   onClick={() => handleTimestampClick(segment.start_time)}
                 >
                   <div className="flex items-start gap-3">
-                    <button
-                      className={`flex-shrink-0 font-mono text-sm px-2 py-1 rounded transition-colors ${
-                        isActiveSegment(segment)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-700 group-hover:bg-blue-600 group-hover:text-white'
-                      }`}
-                    >
-                      {formatTimestamp(segment.start_time)}
-                    </button>
+                    <div className="flex-shrink-0 flex items-center gap-2">
+                      <button
+                        className={`font-mono text-sm px-2 py-1 rounded transition-colors ${
+                          isActiveSegment(segment)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 group-hover:bg-blue-600 group-hover:text-white'
+                        }`}
+                      >
+                        {formatTimestamp(segment.start_time)}
+                      </button>
+                      {segment.speaker_name && (
+                        <span
+                          className={`text-xs px-2 py-1 rounded font-medium ${
+                            isActiveSegment(segment)
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {segment.speaker_name}
+                        </span>
+                      )}
+                    </div>
                     <p
                       className={`text-sm leading-relaxed ${
                         isActiveSegment(segment) ? 'text-gray-900 font-medium' : 'text-gray-700'
