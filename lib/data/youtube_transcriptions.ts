@@ -212,3 +212,79 @@ export async function getAllTranscriptions(limit: number = 50, offset: number = 
     total: count || 0,
   };
 }
+
+/**
+ * Update speaker IDs for segments with matching speaker label
+ */
+export async function updateSpeakerMapping(
+  videoId: string,
+  speakerLabel: string,
+  legislatorId: string | null
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('youtube_transcript_segments')
+    .update({ speaker_id: legislatorId })
+    .eq('video_id', videoId)
+    .eq('speaker_name', speakerLabel);
+
+  if (error) {
+    console.error('Error updating speaker mapping:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Get unique speaker labels from a video's transcript
+ */
+export async function getSpeakerLabels(videoId: string): Promise<{
+  labels: Array<{ label: string; segmentCount: number; legislatorId: string | null }>;
+  total: number;
+}> {
+  const { data, error } = await supabase
+    .from('youtube_transcript_segments')
+    .select('speaker_name, speaker_id')
+    .eq('video_id', videoId)
+    .not('speaker_name', 'is', null);
+
+  if (error) {
+    console.error('Error fetching speaker labels:', error);
+    return { labels: [], total: 0 };
+  }
+
+  if (!data || data.length === 0) {
+    return { labels: [], total: 0 };
+  }
+
+  // Group by speaker label
+  const labelMap = new Map<string, { count: number; legislatorId: string | null }>();
+  
+  data.forEach(seg => {
+    const label = seg.speaker_name!;
+    const existing = labelMap.get(label);
+    
+    if (existing) {
+      existing.count++;
+      if (seg.speaker_id && !existing.legislatorId) {
+        existing.legislatorId = seg.speaker_id;
+      }
+    } else {
+      labelMap.set(label, {
+        count: 1,
+        legislatorId: seg.speaker_id,
+      });
+    }
+  });
+
+  const labels = Array.from(labelMap.entries()).map(([label, info]) => ({
+    label,
+    segmentCount: info.count,
+    legislatorId: info.legislatorId,
+  }));
+
+  // Sort by segment count
+  labels.sort((a, b) => b.segmentCount - a.segmentCount);
+
+  return { labels, total: data.length };
+}

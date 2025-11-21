@@ -291,7 +291,195 @@ async function waitForTranscription(videoId: string): Promise<void> {
 
 ---
 
-### 3. File Upload Transcription
+### 3. Manual Speaker Mapping (Diarization)
+
+**Endpoint**: `GET/PATCH /api/transcribe/youtube/speakers`
+
+**Purpose**: After transcribing with Eleven Labs diarization, manually map speaker labels (e.g., "SPEAKER_00") to actual legislators.
+
+#### Workflow
+
+1. **Transcribe with Eleven Labs**: Use `provider: "elevenlabs"` to get speaker diarization
+2. **Get Speaker Labels**: Retrieve list of detected speakers with segment counts
+3. **Map Speakers**: Assign legislator IDs to each speaker label
+4. **Segments Updated**: All segments with that label now link to the legislator
+
+---
+
+#### Get Speaker Labels
+
+**Endpoint**: `GET /api/transcribe/youtube/speakers?videoId={videoId}`
+
+**Purpose**: Retrieve all speaker labels detected in a transcription with their current mappings.
+
+**Request**:
+```
+GET /api/transcribe/youtube/speakers?videoId=dQw4w9WgXcQ
+```
+
+**Response**:
+```json
+{
+  "videoId": "dQw4w9WgXcQ",
+  "speakers": [
+    {
+      "label": "SPEAKER_00",
+      "segmentCount": 45,
+      "currentLegislatorId": null,
+      "currentLegislatorName": null
+    },
+    {
+      "label": "SPEAKER_01",
+      "segmentCount": 38,
+      "currentLegislatorId": "uuid-123",
+      "currentLegislatorName": "Edmund Ford"
+    },
+    {
+      "label": "SPEAKER_02",
+      "segmentCount": 22,
+      "currentLegislatorId": null,
+      "currentLegislatorName": null
+    }
+  ],
+  "totalSpeakers": 3,
+  "totalSegments": 105
+}
+```
+
+**Notes**:
+- Speakers sorted by segment count (most active first)
+- `currentLegislatorId` shows existing mapping if already set
+- Use this to identify which speakers need mapping
+
+---
+
+#### Update Speaker Mappings
+
+**Endpoint**: `PATCH /api/transcribe/youtube/speakers`
+
+**Purpose**: Map speaker labels to legislator UUIDs.
+
+**Request**:
+```json
+{
+  "videoId": "dQw4w9WgXcQ",
+  "mappings": {
+    "SPEAKER_00": "legislator-uuid-1",
+    "SPEAKER_01": "legislator-uuid-2",
+    "SPEAKER_02": null
+  }
+}
+```
+
+**Parameters**:
+- `videoId` (string, required) - YouTube video ID
+- `mappings` (object, required) - Map of speaker label → legislator UUID
+  - Use `null` to clear a mapping
+
+**Response**:
+```json
+{
+  "message": "Updated 3 speaker mapping(s)",
+  "videoId": "dQw4w9WgXcQ",
+  "results": [
+    {
+      "label": "SPEAKER_00",
+      "success": true,
+      "segmentsUpdated": 45
+    },
+    {
+      "label": "SPEAKER_01",
+      "success": true,
+      "segmentsUpdated": 38
+    },
+    {
+      "label": "SPEAKER_02",
+      "success": true,
+      "segmentsUpdated": 22
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "success": 3,
+    "failed": 0
+  }
+}
+```
+
+**Notes**:
+- `segmentsUpdated` shows how many transcript segments were updated for each speaker label
+- Multiple speaker labels can map to the same legislator (e.g., if diarization incorrectly split one speaker into SPEAKER_00 and SPEAKER_01)
+- `segmentsUpdated: 0` indicates the speaker label wasn't found in any segments
+
+**Error Response** (400):
+```json
+{
+  "error": "One or more legislator IDs are invalid"
+}
+```
+
+---
+
+#### Complete Example: Diarization Workflow
+
+```typescript
+// Step 1: Transcribe with Eleven Labs
+const transcribeResponse = await fetch('/api/transcribe/youtube', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    videoId: 'abc123',
+    provider: 'elevenlabs',
+    numSpeakers: 10  // Memphis has ~13 council members
+  })
+});
+
+// Step 2: Wait for completion (poll status endpoint)
+// ... wait for status === 'completed' ...
+
+// Step 3: Get speaker labels
+const speakersResponse = await fetch('/api/transcribe/youtube/speakers?videoId=abc123');
+const { speakers } = await speakersResponse.json();
+
+console.log('Detected speakers:', speakers);
+// SPEAKER_00: 45 segments
+// SPEAKER_01: 38 segments
+// SPEAKER_02: 22 segments
+
+// Step 4: Manually identify speakers (listen to audio, check context, etc.)
+// Then create mapping:
+const mappings = {
+  'SPEAKER_00': 'edmund-ford-uuid',      // Council Member Edmund Ford
+  'SPEAKER_01': 'frank-colvett-uuid',    // Council Member Frank Colvett
+  'SPEAKER_02': 'mayor-young-uuid'       // Mayor Paul Young
+};
+
+// Step 5: Apply mappings
+const updateResponse = await fetch('/api/transcribe/youtube/speakers', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    videoId: 'abc123',
+    mappings
+  })
+});
+
+const result = await updateResponse.json();
+console.log(`Mapped ${result.summary.success} speakers`);
+
+// Now all segments have speaker_id linked to legislators!
+```
+
+**Tips for Identifying Speakers**:
+- Listen to a few segments from each speaker
+- Check meeting agenda for speaking order
+- Mayor typically speaks first/most
+- Council members may introduce themselves
+- Cross-reference with video if available
+
+---
+
+### 4. File Upload Transcription
 
 **Endpoint**: `POST /api/transcribe`
 
