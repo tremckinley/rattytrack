@@ -33,6 +33,7 @@ CapyTrackAI uses AI to automate civic engagement tracking:
 
 **AI Services**:
 - **OpenAI Whisper API** - Speech-to-text transcription ($0.006/minute)
+- **Eleven Labs Speech-to-Text API** - Advanced STT with speaker diarization ($0.006/minute)
 - **Puppeteer** - Browser automation for YouTube downloads
 - **FFmpeg** - Audio processing and chunking
 
@@ -72,13 +73,17 @@ Content-Type: application/json
 ```json
 {
   "videoId": "dQw4w9WgXcQ",
-  "forceRetry": false  // Optional, admin-only
+  "forceRetry": false,  // Optional, admin-only
+  "provider": "whisper",  // Optional: "whisper" (default) or "elevenlabs"
+  "numSpeakers": 10  // Optional: for Eleven Labs diarization (max 32)
 }
 ```
 
 **Parameters**:
 - `videoId` (string, required) - YouTube video ID (from URL: `youtube.com/watch?v=VIDEOID`)
 - `forceRetry` (boolean, optional) - Admin-only flag to delete and re-transcribe existing video
+- `provider` (string, optional) - Transcription provider: `"whisper"` (default) or `"elevenlabs"`
+- `numSpeakers` (number, optional) - Number of expected speakers for Eleven Labs diarization (1-32, omit for auto-detection)
 
 #### Response
 
@@ -551,7 +556,196 @@ const chunkedResult = await transcribeWithAutoChunking([
 
 ---
 
-### 2. YouTube Downloader
+### 2. Eleven Labs Speech-to-Text with Diarization
+
+**Module**: `lib/utils/elevenlabs-client.ts`
+
+**Purpose**: Advanced speech-to-text with automatic speaker identification (diarization) for multi-speaker meetings.
+
+#### Key Features
+
+- **Speaker Diarization**: Automatically identifies and labels different speakers in audio
+- **Word-Level Timestamps**: Precise timing for each word spoken
+- **Multi-Speaker Support**: Handles up to 32 speakers simultaneously
+- **Same Pricing**: $0.006/minute (same as Whisper)
+
+#### Functions
+
+##### `transcribeAudio(options)`
+
+Transcribes a single audio file with speaker diarization.
+
+**Parameters**:
+```typescript
+interface TranscribeOptions {
+  filePath: string;              // Path to audio file
+  language?: string;             // ISO language code (default: 'en')
+  numSpeakers?: number | null;   // Expected number of speakers (1-32, null for auto)
+  diarizationThreshold?: number; // Speaker separation sensitivity (0.1-0.4, default: 0.22)
+}
+```
+
+**Returns**:
+```typescript
+interface TranscribeResult {
+  text: string;                  // Full transcript
+  segments: Array<{              // Speaker-labeled segments
+    start: number;
+    end: number;
+    text: string;
+    speaker?: string;            // Speaker label (e.g., "SPEAKER_00", "SPEAKER_01")
+  }>;
+  duration: number;
+  cost: number;
+}
+```
+
+**Example**:
+```typescript
+import { transcribeAudio } from '@/lib/utils/elevenlabs-client';
+
+const result = await transcribeAudio({
+  filePath: '/tmp/meeting.mp3',
+  language: 'en',
+  numSpeakers: 10,               // Expecting ~10 council members
+  diarizationThreshold: 0.22     // Default sensitivity
+});
+
+console.log('Speakers detected:', new Set(result.segments.map(s => s.speaker)).size);
+console.log('First segment:', result.segments[0].speaker, result.segments[0].text);
+```
+
+**Diarization Parameters**:
+- **numSpeakers**: Exact number if known, or `null` for automatic detection
+  - If you know there are 10 council members → `numSpeakers: 10`
+  - If speaker count varies → `numSpeakers: null`
+- **diarizationThreshold**: Controls speaker separation sensitivity
+  - Lower (0.1): More likely to merge speakers (fewer speakers detected)
+  - Higher (0.4): More likely to split speakers (more speakers detected)
+  - Default (0.22): Balanced for most meetings
+
+##### `transcribeWithAutoChunking(filePaths, options)`
+
+Same as Whisper client but with diarization support.
+
+**Usage**:
+```typescript
+import { transcribeWithAutoChunking } from '@/lib/utils/elevenlabs-client';
+
+// Single file with diarization
+const result = await transcribeWithAutoChunking(['/tmp/audio.mp3'], {
+  language: 'en',
+  numSpeakers: 12
+});
+
+// Multiple chunks (speaker labels preserved across chunks)
+const chunkedResult = await transcribeWithAutoChunking([
+  '/tmp/chunk_000.mp3',
+  '/tmp/chunk_001.mp3'
+], {
+  numSpeakers: null  // Auto-detect
+});
+```
+
+---
+
+### 3. Speaker Matching
+
+**Module**: `lib/utils/speaker-matcher.ts`
+
+**Purpose**: Automatically match speaker labels (e.g., "SPEAKER_00") to legislators in the database using fuzzy name matching.
+
+#### How It Works
+
+1. **Extract Names**: Parses speaker labels to extract names and titles
+   - "Council Member Smith" → { title: "council member", lastName: "Smith" }
+   - "Mayor Jones" → { title: "mayor", lastName: "Jones" }
+   - "SPEAKER_00" → Unmatched (generic label)
+
+2. **Fuzzy Matching**: Compares extracted names to legislator database
+   - Last name match: 50 points
+   - First name match: 30 points
+   - Title match: 20 points
+
+3. **Confidence Scoring**:
+   - **High** (70+ points): Last + first name match
+   - **Medium** (50-69 points): Last name + partial first name
+   - **Low** (30-49 points): Partial matches
+   - **None** (<30 points): No match
+
+#### Functions
+
+##### `matchSpeakerToLegislator(speakerLabel)`
+
+Match a single speaker label to a legislator.
+
+**Parameters**:
+```typescript
+speakerLabel: string  // e.g., "Council Member Smith"
+```
+
+**Returns**:
+```typescript
+interface SpeakerMatch {
+  legislatorId: string | null;      // UUID of matched legislator
+  legislator: Legislator | null;    // Full legislator object
+  confidence: 'high' | 'medium' | 'low' | 'none';
+  speakerLabel: string;             // Original label
+}
+```
+
+**Example**:
+```typescript
+import { matchSpeakerToLegislator } from '@/lib/utils/speaker-matcher';
+
+const match = await matchSpeakerToLegislator("Council Member Edmund Ford");
+
+if (match.confidence === 'high') {
+  console.log('Matched:', match.legislator?.display_name);
+  console.log('ID:', match.legislatorId);
+}
+```
+
+##### `matchAllSpeakers(speakerLabels)`
+
+Batch match multiple speakers.
+
+**Parameters**:
+```typescript
+speakerLabels: string[]  // Array of unique speaker labels
+```
+
+**Returns**:
+```typescript
+Map<string, SpeakerMatch>  // Map of label → match result
+```
+
+**Example**:
+```typescript
+import { matchAllSpeakers } from '@/lib/utils/speaker-matcher';
+
+const speakers = ["Council Member Smith", "Mayor Jones", "SPEAKER_02"];
+const matches = await matchAllSpeakers(speakers);
+
+matches.forEach((match, label) => {
+  if (match.legislatorId) {
+    console.log(`${label} → ${match.legislator?.display_name} (${match.confidence})`);
+  } else {
+    console.log(`${label} → Unmatched`);
+  }
+});
+```
+
+**Title Patterns Recognized**:
+- Council Member, Councilmember
+- Mayor, Vice Mayor
+- Chairman, Chairwoman, Chair
+- President
+- Commissioner
+
+---
+
+### 4. YouTube Downloader
 
 **Module**: `lib/utils/youtube-downloader.ts`
 
