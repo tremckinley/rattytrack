@@ -2,12 +2,26 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { YouTubeTranscription, TranscriptSegment, TranscriptionStatus } from '@/lib/types/youtube';
+import { Pool } from 'pg';
 
 // Use service role key for server-side operations
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Direct PostgreSQL connection pool for reliable writes
+let pgPool: Pool | null = null;
+
+function getPgPool(): Pool {
+  if (!pgPool) {
+    pgPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    });
+  }
+  return pgPool;
+}
 
 /**
  * Check if a video has already been transcribed
@@ -90,7 +104,8 @@ export async function updateTranscriptionStatus(
 }
 
 /**
- * Save transcript segments to database
+ * Save transcript segments to database using direct PostgreSQL connection
+ * This bypasses Supabase PostgREST client issues with schema cache
  */
 export async function saveTranscriptSegments(
   videoId: string,
@@ -105,40 +120,73 @@ export async function saveTranscriptSegments(
   provider?: string,
   diarizationEnabled?: boolean
 ): Promise<void> {
-  // Insert all segments
-  const { error: segmentsError } = await supabase
-    .from('youtube_transcript_segments')
-    .insert(
-      segments.map(seg => ({
-        video_id: videoId,
-        start_time: seg.start,
-        end_time: seg.end,
-        text: seg.text.trim(),
-        speaker_name: seg.speakerName || null,
-        speaker_id: seg.speakerId || null,
-      }))
+  const pool = getPgPool();
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+    
+    // Delete any existing segments for this video (for retry scenarios)
+    const deleteResult = await client.query(
+      'DELETE FROM youtube_transcript_segments WHERE video_id = $1',
+      [videoId]
     );
-
-  if (segmentsError) {
-    console.error('Error saving segments:', segmentsError);
-    throw segmentsError;
-  }
-
-  // Update transcription to completed status
-  const { error: updateError } = await supabase
-    .from('youtube_transcriptions')
-    .update({
-      status: 'completed',
-      transcription_cost: cost,
-      provider: provider || 'whisper',
-      diarization_enabled: diarizationEnabled || false,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('video_id', videoId);
-
-  if (updateError) {
-    console.error('Error updating transcription:', updateError);
-    throw updateError;
+    console.log(`Deleted ${deleteResult.rowCount} existing segments for retry`);
+    
+    // Insert all segments using bulk insert
+    if (segments.length > 0) {
+      const values: any[] = [];
+      const placeholders: string[] = [];
+      
+      segments.forEach((seg, i) => {
+        const offset = i * 6;
+        placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`);
+        values.push(
+          videoId,
+          seg.start,
+          seg.end,
+          seg.text.trim(),
+          seg.speakerName || null,
+          seg.speakerId || null
+        );
+      });
+      
+      const insertQuery = `
+        INSERT INTO youtube_transcript_segments 
+        (video_id, start_time, end_time, text, speaker_name, speaker_id)
+        VALUES ${placeholders.join(', ')}
+      `;
+      
+      const insertResult = await client.query(insertQuery, values);
+      console.log(`Inserted ${insertResult.rowCount} transcript segments`);
+    }
+    
+    // Update transcription record with metadata
+    const updateResult = await client.query(
+      `UPDATE youtube_transcriptions 
+       SET status = $1,
+           transcription_cost = $2,
+           provider = $3,
+           diarization_enabled = $4,
+           updated_at = NOW()
+       WHERE video_id = $5`,
+      ['completed', cost ?? null, provider || 'whisper', diarizationEnabled || false, videoId]
+    );
+    
+    console.log(`Updated transcription record: ${updateResult.rowCount} rows affected`);
+    
+    if (updateResult.rowCount === 0) {
+      throw new Error(`No transcription record found for video ${videoId}`);
+    }
+    
+    await client.query('COMMIT');
+    console.log(`Successfully saved ${segments.length} segments for video ${videoId}`);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Transaction failed, rolled back:', error);
+    throw error;
+  } finally {
+    client.release();
   }
 }
 
