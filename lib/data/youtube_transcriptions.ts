@@ -1,6 +1,7 @@
 // Database operations for YouTube transcriptions
 
 import { createClient } from '@supabase/supabase-js';
+import { Pool } from 'pg';
 import { YouTubeTranscription, TranscriptSegment, TranscriptionStatus } from '@/lib/types/youtube';
 
 // Use service role key for server-side operations
@@ -8,6 +9,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Direct PostgreSQL connection to bypass Supabase cache issues
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 /**
  * Check if a video has already been transcribed
@@ -69,28 +75,36 @@ export async function createTranscription(data: {
 
 /**
  * Update transcription status
+ * Uses raw SQL to bypass Supabase PostgREST schema cache issues
  */
 export async function updateTranscriptionStatus(
   videoId: string,
   status: TranscriptionStatus,
   errorMessage?: string
 ): Promise<void> {
-  const { error } = await supabase
-    .from('youtube_transcriptions')
-    .update({
-      status,
-      error_message: errorMessage || null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('video_id', videoId);
-
-  if (error) {
+  const client = await pool.connect();
+  
+  try {
+    const query = `
+      UPDATE youtube_transcriptions 
+      SET status = $1, 
+          error_message = $2, 
+          updated_at = NOW()
+      WHERE video_id = $3
+    `;
+    
+    await client.query(query, [status, errorMessage || null, videoId]);
+  } catch (error) {
     console.error('Error updating transcription status:', error);
+    throw error;
+  } finally {
+    client.release();
   }
 }
 
 /**
  * Save transcript segments to database
+ * Uses raw SQL to bypass Supabase PostgREST schema cache issues
  */
 export async function saveTranscriptSegments(
   videoId: string,
@@ -105,42 +119,68 @@ export async function saveTranscriptSegments(
   provider?: string,
   diarizationEnabled?: boolean
 ): Promise<void> {
-  // Insert all segments
-  // TEMPORARY: speaker_id removed due to Supabase schema cache issue (PGRST204)
-  // Will be backfilled via UPDATE after cache refresh
-  const { error: segmentsError } = await supabase
-    .from('youtube_transcript_segments')
-    .insert(
-      segments.map(seg => ({
-        video_id: videoId,
-        start_time: seg.start,
-        end_time: seg.end,
-        text: seg.text.trim(),
-        speaker_name: seg.speakerName || null,
-        // speaker_id: seg.speakerId || null,  // COMMENTED OUT - cache issue
-      }))
-    );
-
-  if (segmentsError) {
-    console.error('Error saving segments:', segmentsError);
-    throw segmentsError;
-  }
-
-  // Update transcription to completed status
-  const { error: updateError } = await supabase
-    .from('youtube_transcriptions')
-    .update({
-      status: 'completed',
-      transcription_cost: cost,
-      provider: provider || 'whisper',
-      diarization_enabled: diarizationEnabled || false,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('video_id', videoId);
-
-  if (updateError) {
-    console.error('Error updating transcription:', updateError);
-    throw updateError;
+  const client = await pool.connect();
+  
+  try {
+    // Begin transaction
+    await client.query('BEGIN');
+    
+    // Insert all segments using raw SQL (bypasses Supabase cache)
+    if (segments.length > 0) {
+      const values: any[] = [];
+      const placeholders: string[] = [];
+      
+      segments.forEach((seg, index) => {
+        const offset = index * 6;
+        placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`);
+        values.push(
+          videoId,
+          seg.start,
+          seg.end,
+          seg.text.trim(),
+          seg.speakerName || null,
+          seg.speakerId || null
+        );
+      });
+      
+      const insertQuery = `
+        INSERT INTO youtube_transcript_segments 
+        (video_id, start_time, end_time, text, speaker_name, speaker_id)
+        VALUES ${placeholders.join(', ')}
+      `;
+      
+      await client.query(insertQuery, values);
+    }
+    
+    // Update transcription to completed status
+    const updateQuery = `
+      UPDATE youtube_transcriptions 
+      SET status = $1, 
+          transcription_cost = $2, 
+          provider = $3, 
+          diarization_enabled = $4, 
+          updated_at = NOW()
+      WHERE video_id = $5
+    `;
+    
+    await client.query(updateQuery, [
+      'completed',
+      cost || null,
+      provider || 'whisper',
+      diarizationEnabled || false,
+      videoId
+    ]);
+    
+    // Commit transaction
+    await client.query('COMMIT');
+    
+  } catch (error) {
+    // Rollback on error
+    await client.query('ROLLBACK');
+    console.error('Error saving segments:', error);
+    throw error;
+  } finally {
+    client.release();
   }
 }
 
