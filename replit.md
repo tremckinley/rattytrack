@@ -39,7 +39,14 @@ Preferred communication style: Simple, everyday language.
   - `legislator_card.ts` - List view data with active/inactive filtering support
   - `legislator_profile.ts` - Full profile with statistics
   - `legislator_statements.ts` - Legislator statements with issues from transcription segments
+  - `youtube_transcriptions.ts` - YouTube transcription data with raw SQL for critical operations
 - Supabase client configured in `lib/utils/supabase.ts` using environment variables
+- **Direct PostgreSQL Access** (added 2025-11-21):
+  - Uses `pg` package with DATABASE_URL for critical write operations
+  - Bypasses Supabase PostgREST schema cache issues (PGRST204 errors)
+  - Raw SQL used in `saveTranscriptSegments()` and `updateTranscriptionStatus()`
+  - Prevents transcription failures when schema cache is stale
+  - Connection pooling for performance and resource management
 - **Active/Inactive Legislator Tracking** (added 2025-11-15):
   - Legislators have `is_active`, `term_start`, and `term_end` fields
   - Data layer supports filtering by status: 'active', 'inactive', or 'all'
