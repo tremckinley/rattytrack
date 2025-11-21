@@ -7,24 +7,20 @@ interface TranscribeOptions {
   diarizationThreshold?: number;
 }
 
-interface ElevenLabsSegment {
+interface ElevenLabsWord {
   text: string;
-  start_time: number;
-  end_time: number;
-  speaker?: {
-    id: string;
-    name: string;
-  };
-  words?: Array<{
-    text: string;
-    start_time: number;
-    end_time: number;
-  }>;
+  start: number;
+  end: number;
+  type: 'word' | 'spacing';
+  speaker_id: string;
+  logprob: number;
 }
 
 interface ElevenLabsResponse {
   language_code: string;
-  segments: ElevenLabsSegment[];
+  text: string;
+  words: ElevenLabsWord[];
+  transcription_id?: string;
 }
 
 interface TranscribeResult {
@@ -39,7 +35,7 @@ interface TranscribeResult {
   cost: number;
 }
 
-const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/speech-to-text/convert';
+const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/speech-to-text';
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 
 function calculateCost(durationSeconds: number): number {
@@ -47,18 +43,71 @@ function calculateCost(durationSeconds: number): number {
   return minutes * 0.006;
 }
 
-function convertElevenLabsSegments(segments: ElevenLabsSegment[]): Array<{
+function convertElevenLabsSegments(words: ElevenLabsWord[]): Array<{
   start: number;
   end: number;
   text: string;
   speaker?: string;
 }> {
-  return segments.map(seg => ({
-    start: seg.start_time,
-    end: seg.end_time,
-    text: seg.text,
-    speaker: seg.speaker?.name || undefined,
-  }));
+  // Filter out spacing segments and group words into sentences
+  const wordSegments = words.filter(w => w.type === 'word');
+  
+  if (wordSegments.length === 0) {
+    return [];
+  }
+
+  const sentences: Array<{
+    start: number;
+    end: number;
+    text: string;
+    speaker?: string;
+  }> = [];
+
+  let currentSentence: ElevenLabsWord[] = [];
+  let currentSpeaker: string | null = null;
+
+  const flushSentence = () => {
+    if (currentSentence.length > 0) {
+      sentences.push({
+        start: currentSentence[0].start,
+        end: currentSentence[currentSentence.length - 1].end,
+        text: currentSentence.map(w => w.text).join(' '),
+        speaker: currentSpeaker || undefined,
+      });
+      currentSentence = [];
+    }
+  };
+
+  for (let i = 0; i < wordSegments.length; i++) {
+    const word = wordSegments[i];
+    const nextWord = wordSegments[i + 1];
+
+    // Check if we need to start a new sentence due to speaker change
+    const speakerChange = currentSpeaker !== null && word.speaker_id !== currentSpeaker;
+    
+    if (speakerChange) {
+      flushSentence();
+      currentSpeaker = word.speaker_id;
+    } else if (currentSpeaker === null) {
+      currentSpeaker = word.speaker_id;
+    }
+
+    // Add word to current sentence
+    currentSentence.push(word);
+
+    // Check for sentence boundaries
+    const sentenceEnd = word.text.match(/[.!?]$/);
+    const longPause = nextWord && (nextWord.start - word.end > 1.0); // 1+ second pause
+    const isLastWord = !nextWord;
+
+    // Flush on sentence boundaries
+    if (sentenceEnd || longPause || isLastWord) {
+      flushSentence();
+      currentSpeaker = null;
+    }
+  }
+
+  return sentences;
 }
 
 export async function transcribeAudio(options: TranscribeOptions): Promise<TranscribeResult> {
@@ -117,12 +166,9 @@ export async function transcribeAudio(options: TranscribeOptions): Promise<Trans
 
     const result: ElevenLabsResponse = JSON.parse(responseText);
     
-    console.log('===== ELEVENLABS RAW RESPONSE =====');
-    console.log(JSON.stringify(result, null, 2));
-    console.log('===================================');
-    console.log(`ElevenLabs response: ${result.segments?.length || 0} segments, language: ${result.language_code}`);
+    console.log(`ElevenLabs response: ${result.words?.length || 0} words, language: ${result.language_code}`);
 
-    const segments = convertElevenLabsSegments(result.segments || []);
+    const segments = convertElevenLabsSegments(result.words || []);
 
     const duration = segments.length > 0 
       ? segments[segments.length - 1].end 
