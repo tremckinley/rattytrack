@@ -106,6 +106,8 @@ export async function saveTranscriptSegments(
   diarizationEnabled?: boolean
 ): Promise<void> {
   // Insert all segments
+  // TEMPORARY: speaker_id removed due to Supabase schema cache issue (PGRST204)
+  // Will be backfilled via UPDATE after cache refresh
   const { error: segmentsError } = await supabase
     .from('youtube_transcript_segments')
     .insert(
@@ -115,7 +117,7 @@ export async function saveTranscriptSegments(
         end_time: seg.end,
         text: seg.text.trim(),
         speaker_name: seg.speakerName || null,
-        speaker_id: seg.speakerId || null,
+        // speaker_id: seg.speakerId || null,  // COMMENTED OUT - cache issue
       }))
     );
 
