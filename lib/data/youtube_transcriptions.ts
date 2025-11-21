@@ -94,8 +94,16 @@ export async function updateTranscriptionStatus(
  */
 export async function saveTranscriptSegments(
   videoId: string,
-  segments: Array<{ start: number; end: number; text: string }>,
-  cost?: number
+  segments: Array<{ 
+    start: number; 
+    end: number; 
+    text: string;
+    speakerName?: string | null;
+    speakerId?: string | null;
+  }>,
+  cost?: number,
+  provider?: string,
+  diarizationEnabled?: boolean
 ): Promise<void> {
   // Insert all segments
   const { error: segmentsError } = await supabase
@@ -106,6 +114,8 @@ export async function saveTranscriptSegments(
         start_time: seg.start,
         end_time: seg.end,
         text: seg.text.trim(),
+        speaker_name: seg.speakerName || null,
+        speaker_id: seg.speakerId || null,
       }))
     );
 
@@ -120,6 +130,8 @@ export async function saveTranscriptSegments(
     .update({
       status: 'completed',
       transcription_cost: cost,
+      provider: provider || 'whisper',
+      diarization_enabled: diarizationEnabled || false,
       updated_at: new Date().toISOString(),
     })
     .eq('video_id', videoId);
