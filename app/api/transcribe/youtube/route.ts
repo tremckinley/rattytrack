@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
  */
 async function processTranscription(
   videoId: string,
-  provider: 'whisper' | 'elevenlabs' = 'whisper',
+  provider: 'whisper' | 'elevenlabs' = 'elevenlabs',
   numSpeakers?: number
 ): Promise<void> {
   const workDir = path.join(os.tmpdir(), `youtube-transcribe-${videoId}-${Date.now()}`);

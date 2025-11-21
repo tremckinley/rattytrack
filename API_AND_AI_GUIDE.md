@@ -74,7 +74,7 @@ Content-Type: application/json
 {
   "videoId": "dQw4w9WgXcQ",
   "forceRetry": false,  // Optional, admin-only
-  "provider": "whisper",  // Optional: "whisper" (default) or "elevenlabs"
+  "provider": "elevenlabs",  // Optional: "elevenlabs" (default) or "whisper"
   "numSpeakers": 10  // Optional: for Eleven Labs diarization (max 32)
 }
 ```
@@ -82,7 +82,7 @@ Content-Type: application/json
 **Parameters**:
 - `videoId` (string, required) - YouTube video ID (from URL: `youtube.com/watch?v=VIDEOID`)
 - `forceRetry` (boolean, optional) - Admin-only flag to delete and re-transcribe existing video
-- `provider` (string, optional) - Transcription provider: `"whisper"` (default) or `"elevenlabs"`
+- `provider` (string, optional) - Transcription provider: `"elevenlabs"` (default) or `"whisper"`
 - `numSpeakers` (number, optional) - Number of expected speakers for Eleven Labs diarization (1-32, omit for auto-detection)
 
 #### Response
