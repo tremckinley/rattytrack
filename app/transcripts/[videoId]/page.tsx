@@ -105,7 +105,7 @@ export default async function TranscriptPage({ params }: PageProps) {
               <div>
                 <span className="text-gray-600">Cost:</span>
                 <span className="ml-2 font-medium">
-                  ${transcription.transcription_cost.toFixed(4)}
+                  ${Number(transcription.transcription_cost).toFixed(4)}
                 </span>
               </div>
               <div>

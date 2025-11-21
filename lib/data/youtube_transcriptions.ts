@@ -25,24 +25,30 @@ function getPgPool(): Pool {
 
 /**
  * Check if a video has already been transcribed
+ * Using direct PostgreSQL to avoid PostgREST cache issues
  */
 export async function getTranscription(videoId: string): Promise<YouTubeTranscription | null> {
-  const { data, error } = await supabase
-    .from('youtube_transcriptions')
-    .select('*')
-    .eq('video_id', videoId)
-    .maybeSingle();
-
-  if (error) {
+  const pool = getPgPool();
+  
+  try {
+    const result = await pool.query(
+      'SELECT * FROM youtube_transcriptions WHERE video_id = $1',
+      [videoId]
+    );
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    return result.rows[0] as YouTubeTranscription;
+  } catch (error) {
     console.error('Error fetching transcription:', error);
     return null;
   }
-
-  return data as YouTubeTranscription | null;
 }
 
 /**
- * Create a new transcription record
+ * Create a new transcription record using direct PostgreSQL
  */
 export async function createTranscription(data: {
   videoId: string;
@@ -59,26 +65,27 @@ export async function createTranscription(data: {
     return existing;
   }
 
-  const { data: transcription, error } = await supabase
-    .from('youtube_transcriptions')
-    .insert({
-      video_id: data.videoId,
-      title: data.title,
-      channel_title: data.channelTitle,
-      published_at: data.publishedAt,
-      duration: data.duration,
-      thumbnail_url: data.thumbnailUrl,
-      status: 'processing',
-    })
-    .select()
-    .maybeSingle();
-
-  if (error) {
+  const pool = getPgPool();
+  
+  try {
+    const result = await pool.query(
+      `INSERT INTO youtube_transcriptions 
+       (video_id, title, channel_title, published_at, duration, thumbnail_url, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [data.videoId, data.title, data.channelTitle, data.publishedAt, data.duration, data.thumbnailUrl, 'processing']
+    );
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    console.log(`Created transcription record for ${data.videoId}`);
+    return result.rows[0] as YouTubeTranscription;
+  } catch (error) {
     console.error('Error creating transcription:', error);
     return null;
   }
-
-  return transcription as YouTubeTranscription | null;
 }
 
 /**

@@ -126,6 +126,14 @@ export async function transcribeAudio(options: TranscribeOptions): Promise<Trans
     }
 
     const result: ElevenLabsResponse = await response.json();
+    
+    console.log(`ElevenLabs response:`, {
+      hasWords: !!result.words,
+      wordCount: result.words?.length || 0,
+      hasText: !!result.text,
+      textLength: result.text?.length || 0,
+      firstWords: result.words?.slice(0, 3),
+    });
 
     const segments = result.words && result.words.length > 0
       ? groupWordsIntoSegments(result.words)
