@@ -7,17 +7,24 @@ interface TranscribeOptions {
   diarizationThreshold?: number;
 }
 
-interface ElevenLabsWord {
-  word: string;
-  start: number;
-  end: number;
-  speaker?: string;
+interface ElevenLabsSegment {
+  text: string;
+  start_time: number;
+  end_time: number;
+  speaker?: {
+    id: string;
+    name: string;
+  };
+  words?: Array<{
+    text: string;
+    start_time: number;
+    end_time: number;
+  }>;
 }
 
 interface ElevenLabsResponse {
-  text: string;
-  language: string;
-  words?: ElevenLabsWord[];
+  language_code: string;
+  segments: ElevenLabsSegment[];
 }
 
 interface TranscribeResult {
@@ -40,49 +47,18 @@ function calculateCost(durationSeconds: number): number {
   return minutes * 0.006;
 }
 
-function groupWordsIntoSegments(words: ElevenLabsWord[]): Array<{
+function convertElevenLabsSegments(segments: ElevenLabsSegment[]): Array<{
   start: number;
   end: number;
   text: string;
   speaker?: string;
 }> {
-  if (words.length === 0) return [];
-
-  const segments: Array<{ start: number; end: number; text: string; speaker?: string }> = [];
-  let currentSegment: ElevenLabsWord[] = [words[0]];
-  let currentSpeaker = words[0].speaker;
-
-  for (let i = 1; i < words.length; i++) {
-    const word = words[i];
-    const prevWord = words[i - 1];
-    
-    const speakerChanged = word.speaker !== currentSpeaker;
-    const longPause = word.start - prevWord.end > 1.5;
-
-    if (speakerChanged || longPause || currentSegment.length >= 20) {
-      segments.push({
-        start: currentSegment[0].start,
-        end: currentSegment[currentSegment.length - 1].end,
-        text: currentSegment.map(w => w.word).join(' '),
-        speaker: currentSpeaker,
-      });
-      currentSegment = [word];
-      currentSpeaker = word.speaker;
-    } else {
-      currentSegment.push(word);
-    }
-  }
-
-  if (currentSegment.length > 0) {
-    segments.push({
-      start: currentSegment[0].start,
-      end: currentSegment[currentSegment.length - 1].end,
-      text: currentSegment.map(w => w.word).join(' '),
-      speaker: currentSpeaker,
-    });
-  }
-
-  return segments;
+  return segments.map(seg => ({
+    start: seg.start_time,
+    end: seg.end_time,
+    text: seg.text,
+    speaker: seg.speaker?.name || undefined,
+  }));
 }
 
 export async function transcribeAudio(options: TranscribeOptions): Promise<TranscribeResult> {
@@ -127,22 +103,9 @@ export async function transcribeAudio(options: TranscribeOptions): Promise<Trans
 
     const result: ElevenLabsResponse = await response.json();
     
-    console.log(`ElevenLabs response:`, {
-      hasWords: !!result.words,
-      wordCount: result.words?.length || 0,
-      hasText: !!result.text,
-      textLength: result.text?.length || 0,
-      firstWords: result.words?.slice(0, 3),
-    });
+    console.log(`ElevenLabs response: ${result.segments?.length || 0} segments, language: ${result.language_code}`);
 
-    const segments = result.words && result.words.length > 0
-      ? groupWordsIntoSegments(result.words)
-      : [{
-          start: 0,
-          end: 0,
-          text: result.text,
-          speaker: undefined,
-        }];
+    const segments = convertElevenLabsSegments(result.segments || []);
 
     const duration = segments.length > 0 
       ? segments[segments.length - 1].end 
@@ -151,6 +114,7 @@ export async function transcribeAudio(options: TranscribeOptions): Promise<Trans
     const cost = calculateCost(duration);
 
     const uniqueSpeakers = new Set(segments.map((s) => s.speaker).filter(Boolean));
+    const fullText = segments.map(s => s.text).join(' ');
 
     console.log(
       `Transcription completed: ${segments.length} segments, ` +
@@ -159,7 +123,7 @@ export async function transcribeAudio(options: TranscribeOptions): Promise<Trans
     );
 
     return {
-      text: result.text,
+      text: fullText,
       segments,
       duration,
       cost,
