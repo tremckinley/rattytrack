@@ -1,0 +1,2962 @@
+{
+  "language_code": "eng",
+  "segments": [
+    {
+      "text": "Hello, Memphis. I'm Ford Canale, Chairman of the Memphis City Council. ",
+      "start_time": 8.1,
+      "end_time": 11.36,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "Hello,",
+          "start_time": 8.1,
+          "end_time": 8.28
+        },
+        {
+          "text": " ",
+          "start_time": 8.28,
+          "end_time": 8.3
+        },
+        {
+          "text": "Memphis.",
+          "start_time": 8.3,
+          "end_time": 8.8
+        },
+        {
+          "text": " ",
+          "start_time": 8.8,
+          "end_time": 8.84
+        },
+        {
+          "text": "I'm",
+          "start_time": 8.84,
+          "end_time": 8.92
+        },
+        {
+          "text": " ",
+          "start_time": 8.92,
+          "end_time": 9.02
+        },
+        {
+          "text": "Ford",
+          "start_time": 9.02,
+          "end_time": 9.18
+        },
+        {
+          "text": " ",
+          "start_time": 9.18,
+          "end_time": 9.26
+        },
+        {
+          "text": "Canale,",
+          "start_time": 9.26,
+          "end_time": 9.78
+        },
+        {
+          "text": " ",
+          "start_time": 9.78,
+          "end_time": 9.84
+        },
+        {
+          "text": "Chairman",
+          "start_time": 9.84,
+          "end_time": 10.08
+        },
+        {
+          "text": " ",
+          "start_time": 10.08,
+          "end_time": 10.1
+        },
+        {
+          "text": "of",
+          "start_time": 10.1,
+          "end_time": 10.15
+        },
+        {
+          "text": " ",
+          "start_time": 10.15,
+          "end_time": 10.18
+        },
+        {
+          "text": "the",
+          "start_time": 10.18,
+          "end_time": 10.22
+        },
+        {
+          "text": " ",
+          "start_time": 10.22,
+          "end_time": 10.28
+        },
+        {
+          "text": "Memphis",
+          "start_time": 10.28,
+          "end_time": 10.5
+        },
+        {
+          "text": " ",
+          "start_time": 10.5,
+          "end_time": 10.54
+        },
+        {
+          "text": "City",
+          "start_time": 10.54,
+          "end_time": 10.68
+        },
+        {
+          "text": " ",
+          "start_time": 10.68,
+          "end_time": 10.78
+        },
+        {
+          "text": "Council.",
+          "start_time": 10.78,
+          "end_time": 11.34
+        },
+        {
+          "text": " ",
+          "start_time": 11.34,
+          "end_time": 11.36
+        }
+      ]
+    },
+    {
+      "text": "And I'm Chairwoman-Elect Jana Swearengen Washington. We're here bringing you the latest from our November 18th council meeting. ",
+      "start_time": 11.36,
+      "end_time": 19.14,
+      "speaker": {
+        "id": "speaker_1",
+        "name": "Speaker 1"
+      },
+      "words": [
+        {
+          "text": "And",
+          "start_time": 11.36,
+          "end_time": 11.5
+        },
+        {
+          "text": " ",
+          "start_time": 11.5,
+          "end_time": 11.54
+        },
+        {
+          "text": "I'm",
+          "start_time": 11.54,
+          "end_time": 11.75
+        },
+        {
+          "text": " ",
+          "start_time": 11.75,
+          "end_time": 11.78
+        },
+        {
+          "text": "Chairwoman-Elect",
+          "start_time": 11.78,
+          "end_time": 12.8
+        },
+        {
+          "text": " ",
+          "start_time": 12.8,
+          "end_time": 12.92
+        },
+        {
+          "text": "Jana",
+          "start_time": 12.92,
+          "end_time": 13.24
+        },
+        {
+          "text": " ",
+          "start_time": 13.24,
+          "end_time": 13.26
+        },
+        {
+          "text": "Swearengen",
+          "start_time": 13.26,
+          "end_time": 13.68
+        },
+        {
+          "text": " ",
+          "start_time": 13.68,
+          "end_time": 13.78
+        },
+        {
+          "text": "Washington.",
+          "start_time": 13.78,
+          "end_time": 14.66
+        },
+        {
+          "text": " ",
+          "start_time": 14.66,
+          "end_time": 14.68
+        },
+        {
+          "text": "We're",
+          "start_time": 14.68,
+          "end_time": 14.84
+        },
+        {
+          "text": " ",
+          "start_time": 14.84,
+          "end_time": 14.9
+        },
+        {
+          "text": "here",
+          "start_time": 14.9,
+          "end_time": 15.02
+        },
+        {
+          "text": " ",
+          "start_time": 15.02,
+          "end_time": 15.1
+        },
+        {
+          "text": "bringing",
+          "start_time": 15.1,
+          "end_time": 15.36
+        },
+        {
+          "text": " ",
+          "start_time": 15.36,
+          "end_time": 15.42
+        },
+        {
+          "text": "you",
+          "start_time": 15.42,
+          "end_time": 15.52
+        },
+        {
+          "text": " ",
+          "start_time": 15.52,
+          "end_time": 15.559
+        },
+        {
+          "text": "the",
+          "start_time": 15.56,
+          "end_time": 15.64
+        },
+        {
+          "text": " ",
+          "start_time": 15.64,
+          "end_time": 15.8
+        },
+        {
+          "text": "latest",
+          "start_time": 15.8,
+          "end_time": 16.36
+        },
+        {
+          "text": " ",
+          "start_time": 16.36,
+          "end_time": 16.4
+        },
+        {
+          "text": "from",
+          "start_time": 16.4,
+          "end_time": 16.54
+        },
+        {
+          "text": " ",
+          "start_time": 16.54,
+          "end_time": 16.58
+        },
+        {
+          "text": "our",
+          "start_time": 16.58,
+          "end_time": 16.72
+        },
+        {
+          "text": " ",
+          "start_time": 16.72,
+          "end_time": 16.759
+        },
+        {
+          "text": "November",
+          "start_time": 16.76,
+          "end_time": 17.14
+        },
+        {
+          "text": " ",
+          "start_time": 17.14,
+          "end_time": 17.3
+        },
+        {
+          "text": "18th",
+          "start_time": 17.3,
+          "end_time": 17.88
+        },
+        {
+          "text": " ",
+          "start_time": 17.88,
+          "end_time": 17.919
+        },
+        {
+          "text": "council",
+          "start_time": 17.92,
+          "end_time": 18.32
+        },
+        {
+          "text": " ",
+          "start_time": 18.32,
+          "end_time": 18.42
+        },
+        {
+          "text": "meeting.",
+          "start_time": 18.42,
+          "end_time": 19.08
+        },
+        {
+          "text": " ",
+          "start_time": 19.08,
+          "end_time": 19.14
+        }
+      ]
+    },
+    {
+      "text": "Make sure you follow us on social media at MemphisCityCouncil to stay updated on all the great things happening in our city. I'm excited to announce that our official council podcast, The Council Connect, is live. You can listen right now at wherever you get your podcasts. ",
+      "start_time": 19.14,
+      "end_time": 33.72,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "Make",
+          "start_time": 19.14,
+          "end_time": 19.24
+        },
+        {
+          "text": " ",
+          "start_time": 19.24,
+          "end_time": 19.28
+        },
+        {
+          "text": "sure",
+          "start_time": 19.28,
+          "end_time": 19.4
+        },
+        {
+          "text": " ",
+          "start_time": 19.4,
+          "end_time": 19.44
+        },
+        {
+          "text": "you",
+          "start_time": 19.44,
+          "end_time": 19.54
+        },
+        {
+          "text": " ",
+          "start_time": 19.54,
+          "end_time": 19.58
+        },
+        {
+          "text": "follow",
+          "start_time": 19.58,
+          "end_time": 19.8
+        },
+        {
+          "text": " ",
+          "start_time": 19.8,
+          "end_time": 19.84
+        },
+        {
+          "text": "us",
+          "start_time": 19.84,
+          "end_time": 19.92
+        },
+        {
+          "text": " ",
+          "start_time": 19.92,
+          "end_time": 19.98
+        },
+        {
+          "text": "on",
+          "start_time": 19.98,
+          "end_time": 20.1
+        },
+        {
+          "text": " ",
+          "start_time": 20.1,
+          "end_time": 20.14
+        },
+        {
+          "text": "social",
+          "start_time": 20.14,
+          "end_time": 20.38
+        },
+        {
+          "text": " ",
+          "start_time": 20.38,
+          "end_time": 20.459
+        },
+        {
+          "text": "media",
+          "start_time": 20.46,
+          "end_time": 20.8
+        },
+        {
+          "text": " ",
+          "start_time": 20.8,
+          "end_time": 20.98
+        },
+        {
+          "text": "at",
+          "start_time": 20.98,
+          "end_time": 21.1
+        },
+        {
+          "text": " ",
+          "start_time": 21.1,
+          "end_time": 21.12
+        },
+        {
+          "text": "MemphisCityCouncil",
+          "start_time": 21.12,
+          "end_time": 22.06
+        },
+        {
+          "text": " ",
+          "start_time": 22.06,
+          "end_time": 22.14
+        },
+        {
+          "text": "to",
+          "start_time": 22.14,
+          "end_time": 22.24
+        },
+        {
+          "text": " ",
+          "start_time": 22.24,
+          "end_time": 22.25
+        },
+        {
+          "text": "stay",
+          "start_time": 22.25,
+          "end_time": 22.44
+        },
+        {
+          "text": " ",
+          "start_time": 22.44,
+          "end_time": 22.56
+        },
+        {
+          "text": "updated",
+          "start_time": 22.56,
+          "end_time": 23.04
+        },
+        {
+          "text": " ",
+          "start_time": 23.04,
+          "end_time": 23.08
+        },
+        {
+          "text": "on",
+          "start_time": 23.08,
+          "end_time": 23.26
+        },
+        {
+          "text": " ",
+          "start_time": 23.26,
+          "end_time": 23.36
+        },
+        {
+          "text": "all",
+          "start_time": 23.36,
+          "end_time": 23.5
+        },
+        {
+          "text": " ",
+          "start_time": 23.5,
+          "end_time": 23.52
+        },
+        {
+          "text": "the",
+          "start_time": 23.52,
+          "end_time": 23.6
+        },
+        {
+          "text": " ",
+          "start_time": 23.6,
+          "end_time": 23.62
+        },
+        {
+          "text": "great",
+          "start_time": 23.62,
+          "end_time": 23.82
+        },
+        {
+          "text": " ",
+          "start_time": 23.82,
+          "end_time": 23.88
+        },
+        {
+          "text": "things",
+          "start_time": 23.88,
+          "end_time": 24.12
+        },
+        {
+          "text": " ",
+          "start_time": 24.12,
+          "end_time": 24.2
+        },
+        {
+          "text": "happening",
+          "start_time": 24.2,
+          "end_time": 24.47
+        },
+        {
+          "text": " ",
+          "start_time": 24.47,
+          "end_time": 24.5
+        },
+        {
+          "text": "in",
+          "start_time": 24.5,
+          "end_time": 24.54
+        },
+        {
+          "text": " ",
+          "start_time": 24.54,
+          "end_time": 24.58
+        },
+        {
+          "text": "our",
+          "start_time": 24.58,
+          "end_time": 24.7
+        },
+        {
+          "text": " ",
+          "start_time": 24.7,
+          "end_time": 24.759
+        },
+        {
+          "text": "city.",
+          "start_time": 24.76,
+          "end_time": 25.54
+        },
+        {
+          "text": " ",
+          "start_time": 25.54,
+          "end_time": 25.599
+        },
+        {
+          "text": "I'm",
+          "start_time": 25.6,
+          "end_time": 25.64
+        },
+        {
+          "text": " ",
+          "start_time": 25.64,
+          "end_time": 25.7
+        },
+        {
+          "text": "excited",
+          "start_time": 25.7,
+          "end_time": 26.05
+        },
+        {
+          "text": " ",
+          "start_time": 26.05,
+          "end_time": 26.08
+        },
+        {
+          "text": "to",
+          "start_time": 26.08,
+          "end_time": 26.14
+        },
+        {
+          "text": " ",
+          "start_time": 26.14,
+          "end_time": 26.18
+        },
+        {
+          "text": "announce",
+          "start_time": 26.18,
+          "end_time": 26.5
+        },
+        {
+          "text": " ",
+          "start_time": 26.5,
+          "end_time": 26.54
+        },
+        {
+          "text": "that",
+          "start_time": 26.54,
+          "end_time": 26.61
+        },
+        {
+          "text": " ",
+          "start_time": 26.61,
+          "end_time": 26.64
+        },
+        {
+          "text": "our",
+          "start_time": 26.64,
+          "end_time": 26.84
+        },
+        {
+          "text": " ",
+          "start_time": 26.84,
+          "end_time": 26.88
+        },
+        {
+          "text": "official",
+          "start_time": 26.88,
+          "end_time": 27.3
+        },
+        {
+          "text": " ",
+          "start_time": 27.3,
+          "end_time": 27.34
+        },
+        {
+          "text": "council",
+          "start_time": 27.34,
+          "end_time": 27.72
+        },
+        {
+          "text": " ",
+          "start_time": 27.72,
+          "end_time": 27.73
+        },
+        {
+          "text": "podcast,",
+          "start_time": 27.73,
+          "end_time": 28.76
+        },
+        {
+          "text": " ",
+          "start_time": 28.76,
+          "end_time": 28.77
+        },
+        {
+          "text": "The",
+          "start_time": 28.77,
+          "end_time": 28.88
+        },
+        {
+          "text": " ",
+          "start_time": 28.88,
+          "end_time": 28.919
+        },
+        {
+          "text": "Council",
+          "start_time": 28.92,
+          "end_time": 29.24
+        },
+        {
+          "text": " ",
+          "start_time": 29.24,
+          "end_time": 29.34
+        },
+        {
+          "text": "Connect,",
+          "start_time": 29.34,
+          "end_time": 29.84
+        },
+        {
+          "text": " ",
+          "start_time": 29.84,
+          "end_time": 29.9
+        },
+        {
+          "text": "is",
+          "start_time": 29.9,
+          "end_time": 30.0
+        },
+        {
+          "text": " ",
+          "start_time": 30.0,
+          "end_time": 30.06
+        },
+        {
+          "text": "live.",
+          "start_time": 30.06,
+          "end_time": 30.91
+        },
+        {
+          "text": " ",
+          "start_time": 30.91,
+          "end_time": 30.96
+        },
+        {
+          "text": "You",
+          "start_time": 30.96,
+          "end_time": 30.98
+        },
+        {
+          "text": " ",
+          "start_time": 30.98,
+          "end_time": 31.02
+        },
+        {
+          "text": "can",
+          "start_time": 31.02,
+          "end_time": 31.1
+        },
+        {
+          "text": " ",
+          "start_time": 31.1,
+          "end_time": 31.14
+        },
+        {
+          "text": "listen",
+          "start_time": 31.18,
+          "end_time": 31.38
+        },
+        {
+          "text": " ",
+          "start_time": 31.38,
+          "end_time": 31.459
+        },
+        {
+          "text": "right",
+          "start_time": 31.46,
+          "end_time": 31.6
+        },
+        {
+          "text": " ",
+          "start_time": 31.6,
+          "end_time": 31.64
+        },
+        {
+          "text": "now",
+          "start_time": 31.64,
+          "end_time": 31.81
+        },
+        {
+          "text": " ",
+          "start_time": 31.81,
+          "end_time": 31.84
+        },
+        {
+          "text": "at",
+          "start_time": 31.84,
+          "end_time": 31.97
+        },
+        {
+          "text": " ",
+          "start_time": 31.97,
+          "end_time": 32.0
+        },
+        {
+          "text": "wherever",
+          "start_time": 32.0,
+          "end_time": 32.32
+        },
+        {
+          "text": " ",
+          "start_time": 32.32,
+          "end_time": 32.34
+        },
+        {
+          "text": "you",
+          "start_time": 32.34,
+          "end_time": 32.43
+        },
+        {
+          "text": " ",
+          "start_time": 32.43,
+          "end_time": 32.439
+        },
+        {
+          "text": "get",
+          "start_time": 32.439,
+          "end_time": 32.56
+        },
+        {
+          "text": " ",
+          "start_time": 32.56,
+          "end_time": 32.58
+        },
+        {
+          "text": "your",
+          "start_time": 32.58,
+          "end_time": 32.72
+        },
+        {
+          "text": " ",
+          "start_time": 32.72,
+          "end_time": 32.74
+        },
+        {
+          "text": "podcasts.",
+          "start_time": 32.74,
+          "end_time": 33.69
+        },
+        {
+          "text": " ",
+          "start_time": 33.69,
+          "end_time": 33.72
+        }
+      ]
+    },
+    {
+      "text": "We began the council day in the Public Safety and Homeland Security Committee. The Memphis Police Department provided an update on crime from October to date. I'm pleased to say crime is down in all categories. ",
+      "start_time": 33.72,
+      "end_time": 49.62,
+      "speaker": {
+        "id": "speaker_1",
+        "name": "Speaker 1"
+      },
+      "words": [
+        {
+          "text": "We",
+          "start_time": 33.72,
+          "end_time": 33.82
+        },
+        {
+          "text": " ",
+          "start_time": 33.82,
+          "end_time": 33.88
+        },
+        {
+          "text": "began",
+          "start_time": 33.88,
+          "end_time": 34.3
+        },
+        {
+          "text": " ",
+          "start_time": 34.3,
+          "end_time": 34.34
+        },
+        {
+          "text": "the",
+          "start_time": 34.34,
+          "end_time": 34.4
+        },
+        {
+          "text": " ",
+          "start_time": 34.4,
+          "end_time": 34.42
+        },
+        {
+          "text": "council",
+          "start_time": 34.42,
+          "end_time": 34.8
+        },
+        {
+          "text": " ",
+          "start_time": 34.8,
+          "end_time": 34.9
+        },
+        {
+          "text": "day",
+          "start_time": 34.9,
+          "end_time": 35.46
+        },
+        {
+          "text": " ",
+          "start_time": 35.46,
+          "end_time": 35.5
+        },
+        {
+          "text": "in",
+          "start_time": 35.5,
+          "end_time": 35.57
+        },
+        {
+          "text": " ",
+          "start_time": 35.57,
+          "end_time": 35.6
+        },
+        {
+          "text": "the",
+          "start_time": 35.6,
+          "end_time": 35.72
+        },
+        {
+          "text": " ",
+          "start_time": 35.72,
+          "end_time": 35.74
+        },
+        {
+          "text": "Public",
+          "start_time": 35.74,
+          "end_time": 36.07
+        },
+        {
+          "text": " ",
+          "start_time": 36.07,
+          "end_time": 36.22
+        },
+        {
+          "text": "Safety",
+          "start_time": 36.22,
+          "end_time": 36.64
+        },
+        {
+          "text": " ",
+          "start_time": 36.64,
+          "end_time": 36.66
+        },
+        {
+          "text": "and",
+          "start_time": 36.66,
+          "end_time": 36.87
+        },
+        {
+          "text": " ",
+          "start_time": 36.87,
+          "end_time": 36.9
+        },
+        {
+          "text": "Homeland",
+          "start_time": 36.9,
+          "end_time": 37.39
+        },
+        {
+          "text": " ",
+          "start_time": 37.39,
+          "end_time": 37.52
+        },
+        {
+          "text": "Security",
+          "start_time": 37.52,
+          "end_time": 38.2
+        },
+        {
+          "text": " ",
+          "start_time": 38.2,
+          "end_time": 38.24
+        },
+        {
+          "text": "Committee.",
+          "start_time": 38.24,
+          "end_time": 39.04
+        },
+        {
+          "text": " ",
+          "start_time": 39.04,
+          "end_time": 39.08
+        },
+        {
+          "text": "The",
+          "start_time": 39.08,
+          "end_time": 39.24
+        },
+        {
+          "text": " ",
+          "start_time": 39.24,
+          "end_time": 39.26
+        },
+        {
+          "text": "Memphis",
+          "start_time": 39.26,
+          "end_time": 39.66
+        },
+        {
+          "text": " ",
+          "start_time": 39.66,
+          "end_time": 39.68
+        },
+        {
+          "text": "Police",
+          "start_time": 39.68,
+          "end_time": 39.96
+        },
+        {
+          "text": " ",
+          "start_time": 39.96,
+          "end_time": 40.06
+        },
+        {
+          "text": "Department",
+          "start_time": 40.06,
+          "end_time": 40.92
+        },
+        {
+          "text": " ",
+          "start_time": 40.92,
+          "end_time": 40.93
+        },
+        {
+          "text": "provided",
+          "start_time": 40.93,
+          "end_time": 41.42
+        },
+        {
+          "text": " ",
+          "start_time": 41.42,
+          "end_time": 41.43
+        },
+        {
+          "text": "an",
+          "start_time": 41.43,
+          "end_time": 41.66
+        },
+        {
+          "text": " ",
+          "start_time": 41.66,
+          "end_time": 41.72
+        },
+        {
+          "text": "update",
+          "start_time": 41.72,
+          "end_time": 42.08
+        },
+        {
+          "text": " ",
+          "start_time": 42.08,
+          "end_time": 42.239
+        },
+        {
+          "text": "on",
+          "start_time": 42.24,
+          "end_time": 42.4
+        },
+        {
+          "text": " ",
+          "start_time": 42.4,
+          "end_time": 42.46
+        },
+        {
+          "text": "crime",
+          "start_time": 42.46,
+          "end_time": 42.94
+        },
+        {
+          "text": " ",
+          "start_time": 42.94,
+          "end_time": 43.12
+        },
+        {
+          "text": "from",
+          "start_time": 43.12,
+          "end_time": 43.35
+        },
+        {
+          "text": " ",
+          "start_time": 43.35,
+          "end_time": 43.4
+        },
+        {
+          "text": "October",
+          "start_time": 43.4,
+          "end_time": 43.9
+        },
+        {
+          "text": " ",
+          "start_time": 43.9,
+          "end_time": 43.94
+        },
+        {
+          "text": "to",
+          "start_time": 43.94,
+          "end_time": 44.0
+        },
+        {
+          "text": " ",
+          "start_time": 44.0,
+          "end_time": 44.12
+        },
+        {
+          "text": "date.",
+          "start_time": 44.12,
+          "end_time": 44.78
+        },
+        {
+          "text": " ",
+          "start_time": 44.78,
+          "end_time": 44.86
+        },
+        {
+          "text": "I'm",
+          "start_time": 44.86,
+          "end_time": 45.02
+        },
+        {
+          "text": " ",
+          "start_time": 45.02,
+          "end_time": 45.1
+        },
+        {
+          "text": "pleased",
+          "start_time": 45.1,
+          "end_time": 45.6
+        },
+        {
+          "text": " ",
+          "start_time": 45.6,
+          "end_time": 45.64
+        },
+        {
+          "text": "to",
+          "start_time": 45.64,
+          "end_time": 45.78
+        },
+        {
+          "text": " ",
+          "start_time": 45.78,
+          "end_time": 45.86
+        },
+        {
+          "text": "say",
+          "start_time": 45.86,
+          "end_time": 46.34
+        },
+        {
+          "text": " ",
+          "start_time": 46.34,
+          "end_time": 46.42
+        },
+        {
+          "text": "crime",
+          "start_time": 46.42,
+          "end_time": 46.76
+        },
+        {
+          "text": " ",
+          "start_time": 46.76,
+          "end_time": 46.8
+        },
+        {
+          "text": "is",
+          "start_time": 46.8,
+          "end_time": 47.01
+        },
+        {
+          "text": " ",
+          "start_time": 47.01,
+          "end_time": 47.04
+        },
+        {
+          "text": "down",
+          "start_time": 47.04,
+          "end_time": 47.5
+        },
+        {
+          "text": " ",
+          "start_time": 47.5,
+          "end_time": 47.58
+        },
+        {
+          "text": "in",
+          "start_time": 47.58,
+          "end_time": 47.91
+        },
+        {
+          "text": " ",
+          "start_time": 47.91,
+          "end_time": 48.019
+        },
+        {
+          "text": "all",
+          "start_time": 48.02,
+          "end_time": 48.35
+        },
+        {
+          "text": " ",
+          "start_time": 48.35,
+          "end_time": 48.4
+        },
+        {
+          "text": "categories.",
+          "start_time": 48.4,
+          "end_time": 49.61
+        },
+        {
+          "text": " ",
+          "start_time": 49.61,
+          "end_time": 49.62
+        }
+      ]
+    },
+    {
+      "text": "It's Veterans and Military Families Month. During our regular council meeting, Councilman Spinoza sponsored a resolution honoring the sacrifice of service members and their families. ",
+      "start_time": 49.62,
+      "end_time": 59.58,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "It's",
+          "start_time": 49.62,
+          "end_time": 49.83
+        },
+        {
+          "text": " ",
+          "start_time": 49.83,
+          "end_time": 49.88
+        },
+        {
+          "text": "Veterans",
+          "start_time": 49.88,
+          "end_time": 50.23
+        },
+        {
+          "text": " ",
+          "start_time": 50.23,
+          "end_time": 50.24
+        },
+        {
+          "text": "and",
+          "start_time": 50.24,
+          "end_time": 50.29
+        },
+        {
+          "text": " ",
+          "start_time": 50.29,
+          "end_time": 50.36
+        },
+        {
+          "text": "Military",
+          "start_time": 50.36,
+          "end_time": 50.73
+        },
+        {
+          "text": " ",
+          "start_time": 50.73,
+          "end_time": 50.839
+        },
+        {
+          "text": "Families",
+          "start_time": 50.84,
+          "end_time": 51.15
+        },
+        {
+          "text": " ",
+          "start_time": 51.15,
+          "end_time": 51.22
+        },
+        {
+          "text": "Month.",
+          "start_time": 51.22,
+          "end_time": 51.96
+        },
+        {
+          "text": " ",
+          "start_time": 51.96,
+          "end_time": 52.0
+        },
+        {
+          "text": "During",
+          "start_time": 52.0,
+          "end_time": 52.16
+        },
+        {
+          "text": " ",
+          "start_time": 52.16,
+          "end_time": 52.2
+        },
+        {
+          "text": "our",
+          "start_time": 52.2,
+          "end_time": 52.3
+        },
+        {
+          "text": " ",
+          "start_time": 52.3,
+          "end_time": 52.32
+        },
+        {
+          "text": "regular",
+          "start_time": 52.32,
+          "end_time": 52.6
+        },
+        {
+          "text": " ",
+          "start_time": 52.6,
+          "end_time": 52.64
+        },
+        {
+          "text": "council",
+          "start_time": 52.64,
+          "end_time": 52.94
+        },
+        {
+          "text": " ",
+          "start_time": 52.94,
+          "end_time": 53.0
+        },
+        {
+          "text": "meeting,",
+          "start_time": 53.0,
+          "end_time": 53.32
+        },
+        {
+          "text": " ",
+          "start_time": 53.32,
+          "end_time": 53.36
+        },
+        {
+          "text": "Councilman",
+          "start_time": 53.36,
+          "end_time": 53.8
+        },
+        {
+          "text": " ",
+          "start_time": 53.8,
+          "end_time": 53.84
+        },
+        {
+          "text": "Spinoza",
+          "start_time": 53.84,
+          "end_time": 54.38
+        },
+        {
+          "text": " ",
+          "start_time": 54.38,
+          "end_time": 54.4
+        },
+        {
+          "text": "sponsored",
+          "start_time": 54.4,
+          "end_time": 54.78
+        },
+        {
+          "text": " ",
+          "start_time": 54.78,
+          "end_time": 54.8
+        },
+        {
+          "text": "a",
+          "start_time": 54.8,
+          "end_time": 54.88
+        },
+        {
+          "text": " ",
+          "start_time": 54.88,
+          "end_time": 54.92
+        },
+        {
+          "text": "resolution",
+          "start_time": 54.92,
+          "end_time": 55.46
+        },
+        {
+          "text": " ",
+          "start_time": 55.46,
+          "end_time": 55.64
+        },
+        {
+          "text": "honoring",
+          "start_time": 55.64,
+          "end_time": 55.89
+        },
+        {
+          "text": " ",
+          "start_time": 55.89,
+          "end_time": 55.92
+        },
+        {
+          "text": "the",
+          "start_time": 55.92,
+          "end_time": 56.01
+        },
+        {
+          "text": " ",
+          "start_time": 56.01,
+          "end_time": 56.14
+        },
+        {
+          "text": "sacrifice",
+          "start_time": 56.14,
+          "end_time": 56.8
+        },
+        {
+          "text": " ",
+          "start_time": 56.8,
+          "end_time": 57.26
+        },
+        {
+          "text": "of",
+          "start_time": 57.26,
+          "end_time": 57.33
+        },
+        {
+          "text": " ",
+          "start_time": 57.33,
+          "end_time": 57.42
+        },
+        {
+          "text": "service",
+          "start_time": 57.42,
+          "end_time": 57.74
+        },
+        {
+          "text": " ",
+          "start_time": 57.74,
+          "end_time": 57.78
+        },
+        {
+          "text": "members",
+          "start_time": 57.78,
+          "end_time": 58.28
+        },
+        {
+          "text": " ",
+          "start_time": 58.28,
+          "end_time": 58.34
+        },
+        {
+          "text": "and",
+          "start_time": 58.34,
+          "end_time": 58.449
+        },
+        {
+          "text": " ",
+          "start_time": 58.449,
+          "end_time": 58.48
+        },
+        {
+          "text": "their",
+          "start_time": 58.48,
+          "end_time": 58.62
+        },
+        {
+          "text": " ",
+          "start_time": 58.62,
+          "end_time": 58.66
+        },
+        {
+          "text": "families.",
+          "start_time": 58.66,
+          "end_time": 59.13
+        },
+        {
+          "text": " ",
+          "start_time": 59.13,
+          "end_time": 59.58
+        }
+      ]
+    },
+    {
+      "text": "Councilwoman Cooper-Sutton also sponsored a resolution to First Baptist Church of Lauderdale, celebrating 160 years in ministry. ",
+      "start_time": 59.58,
+      "end_time": 69.94,
+      "speaker": {
+        "id": "speaker_1",
+        "name": "Speaker 1"
+      },
+      "words": [
+        {
+          "text": "Councilwoman",
+          "start_time": 59.58,
+          "end_time": 60.26
+        },
+        {
+          "text": " ",
+          "start_time": 60.26,
+          "end_time": 60.339
+        },
+        {
+          "text": "Cooper-Sutton",
+          "start_time": 60.34,
+          "end_time": 61.14
+        },
+        {
+          "text": " ",
+          "start_time": 61.14,
+          "end_time": 61.58
+        },
+        {
+          "text": "also",
+          "start_time": 61.64,
+          "end_time": 61.98
+        },
+        {
+          "text": " ",
+          "start_time": 61.98,
+          "end_time": 62.08
+        },
+        {
+          "text": "sponsored",
+          "start_time": 62.08,
+          "end_time": 62.71
+        },
+        {
+          "text": " ",
+          "start_time": 62.71,
+          "end_time": 62.98
+        },
+        {
+          "text": "a",
+          "start_time": 62.98,
+          "end_time": 63.02
+        },
+        {
+          "text": " ",
+          "start_time": 63.02,
+          "end_time": 63.1
+        },
+        {
+          "text": "resolution",
+          "start_time": 63.1,
+          "end_time": 63.8
+        },
+        {
+          "text": " ",
+          "start_time": 63.8,
+          "end_time": 63.86
+        },
+        {
+          "text": "to",
+          "start_time": 63.86,
+          "end_time": 63.96
+        },
+        {
+          "text": " ",
+          "start_time": 63.96,
+          "end_time": 64.08
+        },
+        {
+          "text": "First",
+          "start_time": 64.08,
+          "end_time": 64.379
+        },
+        {
+          "text": " ",
+          "start_time": 64.379,
+          "end_time": 64.459
+        },
+        {
+          "text": "Baptist",
+          "start_time": 64.459,
+          "end_time": 64.84
+        },
+        {
+          "text": " ",
+          "start_time": 64.84,
+          "end_time": 64.94
+        },
+        {
+          "text": "Church",
+          "start_time": 64.94,
+          "end_time": 65.2
+        },
+        {
+          "text": " ",
+          "start_time": 65.2,
+          "end_time": 65.26
+        },
+        {
+          "text": "of",
+          "start_time": 65.26,
+          "end_time": 65.379
+        },
+        {
+          "text": " ",
+          "start_time": 65.379,
+          "end_time": 65.42
+        },
+        {
+          "text": "Lauderdale,",
+          "start_time": 65.42,
+          "end_time": 66.32
+        },
+        {
+          "text": " ",
+          "start_time": 66.32,
+          "end_time": 66.38
+        },
+        {
+          "text": "celebrating",
+          "start_time": 66.38,
+          "end_time": 67.06
+        },
+        {
+          "text": " ",
+          "start_time": 67.06,
+          "end_time": 67.36
+        },
+        {
+          "text": "160",
+          "start_time": 67.36,
+          "end_time": 68.1
+        },
+        {
+          "text": " ",
+          "start_time": 68.1,
+          "end_time": 68.28
+        },
+        {
+          "text": "years",
+          "start_time": 68.28,
+          "end_time": 68.74
+        },
+        {
+          "text": " ",
+          "start_time": 68.74,
+          "end_time": 68.8
+        },
+        {
+          "text": "in",
+          "start_time": 68.8,
+          "end_time": 68.96
+        },
+        {
+          "text": " ",
+          "start_time": 68.96,
+          "end_time": 69.0
+        },
+        {
+          "text": "ministry.",
+          "start_time": 69.0,
+          "end_time": 69.9
+        },
+        {
+          "text": " ",
+          "start_time": 69.9,
+          "end_time": 69.94
+        }
+      ]
+    },
+    {
+      "text": "The council approved grant funding in the amount of 105,000 for maintenance repairs at David Carnes Park. ",
+      "start_time": 69.94,
+      "end_time": 75.96,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "The",
+          "start_time": 69.94,
+          "end_time": 70.02
+        },
+        {
+          "text": " ",
+          "start_time": 70.02,
+          "end_time": 70.06
+        },
+        {
+          "text": "council",
+          "start_time": 70.06,
+          "end_time": 70.38
+        },
+        {
+          "text": " ",
+          "start_time": 70.38,
+          "end_time": 70.42
+        },
+        {
+          "text": "approved",
+          "start_time": 70.42,
+          "end_time": 70.74
+        },
+        {
+          "text": " ",
+          "start_time": 70.74,
+          "end_time": 70.759
+        },
+        {
+          "text": "grant",
+          "start_time": 70.76,
+          "end_time": 70.94
+        },
+        {
+          "text": " ",
+          "start_time": 70.94,
+          "end_time": 71.039
+        },
+        {
+          "text": "funding",
+          "start_time": 71.04,
+          "end_time": 71.24
+        },
+        {
+          "text": " ",
+          "start_time": 71.24,
+          "end_time": 71.28
+        },
+        {
+          "text": "in",
+          "start_time": 71.28,
+          "end_time": 71.32
+        },
+        {
+          "text": " ",
+          "start_time": 71.32,
+          "end_time": 71.34
+        },
+        {
+          "text": "the",
+          "start_time": 71.34,
+          "end_time": 71.38
+        },
+        {
+          "text": " ",
+          "start_time": 71.38,
+          "end_time": 71.4
+        },
+        {
+          "text": "amount",
+          "start_time": 71.4,
+          "end_time": 71.66
+        },
+        {
+          "text": " ",
+          "start_time": 71.66,
+          "end_time": 71.7
+        },
+        {
+          "text": "of",
+          "start_time": 71.7,
+          "end_time": 71.78
+        },
+        {
+          "text": " ",
+          "start_time": 71.78,
+          "end_time": 71.88
+        },
+        {
+          "text": "105,000",
+          "start_time": 71.88,
+          "end_time": 73.04
+        },
+        {
+          "text": " ",
+          "start_time": 73.04,
+          "end_time": 73.14
+        },
+        {
+          "text": "for",
+          "start_time": 73.14,
+          "end_time": 73.2
+        },
+        {
+          "text": " ",
+          "start_time": 73.2,
+          "end_time": 73.3
+        },
+        {
+          "text": "maintenance",
+          "start_time": 73.3,
+          "end_time": 73.58
+        },
+        {
+          "text": " ",
+          "start_time": 73.58,
+          "end_time": 73.64
+        },
+        {
+          "text": "repairs",
+          "start_time": 73.64,
+          "end_time": 74.46
+        },
+        {
+          "text": " ",
+          "start_time": 74.46,
+          "end_time": 74.5
+        },
+        {
+          "text": "at",
+          "start_time": 74.5,
+          "end_time": 74.64
+        },
+        {
+          "text": " ",
+          "start_time": 74.64,
+          "end_time": 74.68
+        },
+        {
+          "text": "David",
+          "start_time": 74.68,
+          "end_time": 74.92
+        },
+        {
+          "text": " ",
+          "start_time": 74.92,
+          "end_time": 75.0
+        },
+        {
+          "text": "Carnes",
+          "start_time": 75.0,
+          "end_time": 75.28
+        },
+        {
+          "text": " ",
+          "start_time": 75.28,
+          "end_time": 75.36
+        },
+        {
+          "text": "Park.",
+          "start_time": 75.36,
+          "end_time": 75.9
+        },
+        {
+          "text": " ",
+          "start_time": 75.9,
+          "end_time": 75.96
+        }
+      ]
+    },
+    {
+      "text": "We also accepted $60,000 from the Tennessee Department of Disability and Aging for senior programming at the Josephine Lewis and Frazier Raleigh Senior Centers. ",
+      "start_time": 75.96,
+      "end_time": 88.49,
+      "speaker": {
+        "id": "speaker_1",
+        "name": "Speaker 1"
+      },
+      "words": [
+        {
+          "text": "We",
+          "start_time": 75.96,
+          "end_time": 76.18
+        },
+        {
+          "text": " ",
+          "start_time": 76.18,
+          "end_time": 76.3
+        },
+        {
+          "text": "also",
+          "start_time": 76.3,
+          "end_time": 76.7
+        },
+        {
+          "text": " ",
+          "start_time": 76.7,
+          "end_time": 76.88
+        },
+        {
+          "text": "accepted",
+          "start_time": 76.88,
+          "end_time": 77.78
+        },
+        {
+          "text": " ",
+          "start_time": 77.78,
+          "end_time": 77.79
+        },
+        {
+          "text": "$60,000",
+          "start_time": 77.79,
+          "end_time": 79.4
+        },
+        {
+          "text": " ",
+          "start_time": 79.4,
+          "end_time": 79.46
+        },
+        {
+          "text": "from",
+          "start_time": 79.46,
+          "end_time": 79.6
+        },
+        {
+          "text": " ",
+          "start_time": 79.6,
+          "end_time": 79.64
+        },
+        {
+          "text": "the",
+          "start_time": 79.64,
+          "end_time": 79.76
+        },
+        {
+          "text": " ",
+          "start_time": 79.76,
+          "end_time": 79.82
+        },
+        {
+          "text": "Tennessee",
+          "start_time": 79.82,
+          "end_time": 80.26
+        },
+        {
+          "text": " ",
+          "start_time": 80.26,
+          "end_time": 80.36
+        },
+        {
+          "text": "Department",
+          "start_time": 80.36,
+          "end_time": 81.0
+        },
+        {
+          "text": " ",
+          "start_time": 81.0,
+          "end_time": 81.04
+        },
+        {
+          "text": "of",
+          "start_time": 81.04,
+          "end_time": 81.15
+        },
+        {
+          "text": " ",
+          "start_time": 81.15,
+          "end_time": 81.24
+        },
+        {
+          "text": "Disability",
+          "start_time": 81.24,
+          "end_time": 81.89
+        },
+        {
+          "text": " ",
+          "start_time": 81.89,
+          "end_time": 81.979
+        },
+        {
+          "text": "and",
+          "start_time": 81.98,
+          "end_time": 82.22
+        },
+        {
+          "text": " ",
+          "start_time": 82.22,
+          "end_time": 82.23
+        },
+        {
+          "text": "Aging",
+          "start_time": 82.23,
+          "end_time": 82.66
+        },
+        {
+          "text": " ",
+          "start_time": 82.66,
+          "end_time": 83.0
+        },
+        {
+          "text": "for",
+          "start_time": 83.0,
+          "end_time": 83.12
+        },
+        {
+          "text": " ",
+          "start_time": 83.12,
+          "end_time": 83.13
+        },
+        {
+          "text": "senior",
+          "start_time": 83.13,
+          "end_time": 83.45
+        },
+        {
+          "text": " ",
+          "start_time": 83.45,
+          "end_time": 83.56
+        },
+        {
+          "text": "programming",
+          "start_time": 83.56,
+          "end_time": 84.28
+        },
+        {
+          "text": " ",
+          "start_time": 84.28,
+          "end_time": 84.32
+        },
+        {
+          "text": "at",
+          "start_time": 84.32,
+          "end_time": 84.45
+        },
+        {
+          "text": " ",
+          "start_time": 84.45,
+          "end_time": 84.48
+        },
+        {
+          "text": "the",
+          "start_time": 84.48,
+          "end_time": 84.58
+        },
+        {
+          "text": " ",
+          "start_time": 84.58,
+          "end_time": 84.64
+        },
+        {
+          "text": "Josephine",
+          "start_time": 84.64,
+          "end_time": 85.24
+        },
+        {
+          "text": " ",
+          "start_time": 85.24,
+          "end_time": 85.36
+        },
+        {
+          "text": "Lewis",
+          "start_time": 85.36,
+          "end_time": 85.96
+        },
+        {
+          "text": " ",
+          "start_time": 85.96,
+          "end_time": 86.0
+        },
+        {
+          "text": "and",
+          "start_time": 86.0,
+          "end_time": 86.22
+        },
+        {
+          "text": " ",
+          "start_time": 86.22,
+          "end_time": 86.26
+        },
+        {
+          "text": "Frazier",
+          "start_time": 86.26,
+          "end_time": 86.74
+        },
+        {
+          "text": " ",
+          "start_time": 86.74,
+          "end_time": 86.78
+        },
+        {
+          "text": "Raleigh",
+          "start_time": 86.78,
+          "end_time": 87.14
+        },
+        {
+          "text": " ",
+          "start_time": 87.14,
+          "end_time": 87.15
+        },
+        {
+          "text": "Senior",
+          "start_time": 87.15,
+          "end_time": 87.48
+        },
+        {
+          "text": " ",
+          "start_time": 87.48,
+          "end_time": 87.6
+        },
+        {
+          "text": "Centers.",
+          "start_time": 87.6,
+          "end_time": 88.48
+        },
+        {
+          "text": " ",
+          "start_time": 88.48,
+          "end_time": 88.49
+        }
+      ]
+    },
+    {
+      "text": "The council accepted more than $1.7 million from the Tennessee Department of Transportation for the Winchester Drive interchange at Perkins Road. ",
+      "start_time": 88.49,
+      "end_time": 97.44,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "The",
+          "start_time": 88.49,
+          "end_time": 88.58
+        },
+        {
+          "text": " ",
+          "start_time": 88.58,
+          "end_time": 88.62
+        },
+        {
+          "text": "council",
+          "start_time": 88.62,
+          "end_time": 88.9
+        },
+        {
+          "text": " ",
+          "start_time": 88.9,
+          "end_time": 88.98
+        },
+        {
+          "text": "accepted",
+          "start_time": 88.98,
+          "end_time": 89.38
+        },
+        {
+          "text": " ",
+          "start_time": 89.38,
+          "end_time": 89.42
+        },
+        {
+          "text": "more",
+          "start_time": 89.42,
+          "end_time": 89.53
+        },
+        {
+          "text": " ",
+          "start_time": 89.53,
+          "end_time": 89.58
+        },
+        {
+          "text": "than",
+          "start_time": 89.58,
+          "end_time": 89.75
+        },
+        {
+          "text": " ",
+          "start_time": 89.75,
+          "end_time": 89.75
+        },
+        {
+          "text": "$1.7",
+          "start_time": 89.75,
+          "end_time": 90.67
+        },
+        {
+          "text": " ",
+          "start_time": 90.67,
+          "end_time": 90.7
+        },
+        {
+          "text": "million",
+          "start_time": 90.7,
+          "end_time": 91.44
+        },
+        {
+          "text": " ",
+          "start_time": 91.44,
+          "end_time": 91.48
+        },
+        {
+          "text": "from",
+          "start_time": 91.48,
+          "end_time": 91.59
+        },
+        {
+          "text": " ",
+          "start_time": 91.59,
+          "end_time": 91.6
+        },
+        {
+          "text": "the",
+          "start_time": 91.6,
+          "end_time": 91.68
+        },
+        {
+          "text": " ",
+          "start_time": 91.68,
+          "end_time": 91.72
+        },
+        {
+          "text": "Tennessee",
+          "start_time": 91.72,
+          "end_time": 92.04
+        },
+        {
+          "text": " ",
+          "start_time": 92.04,
+          "end_time": 92.06
+        },
+        {
+          "text": "Department",
+          "start_time": 92.06,
+          "end_time": 92.48
+        },
+        {
+          "text": " ",
+          "start_time": 92.48,
+          "end_time": 92.52
+        },
+        {
+          "text": "of",
+          "start_time": 92.52,
+          "end_time": 92.58
+        },
+        {
+          "text": " ",
+          "start_time": 92.58,
+          "end_time": 92.64
+        },
+        {
+          "text": "Transportation",
+          "start_time": 92.64,
+          "end_time": 93.4
+        },
+        {
+          "text": " ",
+          "start_time": 93.4,
+          "end_time": 93.96
+        },
+        {
+          "text": "for",
+          "start_time": 93.96,
+          "end_time": 94.02
+        },
+        {
+          "text": " ",
+          "start_time": 94.02,
+          "end_time": 94.06
+        },
+        {
+          "text": "the",
+          "start_time": 94.06,
+          "end_time": 94.14
+        },
+        {
+          "text": " ",
+          "start_time": 94.14,
+          "end_time": 94.18
+        },
+        {
+          "text": "Winchester",
+          "start_time": 94.18,
+          "end_time": 94.7
+        },
+        {
+          "text": " ",
+          "start_time": 94.7,
+          "end_time": 94.76
+        },
+        {
+          "text": "Drive",
+          "start_time": 94.76,
+          "end_time": 95.06
+        },
+        {
+          "text": " ",
+          "start_time": 95.06,
+          "end_time": 95.14
+        },
+        {
+          "text": "interchange",
+          "start_time": 95.14,
+          "end_time": 95.78
+        },
+        {
+          "text": " ",
+          "start_time": 95.78,
+          "end_time": 96.08
+        },
+        {
+          "text": "at",
+          "start_time": 96.08,
+          "end_time": 96.18
+        },
+        {
+          "text": " ",
+          "start_time": 96.18,
+          "end_time": 96.22
+        },
+        {
+          "text": "Perkins",
+          "start_time": 96.22,
+          "end_time": 96.54
+        },
+        {
+          "text": " ",
+          "start_time": 96.54,
+          "end_time": 96.62
+        },
+        {
+          "text": "Road.",
+          "start_time": 96.62,
+          "end_time": 96.89
+        },
+        {
+          "text": " ",
+          "start_time": 96.89,
+          "end_time": 97.44
+        }
+      ]
+    },
+    {
+      "text": "Lastly, we'd like to thank Pastor May Jr. For serving as our Chaplain of the Day. ",
+      "start_time": 97.44,
+      "end_time": 104.18,
+      "speaker": {
+        "id": "speaker_1",
+        "name": "Speaker 1"
+      },
+      "words": [
+        {
+          "text": "Lastly,",
+          "start_time": 97.44,
+          "end_time": 98.26
+        },
+        {
+          "text": " ",
+          "start_time": 98.26,
+          "end_time": 98.32
+        },
+        {
+          "text": "we'd",
+          "start_time": 98.32,
+          "end_time": 98.46
+        },
+        {
+          "text": " ",
+          "start_time": 98.46,
+          "end_time": 98.5
+        },
+        {
+          "text": "like",
+          "start_time": 98.5,
+          "end_time": 98.66
+        },
+        {
+          "text": " ",
+          "start_time": 98.66,
+          "end_time": 98.72
+        },
+        {
+          "text": "to",
+          "start_time": 98.72,
+          "end_time": 98.88
+        },
+        {
+          "text": " ",
+          "start_time": 98.88,
+          "end_time": 98.92
+        },
+        {
+          "text": "thank",
+          "start_time": 98.92,
+          "end_time": 99.48
+        },
+        {
+          "text": " ",
+          "start_time": 99.48,
+          "end_time": 99.54
+        },
+        {
+          "text": "Pastor",
+          "start_time": 99.54,
+          "end_time": 99.92
+        },
+        {
+          "text": " ",
+          "start_time": 99.92,
+          "end_time": 100.02
+        },
+        {
+          "text": "May",
+          "start_time": 100.02,
+          "end_time": 100.2
+        },
+        {
+          "text": " ",
+          "start_time": 100.2,
+          "end_time": 100.34
+        },
+        {
+          "text": "Jr.",
+          "start_time": 100.34,
+          "end_time": 100.98
+        },
+        {
+          "text": " ",
+          "start_time": 100.98,
+          "end_time": 101.06
+        },
+        {
+          "text": "For",
+          "start_time": 101.06,
+          "end_time": 101.2
+        },
+        {
+          "text": " ",
+          "start_time": 101.2,
+          "end_time": 101.38
+        },
+        {
+          "text": "serving",
+          "start_time": 101.38,
+          "end_time": 101.98
+        },
+        {
+          "text": " ",
+          "start_time": 101.98,
+          "end_time": 102.02
+        },
+        {
+          "text": "as",
+          "start_time": 102.02,
+          "end_time": 102.16
+        },
+        {
+          "text": " ",
+          "start_time": 102.16,
+          "end_time": 102.22
+        },
+        {
+          "text": "our",
+          "start_time": 102.22,
+          "end_time": 102.35
+        },
+        {
+          "text": " ",
+          "start_time": 102.35,
+          "end_time": 102.42
+        },
+        {
+          "text": "Chaplain",
+          "start_time": 102.48,
+          "end_time": 103.1
+        },
+        {
+          "text": " ",
+          "start_time": 103.1,
+          "end_time": 103.18
+        },
+        {
+          "text": "of",
+          "start_time": 103.18,
+          "end_time": 103.25
+        },
+        {
+          "text": " ",
+          "start_time": 103.25,
+          "end_time": 103.32
+        },
+        {
+          "text": "the",
+          "start_time": 103.32,
+          "end_time": 103.36
+        },
+        {
+          "text": " ",
+          "start_time": 103.36,
+          "end_time": 103.46
+        },
+        {
+          "text": "Day.",
+          "start_time": 103.46,
+          "end_time": 103.7
+        },
+        {
+          "text": " ",
+          "start_time": 103.7,
+          "end_time": 104.18
+        }
+      ]
+    },
+    {
+      "text": "Memphis, your city council is the forefront of ensuring transparent leadership and fostering collaboration between your elected officials and the communities we serve. ",
+      "start_time": 104.18,
+      "end_time": 113.28,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "Memphis,",
+          "start_time": 104.18,
+          "end_time": 104.76
+        },
+        {
+          "text": " ",
+          "start_time": 104.76,
+          "end_time": 104.8
+        },
+        {
+          "text": "your",
+          "start_time": 104.8,
+          "end_time": 104.89
+        },
+        {
+          "text": " ",
+          "start_time": 104.89,
+          "end_time": 104.96
+        },
+        {
+          "text": "city",
+          "start_time": 104.96,
+          "end_time": 105.14
+        },
+        {
+          "text": " ",
+          "start_time": 105.14,
+          "end_time": 105.22
+        },
+        {
+          "text": "council",
+          "start_time": 105.22,
+          "end_time": 105.56
+        },
+        {
+          "text": " ",
+          "start_time": 105.56,
+          "end_time": 105.66
+        },
+        {
+          "text": "is",
+          "start_time": 105.66,
+          "end_time": 105.74
+        },
+        {
+          "text": " ",
+          "start_time": 105.74,
+          "end_time": 105.78
+        },
+        {
+          "text": "the",
+          "start_time": 105.78,
+          "end_time": 105.86
+        },
+        {
+          "text": " ",
+          "start_time": 105.86,
+          "end_time": 105.92
+        },
+        {
+          "text": "forefront",
+          "start_time": 105.92,
+          "end_time": 106.3
+        },
+        {
+          "text": " ",
+          "start_time": 106.3,
+          "end_time": 106.32
+        },
+        {
+          "text": "of",
+          "start_time": 106.32,
+          "end_time": 106.48
+        },
+        {
+          "text": " ",
+          "start_time": 106.48,
+          "end_time": 106.52
+        },
+        {
+          "text": "ensuring",
+          "start_time": 106.52,
+          "end_time": 106.96
+        },
+        {
+          "text": " ",
+          "start_time": 106.96,
+          "end_time": 107.02
+        },
+        {
+          "text": "transparent",
+          "start_time": 107.02,
+          "end_time": 107.64
+        },
+        {
+          "text": " ",
+          "start_time": 107.64,
+          "end_time": 107.68
+        },
+        {
+          "text": "leadership",
+          "start_time": 107.68,
+          "end_time": 108.22
+        },
+        {
+          "text": " ",
+          "start_time": 108.22,
+          "end_time": 108.62
+        },
+        {
+          "text": "and",
+          "start_time": 108.62,
+          "end_time": 108.69
+        },
+        {
+          "text": " ",
+          "start_time": 108.69,
+          "end_time": 108.8
+        },
+        {
+          "text": "fostering",
+          "start_time": 108.8,
+          "end_time": 109.18
+        },
+        {
+          "text": " ",
+          "start_time": 109.18,
+          "end_time": 109.26
+        },
+        {
+          "text": "collaboration",
+          "start_time": 109.26,
+          "end_time": 109.96
+        },
+        {
+          "text": " ",
+          "start_time": 109.96,
+          "end_time": 110.0
+        },
+        {
+          "text": "between",
+          "start_time": 110.0,
+          "end_time": 110.32
+        },
+        {
+          "text": " ",
+          "start_time": 110.32,
+          "end_time": 110.34
+        },
+        {
+          "text": "your",
+          "start_time": 110.34,
+          "end_time": 110.44
+        },
+        {
+          "text": " ",
+          "start_time": 110.44,
+          "end_time": 110.48
+        },
+        {
+          "text": "elected",
+          "start_time": 110.48,
+          "end_time": 110.78
+        },
+        {
+          "text": " ",
+          "start_time": 110.78,
+          "end_time": 110.82
+        },
+        {
+          "text": "officials",
+          "start_time": 110.82,
+          "end_time": 111.7
+        },
+        {
+          "text": " ",
+          "start_time": 111.7,
+          "end_time": 111.78
+        },
+        {
+          "text": "and",
+          "start_time": 111.78,
+          "end_time": 111.91
+        },
+        {
+          "text": " ",
+          "start_time": 111.91,
+          "end_time": 111.96
+        },
+        {
+          "text": "the",
+          "start_time": 111.96,
+          "end_time": 112.0
+        },
+        {
+          "text": " ",
+          "start_time": 112.0,
+          "end_time": 112.06
+        },
+        {
+          "text": "communities",
+          "start_time": 112.06,
+          "end_time": 112.48
+        },
+        {
+          "text": " ",
+          "start_time": 112.48,
+          "end_time": 112.52
+        },
+        {
+          "text": "we",
+          "start_time": 112.52,
+          "end_time": 112.66
+        },
+        {
+          "text": " ",
+          "start_time": 112.66,
+          "end_time": 112.7
+        },
+        {
+          "text": "serve.",
+          "start_time": 112.7,
+          "end_time": 113.24
+        },
+        {
+          "text": " ",
+          "start_time": 113.24,
+          "end_time": 113.28
+        }
+      ]
+    },
+    {
+      "text": "Thanks for tuning in and staying engaged. Don't forget, follow us on social media at MemphisCityCouncil on all platforms. Together we're building a stronger, safer Memphis in 2025.",
+      "start_time": 113.28,
+      "end_time": 134.78,
+      "speaker": {
+        "id": "speaker_1",
+        "name": "Speaker 1"
+      },
+      "words": [
+        {
+          "text": "Thanks",
+          "start_time": 113.28,
+          "end_time": 113.52
+        },
+        {
+          "text": " ",
+          "start_time": 113.52,
+          "end_time": 113.56
+        },
+        {
+          "text": "for",
+          "start_time": 113.56,
+          "end_time": 113.66
+        },
+        {
+          "text": " ",
+          "start_time": 113.66,
+          "end_time": 113.7
+        },
+        {
+          "text": "tuning",
+          "start_time": 113.7,
+          "end_time": 114.02
+        },
+        {
+          "text": " ",
+          "start_time": 114.02,
+          "end_time": 114.16
+        },
+        {
+          "text": "in",
+          "start_time": 114.16,
+          "end_time": 114.5
+        },
+        {
+          "text": " ",
+          "start_time": 114.5,
+          "end_time": 114.52
+        },
+        {
+          "text": "and",
+          "start_time": 114.52,
+          "end_time": 114.68
+        },
+        {
+          "text": " ",
+          "start_time": 114.68,
+          "end_time": 114.76
+        },
+        {
+          "text": "staying",
+          "start_time": 114.76,
+          "end_time": 115.04
+        },
+        {
+          "text": " ",
+          "start_time": 115.04,
+          "end_time": 115.08
+        },
+        {
+          "text": "engaged.",
+          "start_time": 115.08,
+          "end_time": 116.09
+        },
+        {
+          "text": " ",
+          "start_time": 116.09,
+          "end_time": 116.12
+        },
+        {
+          "text": "Don't",
+          "start_time": 116.12,
+          "end_time": 116.33
+        },
+        {
+          "text": " ",
+          "start_time": 116.33,
+          "end_time": 116.36
+        },
+        {
+          "text": "forget,",
+          "start_time": 116.36,
+          "end_time": 117.08
+        },
+        {
+          "text": " ",
+          "start_time": 117.08,
+          "end_time": 117.16
+        },
+        {
+          "text": "follow",
+          "start_time": 117.16,
+          "end_time": 117.42
+        },
+        {
+          "text": " ",
+          "start_time": 117.42,
+          "end_time": 117.48
+        },
+        {
+          "text": "us",
+          "start_time": 117.48,
+          "end_time": 117.69
+        },
+        {
+          "text": " ",
+          "start_time": 117.69,
+          "end_time": 117.74
+        },
+        {
+          "text": "on",
+          "start_time": 117.74,
+          "end_time": 117.95
+        },
+        {
+          "text": " ",
+          "start_time": 117.95,
+          "end_time": 118.0
+        },
+        {
+          "text": "social",
+          "start_time": 118.0,
+          "end_time": 118.38
+        },
+        {
+          "text": " ",
+          "start_time": 118.38,
+          "end_time": 118.42
+        },
+        {
+          "text": "media",
+          "start_time": 118.42,
+          "end_time": 119.06
+        },
+        {
+          "text": " ",
+          "start_time": 119.06,
+          "end_time": 119.1
+        },
+        {
+          "text": "at",
+          "start_time": 119.1,
+          "end_time": 119.28
+        },
+        {
+          "text": " ",
+          "start_time": 119.28,
+          "end_time": 119.38
+        },
+        {
+          "text": "MemphisCityCouncil",
+          "start_time": 119.38,
+          "end_time": 120.52
+        },
+        {
+          "text": " ",
+          "start_time": 120.52,
+          "end_time": 120.58
+        },
+        {
+          "text": "on",
+          "start_time": 120.58,
+          "end_time": 120.88
+        },
+        {
+          "text": " ",
+          "start_time": 120.88,
+          "end_time": 120.979
+        },
+        {
+          "text": "all",
+          "start_time": 120.98,
+          "end_time": 121.25
+        },
+        {
+          "text": " ",
+          "start_time": 121.25,
+          "end_time": 121.28
+        },
+        {
+          "text": "platforms.",
+          "start_time": 121.28,
+          "end_time": 122.39
+        },
+        {
+          "text": " ",
+          "start_time": 122.39,
+          "end_time": 122.44
+        },
+        {
+          "text": "Together",
+          "start_time": 122.44,
+          "end_time": 123.48
+        },
+        {
+          "text": " ",
+          "start_time": 123.48,
+          "end_time": 123.54
+        },
+        {
+          "text": "we're",
+          "start_time": 123.54,
+          "end_time": 123.72
+        },
+        {
+          "text": " ",
+          "start_time": 123.72,
+          "end_time": 123.78
+        },
+        {
+          "text": "building",
+          "start_time": 123.78,
+          "end_time": 124.16
+        },
+        {
+          "text": " ",
+          "start_time": 124.16,
+          "end_time": 124.24
+        },
+        {
+          "text": "a",
+          "start_time": 124.24,
+          "end_time": 124.42
+        },
+        {
+          "text": " ",
+          "start_time": 124.42,
+          "end_time": 124.6
+        },
+        {
+          "text": "stronger,",
+          "start_time": 124.6,
+          "end_time": 125.48
+        },
+        {
+          "text": " ",
+          "start_time": 125.48,
+          "end_time": 125.56
+        },
+        {
+          "text": "safer",
+          "start_time": 125.56,
+          "end_time": 126.14
+        },
+        {
+          "text": " ",
+          "start_time": 126.14,
+          "end_time": 126.18
+        },
+        {
+          "text": "Memphis",
+          "start_time": 126.18,
+          "end_time": 126.94
+        },
+        {
+          "text": " ",
+          "start_time": 126.94,
+          "end_time": 127.0
+        },
+        {
+          "text": "in",
+          "start_time": 127.0,
+          "end_time": 127.24
+        },
+        {
+          "text": " ",
+          "start_time": 127.24,
+          "end_time": 127.48
+        },
+        {
+          "text": "2025.",
+          "start_time": 127.48,
+          "end_time": 134.78
+        }
+      ]
+    }
+  ]
+}
