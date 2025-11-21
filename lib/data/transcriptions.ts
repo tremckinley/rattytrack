@@ -1,4 +1,4 @@
-// Database operations for YouTube transcriptions
+// Database operations for video transcriptions (unified for YouTube, uploads, livestreams)
 
 import { createClient } from '@supabase/supabase-js';
 import { YouTubeTranscription, TranscriptSegment, TranscriptionStatus } from '@/lib/types/youtube';
@@ -32,7 +32,7 @@ export async function getTranscription(videoId: string): Promise<YouTubeTranscri
   
   try {
     const result = await pool.query(
-      'SELECT * FROM youtube_transcriptions WHERE video_id = $1',
+      'SELECT * FROM video_transcriptions WHERE video_id = $1',
       [videoId]
     );
     
@@ -69,11 +69,11 @@ export async function createTranscription(data: {
   
   try {
     const result = await pool.query(
-      `INSERT INTO youtube_transcriptions 
-       (video_id, title, channel_title, published_at, duration, thumbnail_url, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO video_transcriptions 
+       (video_id, title, channel_title, published_at, duration, thumbnail_url, status, source)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [data.videoId, data.title, data.channelTitle, data.publishedAt, data.duration, data.thumbnailUrl, 'processing']
+      [data.videoId, data.title, data.channelTitle, data.publishedAt, data.duration, data.thumbnailUrl, 'processing', 'youtube']
     );
     
     if (result.rows.length === 0) {
@@ -97,7 +97,7 @@ export async function updateTranscriptionStatus(
   errorMessage?: string
 ): Promise<void> {
   const { error } = await supabase
-    .from('youtube_transcriptions')
+    .from('video_transcriptions')
     .update({
       status,
       error_message: errorMessage || null,
@@ -135,7 +135,7 @@ export async function saveTranscriptSegments(
     
     // Delete any existing segments for this video (for retry scenarios)
     const deleteResult = await client.query(
-      'DELETE FROM youtube_transcript_segments WHERE video_id = $1',
+      'DELETE FROM transcription_segments WHERE video_id = $1',
       [videoId]
     );
     console.log(`Deleted ${deleteResult.rowCount} existing segments for retry`);
@@ -146,21 +146,22 @@ export async function saveTranscriptSegments(
       const placeholders: string[] = [];
       
       segments.forEach((seg, i) => {
-        const offset = i * 6;
-        placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`);
+        const offset = i * 7;
+        placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7})`);
         values.push(
           videoId,
           seg.start,
           seg.end,
           seg.text.trim(),
           seg.speakerName || null,
-          seg.speakerId || null
+          seg.speakerId || null,
+          'youtube'
         );
       });
       
       const insertQuery = `
-        INSERT INTO youtube_transcript_segments 
-        (video_id, start_time, end_time, text, speaker_name, speaker_id)
+        INSERT INTO transcription_segments 
+        (video_id, start_time, end_time, text, speaker_name, speaker_id, source)
         VALUES ${placeholders.join(', ')}
       `;
       
@@ -170,7 +171,7 @@ export async function saveTranscriptSegments(
     
     // Update transcription record with metadata
     const updateResult = await client.query(
-      `UPDATE youtube_transcriptions 
+      `UPDATE video_transcriptions 
        SET status = $1,
            transcription_cost = $2,
            provider = $3,
@@ -205,7 +206,7 @@ export async function getTranscriptSegments(videoId: string): Promise<Transcript
   
   try {
     const result = await pool.query(
-      'SELECT * FROM youtube_transcript_segments WHERE video_id = $1 ORDER BY start_time ASC',
+      'SELECT * FROM transcription_segments WHERE video_id = $1 ORDER BY start_time ASC',
       [videoId]
     );
     
@@ -235,7 +236,7 @@ export async function getTranscriptionWithSegments(videoId: string): Promise<{
 export async function deleteTranscription(videoId: string): Promise<void> {
   // Segments will be cascade deleted due to foreign key
   const { error } = await supabase
-    .from('youtube_transcriptions')
+    .from('video_transcriptions')
     .delete()
     .eq('video_id', videoId);
 
@@ -253,7 +254,7 @@ export async function getAllTranscriptions(limit: number = 50, offset: number = 
   total: number;
 }> {
   const { data, error, count } = await supabase
-    .from('youtube_transcriptions')
+    .from('video_transcriptions')
     .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -281,7 +282,7 @@ export async function updateSpeakerMapping(
   
   try {
     await pool.query(
-      'UPDATE youtube_transcript_segments SET speaker_id = $1 WHERE video_id = $2 AND speaker_name = $3',
+      'UPDATE transcription_segments SET speaker_id = $1 WHERE video_id = $2 AND speaker_name = $3',
       [legislatorId, videoId, speakerLabel]
     );
     return { success: true };
@@ -305,7 +306,7 @@ export async function getSpeakerLabels(videoId: string): Promise<{
   
   try {
     const result = await pool.query(
-      'SELECT speaker_name, speaker_id FROM youtube_transcript_segments WHERE video_id = $1 AND speaker_name IS NOT NULL',
+      'SELECT speaker_name, speaker_id FROM transcription_segments WHERE video_id = $1 AND speaker_name IS NOT NULL',
       [videoId]
     );
 

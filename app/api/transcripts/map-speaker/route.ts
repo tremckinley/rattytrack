@@ -2,7 +2,7 @@
 // Updates all segments with a given speaker label to point to a legislator
 
 import { NextRequest, NextResponse } from 'next/server';
-import { updateSpeakerMapping } from '@/lib/data/youtube_transcriptions';
+import { updateSpeakerMapping } from '@/lib/data/transcriptions';
 
 export async function POST(request: NextRequest) {
   try {

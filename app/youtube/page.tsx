@@ -2,7 +2,7 @@
 // Displays latest Memphis City Council videos with transcription options
 
 import { fetchLatestVideos } from '@/lib/data/youtube';
-import { getTranscription } from '@/lib/data/youtube_transcriptions';
+import { getTranscription } from '@/lib/data/transcriptions';
 import YouTubeTranscribeButton from '@/components/YouTubeTranscribeButton';
 import Link from 'next/link';
 

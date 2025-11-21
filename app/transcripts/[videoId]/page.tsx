@@ -1,7 +1,7 @@
 // Transcript viewer page - Server Component
 // Displays YouTube video with timestamped transcript
 
-import { getTranscriptionWithSegments, getSpeakerLabels } from '@/lib/data/youtube_transcriptions';
+import { getTranscriptionWithSegments, getSpeakerLabels } from '@/lib/data/transcriptions';
 import { getLegislators } from '@/lib/data/legislators/legislator_card';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';

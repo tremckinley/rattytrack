@@ -9,7 +9,7 @@ import {
   updateTranscriptionStatus,
   saveTranscriptSegments,
   deleteTranscription,
-} from '@/lib/data/youtube_transcriptions';
+} from '@/lib/data/transcriptions';
 import { cleanupAudioFiles } from '@/lib/utils/audio-processor';
 import { transcribeWithAutoChunking } from '@/lib/utils/whisper-client';
 import path from 'path';
