@@ -100,12 +100,22 @@ export async function transcribeAudio(options: TranscribeOptions): Promise<Trans
     
     console.log(`ElevenLabs response status: ${response.status} ${response.statusText}`);
 
+    // Save raw response to file for debugging
+    const responseText = await response.text();
+    const debugFilePath = '/tmp/elevenlabs-response-debug.json';
+    fs.writeFileSync(debugFilePath, JSON.stringify({
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      body: responseText
+    }, null, 2));
+    console.log(`Saved ElevenLabs response to ${debugFilePath}`);
+
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Eleven Labs API error (${response.status}): ${errorText}`);
+      throw new Error(`Eleven Labs API error (${response.status}): ${responseText}`);
     }
 
-    const result: ElevenLabsResponse = await response.json();
+    const result: ElevenLabsResponse = JSON.parse(responseText);
     
     console.log('===== ELEVENLABS RAW RESPONSE =====');
     console.log(JSON.stringify(result, null, 2));
