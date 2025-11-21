@@ -39,7 +39,7 @@ interface TranscribeResult {
   cost: number;
 }
 
-const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/speech-to-text';
+const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/speech-to-text/convert';
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 
 function calculateCost(durationSeconds: number): number {
@@ -68,7 +68,7 @@ export async function transcribeAudio(options: TranscribeOptions): Promise<Trans
     throw new Error('ELEVENLABS_API_KEY is not configured');
   }
 
-  console.log(`Transcribing ${filePath} with Eleven Labs...`);
+  console.log(`Transcribing ${filePath} with Eleven Labs to ${ELEVENLABS_API_URL}...`);
 
   try {
     const fileBuffer = fs.readFileSync(filePath);
@@ -88,6 +88,8 @@ export async function transcribeAudio(options: TranscribeOptions): Promise<Trans
       formData.append('diarization_threshold', diarizationThreshold.toString());
     }
 
+    console.log(`Making request to ${ELEVENLABS_API_URL} with model_id=${formData.get('model_id')}, diarize=${formData.get('diarize')}`);
+
     const response = await fetch(ELEVENLABS_API_URL, {
       method: 'POST',
       headers: {
@@ -95,6 +97,8 @@ export async function transcribeAudio(options: TranscribeOptions): Promise<Trans
       },
       body: formData,
     });
+    
+    console.log(`ElevenLabs response status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -103,6 +107,9 @@ export async function transcribeAudio(options: TranscribeOptions): Promise<Trans
 
     const result: ElevenLabsResponse = await response.json();
     
+    console.log('===== ELEVENLABS RAW RESPONSE =====');
+    console.log(JSON.stringify(result, null, 2));
+    console.log('===================================');
     console.log(`ElevenLabs response: ${result.segments?.length || 0} segments, language: ${result.language_code}`);
 
     const segments = convertElevenLabsSegments(result.segments || []);
