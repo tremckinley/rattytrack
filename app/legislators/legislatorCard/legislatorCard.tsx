@@ -22,7 +22,7 @@ export default function LegislatorCard(params: Legislator) {
         )}
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-lg">{params.display_name}</h3>
+            <h3 className="font-bold text-lg text-foreground">{params.display_name}</h3>
             {params.is_active === false && (
               <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full">
                 Former

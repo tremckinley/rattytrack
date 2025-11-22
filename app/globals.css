@@ -7,7 +7,7 @@
 :root {
   --capyred: #811749;
   --radius: 0.625rem;
-  --background: oklch(96.045% 0.02014 57.906 / 0.925);
+  --background: oklab(97.015% 0 -0.00011);
   --foreground: oklch(0.13 0.028 261.692);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.13 0.028 261.692);
@@ -101,7 +101,7 @@
 
 @layer components {
   .card {
-    @apply rounded-lg border border-foreground bg-card shadow-sm text-foreground text-sm p-4 m-4;
+    @apply shadow-sm bg-white text-foreground text-sm border border-foreground;
   }
 
   .active-nav-link {

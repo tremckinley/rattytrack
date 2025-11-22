@@ -33,9 +33,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NavBar />
-        <div className="mx-auto p-6 max-w-screen">
-        {children}
+        <div className="fixed top-0 left-0 right-0">
+          <NavBar />
+        </div>
+        <div className="mt-16 mx-auto p-6 max-w-screen">
+          {children}
         </div>
       </body>
     </html>
