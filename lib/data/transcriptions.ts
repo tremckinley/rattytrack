@@ -326,3 +326,17 @@ export async function getSpeakerLabels(videoId: string): Promise<{
 
   return { labels, total: data.length };
 }
+
+export async function getTotalTranscriptions(): Promise<number> {
+  const { data, error } = await supabase
+    .from('video_transcriptions')
+    .select('video_id', { count: 'exact' });
+  
+  if (error) {
+    console.error('Error fetching total transcriptions:', error);
+    return 0;
+  }
+  
+  return data.length;
+
+}
