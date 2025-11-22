@@ -1,4 +1,17 @@
 import { supabase } from '../../utils/supabase';
+import { Pool } from 'pg';
+
+let pgPool: Pool | null = null;
+
+function getPgPool(): Pool {
+  if (!pgPool) {
+    pgPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    });
+  }
+  return pgPool;
+}
 
 export type StatementWithIssue = {
   id: string;
@@ -8,6 +21,8 @@ export type StatementWithIssue = {
   meeting_date: string;
   meeting_title: string;
   meeting_id: string;
+  video_id?: string;
+  source?: string;
   issues: Array<{
     issue_name: string;
     issue_slug: string;
@@ -15,107 +30,48 @@ export type StatementWithIssue = {
   }>;
 };
 
-type SegmentIssueRow = {
-  segment_id: string;
-  relevance_score: number;
-  issue: Array<{
-    name: string;
-    slug: string;
-  }> | null;
-};
-
-type TranscriptionSegmentRow = {
-  id: string;
-  text: string;
-  start_time_seconds: number;
-  end_time_seconds: number;
-  meeting: Array<{
-    id: string;
-    title: string;
-    scheduled_start: string;
-  }> | null;
-};
-
 export async function getLegislatorStatements(legislatorId: string): Promise<StatementWithIssue[]> {
+  const pool = getPgPool();
+  
   try {
-    const { data: segments, error } = await supabase
-      .from('transcription_segments')
-      .select(`
-        id,
-        text,
-        start_time_seconds,
-        end_time_seconds,
-        meeting:meetings (
-          id,
-          title,
-          scheduled_start
-        )
-      `)
-      .eq('speaker_id', legislatorId)
-      .order('start_time_seconds', { ascending: false })
-      .limit(50);
+    const result = await pool.query(
+      `SELECT 
+        s.id,
+        s.text,
+        s.start_time AS start_time_seconds,
+        s.end_time AS end_time_seconds,
+        s.video_id,
+        s.source,
+        v.title AS video_title,
+        v.published_at
+       FROM transcription_segments s
+       LEFT JOIN video_transcriptions v ON s.video_id = v.video_id
+       WHERE s.speaker_id = $1
+       ORDER BY v.published_at DESC, s.start_time ASC
+       LIMIT 50`,
+      [legislatorId]
+    );
 
-    if (error) {
-      console.error('Error fetching statements:', error);
+    if (result.rows.length === 0) {
       return [];
     }
 
-    if (!segments || segments.length === 0) {
-      return [];
-    }
-
-    const segmentIds = segments.map(s => s.id);
-    const { data: segmentIssues, error: issuesError } = await supabase
-      .from('segment_issues')
-      .select(`
-        segment_id,
-        relevance_score,
-        issue:issues (
-          name,
-          slug
-        )
-      `)
-      .in('segment_id', segmentIds);
-
-    if (issuesError) {
-      console.error('Error fetching segment issues:', issuesError);
-    }
-
-    const issuesBySegment = new Map<string, Array<{ issue_name: string; issue_slug: string; relevance_score: number }>>();
-    
-    if (segmentIssues) {
-      segmentIssues.forEach((si: SegmentIssueRow) => {
-        if (!issuesBySegment.has(si.segment_id)) {
-          issuesBySegment.set(si.segment_id, []);
-        }
-        issuesBySegment.get(si.segment_id)!.push({
-          issue_name: si.issue?.[0]?.name || 'Unknown',
-          issue_slug: si.issue?.[0]?.slug || '',
-          relevance_score: si.relevance_score || 0
-        });
-      });
-    }
-
-    const statements: StatementWithIssue[] = segments.map((segment: TranscriptionSegmentRow) => ({
-      id: segment.id,
-      text: segment.text,
-      start_time_seconds: segment.start_time_seconds,
-      end_time_seconds: segment.end_time_seconds,
-      meeting_date: segment.meeting?.[0]?.scheduled_start || '',
-      meeting_title: segment.meeting?.[0]?.title || 'Unknown Meeting',
-      meeting_id: segment.meeting?.[0]?.id || '',
-      issues: issuesBySegment.get(segment.id) || []
+    const statements: StatementWithIssue[] = result.rows.map((row: any) => ({
+      id: row.id.toString(),
+      text: row.text,
+      start_time_seconds: parseFloat(row.start_time_seconds),
+      end_time_seconds: parseFloat(row.end_time_seconds),
+      meeting_date: row.published_at || '',
+      meeting_title: row.video_title || 'Unknown Video',
+      meeting_id: row.video_id || '',
+      video_id: row.video_id,
+      source: row.source || 'youtube',
+      issues: []
     }));
-
-    statements.sort((a, b) => {
-      const dateA = new Date(a.meeting_date).getTime();
-      const dateB = new Date(b.meeting_date).getTime();
-      return dateB - dateA;
-    });
 
     return statements;
   } catch (error) {
-    console.error('Unexpected error fetching statements:', error);
+    console.error('Error fetching legislator statements from PostgreSQL:', error);
     return [];
   }
 }

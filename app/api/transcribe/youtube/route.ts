@@ -9,7 +9,7 @@ import {
   updateTranscriptionStatus,
   saveTranscriptSegments,
   deleteTranscription,
-} from '@/lib/data/youtube_transcriptions';
+} from '@/lib/data/transcriptions';
 import { cleanupAudioFiles } from '@/lib/utils/audio-processor';
 import { transcribeWithAutoChunking } from '@/lib/utils/whisper-client';
 import path from 'path';
@@ -18,7 +18,9 @@ import os from 'os';
 
 interface TranscribeRequest {
   videoId: string;
-  forceRetry?: boolean; // Admin-only: allow retranscription
+  forceRetry?: boolean;
+  provider?: 'whisper' | 'elevenlabs';
+  numSpeakers?: number;
 }
 
 /**
@@ -37,7 +39,7 @@ function isAdmin(request: NextRequest): boolean {
 export async function POST(request: NextRequest) {
   try {
     const body: TranscribeRequest = await request.json();
-    const { videoId, forceRetry } = body;
+    const { videoId, forceRetry, provider, numSpeakers } = body;
 
     if (!videoId) {
       return NextResponse.json(
@@ -109,7 +111,7 @@ export async function POST(request: NextRequest) {
 
     // Start transcription process asynchronously
     // We return immediately and let the process run in background
-    processTranscription(videoId).catch(error => {
+    processTranscription(videoId, provider, numSpeakers).catch(error => {
       console.error('Background transcription failed:', error);
     });
 
@@ -131,7 +133,11 @@ export async function POST(request: NextRequest) {
  * Background process for transcription
  * This runs asynchronously after API response is sent
  */
-async function processTranscription(videoId: string): Promise<void> {
+async function processTranscription(
+  videoId: string,
+  provider: 'whisper' | 'elevenlabs' = 'elevenlabs',
+  numSpeakers?: number
+): Promise<void> {
   const workDir = path.join(os.tmpdir(), `youtube-transcribe-${videoId}-${Date.now()}`);
   let audioChunks: string[] = [];
 
@@ -175,27 +181,70 @@ async function processTranscription(videoId: string): Promise<void> {
 
     console.log(`Audio ready: ${audioChunks.length} chunk(s)`);
 
-    // Step 3: Transcribe using Whisper API
-    console.log('Transcribing with Whisper API...');
-    const transcribeResult = await transcribeWithAutoChunking(audioChunks, {
-      language: 'en',
-      prompt: 'Memphis City Council meeting transcription',
-    });
+    // Step 3: Transcribe using selected provider
+    const useDiarization = provider === 'elevenlabs';
+    console.log(`Transcribing with ${provider} API...${useDiarization ? ' (with diarization)' : ''}`);
+    
+    let transcribeResult;
+    
+    if (provider === 'elevenlabs') {
+      const { transcribeWithAutoChunking: transcribeElevenLabs } = await import('@/lib/utils/elevenlabs-client');
+      transcribeResult = await transcribeElevenLabs(audioChunks, {
+        language: 'en',
+        numSpeakers: numSpeakers || null,
+        diarizationThreshold: 0.22,
+      });
+    } else {
+      transcribeResult = await transcribeWithAutoChunking(audioChunks, {
+        language: 'en',
+        prompt: 'Memphis City Council meeting transcription',
+      });
+    }
 
     console.log(`Transcription completed: ${transcribeResult.segments.length} segments`);
 
-    // Step 4: Save to database and mark as completed
+    // Step 4: Match speakers to legislators if diarization was used
+    let speakerMatches: Map<string, any> | null = null;
+    if (useDiarization && transcribeResult.segments.some(s => 'speaker' in s && s.speaker)) {
+      console.log('Matching speakers to legislators...');
+      const { matchAllSpeakers } = await import('@/lib/utils/speaker-matcher');
+      const speakerLabels = transcribeResult.segments
+        .map(s => ('speaker' in s ? s.speaker : undefined))
+        .filter((s): s is string => !!s);
+      speakerMatches = await matchAllSpeakers(speakerLabels);
+      console.log(`Matched ${speakerMatches.size} unique speakers`);
+    }
+
+    // Step 5: Save to database with speaker information
     // Wrap in try-catch to ensure status is updated even if partial save occurs
     try {
+      const segmentsWithSpeakers = transcribeResult.segments.map(seg => {
+        const speaker = 'speaker' in seg ? (seg.speaker as string | undefined) : undefined;
+        const speakerName: string | null = speaker || null;
+        const speakerId: string | null = speakerName && speakerMatches 
+          ? speakerMatches.get(speakerName)?.legislatorId || null
+          : null;
+        
+        return {
+          start: seg.start,
+          end: seg.end,
+          text: seg.text,
+          speakerName,
+          speakerId,
+        };
+      });
+
       await saveTranscriptSegments(
         videoId,
-        transcribeResult.segments,
-        transcribeResult.cost
+        segmentsWithSpeakers,
+        transcribeResult.cost,
+        provider,
+        useDiarization
       );
       
       // Mark as completed only after successful save
       await updateTranscriptionStatus(videoId, 'completed');
-      console.log(`Successfully transcribed video ${videoId}`);
+      console.log(`Successfully transcribed video ${videoId} using ${provider}`);
     } catch (dbError) {
       console.error('Database save failed:', dbError);
       // Even if save fails, mark as error so it's not stuck in processing

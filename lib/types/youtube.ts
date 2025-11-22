@@ -17,6 +17,8 @@ export interface TranscriptSegment {
   start_time: number;
   end_time: number;
   text: string;
+  speaker_name?: string | null;
+  speaker_id?: string | null;
   created_at: string;
 }
 
@@ -28,6 +30,8 @@ export interface VideoTranscript {
 
 export type TranscriptionStatus = 'idle' | 'processing' | 'downloading' | 'transcribing' | 'completed' | 'error';
 
+export type TranscriptionProvider = 'whisper' | 'elevenlabs';
+
 export interface YouTubeTranscription {
   video_id: string;
   title: string;
@@ -38,6 +42,8 @@ export interface YouTubeTranscription {
   status: TranscriptionStatus;
   error_message?: string;
   transcription_cost?: number;
+  provider?: TranscriptionProvider | null;
+  diarization_enabled?: boolean | null;
   created_at: string;
   updated_at: string;
 }

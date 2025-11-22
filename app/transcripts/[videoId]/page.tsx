@@ -1,10 +1,12 @@
 // Transcript viewer page - Server Component
 // Displays YouTube video with timestamped transcript
 
-import { getTranscriptionWithSegments } from '@/lib/data/youtube_transcriptions';
+import { getTranscriptionWithSegments, getSpeakerLabels } from '@/lib/data/transcriptions';
+import { getLegislators } from '@/lib/data/legislators/legislator_card';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import TranscriptPlayer from '@/components/TranscriptPlayer';
+import SpeakerMapperWrapper from '@/components/SpeakerMapperWrapper';
 
 interface PageProps {
   params: Promise<{ videoId: string }>;
@@ -30,6 +32,31 @@ export default async function TranscriptPage({ params }: PageProps) {
 
   if (!transcription) {
     notFound();
+  }
+
+  // Fetch speaker labels and legislators for mapping (only if transcription completed with diarization)
+  let speakerLabels: Array<{ label: string; segmentCount: number; legislatorId: string | null }> = [];
+  let legislators: Array<{ id: string; display_name: string; title: string | null; district: string | null; photo_url: string | null }> = [];
+  let legislatorMap: Record<string, { display_name: string }> = {};
+
+  if (transcription.status === 'completed' && transcription.diarization_enabled) {
+    const speakerData = await getSpeakerLabels(videoId);
+    speakerLabels = speakerData.labels;
+    
+    const legislatorData = await getLegislators('all');
+    legislators = legislatorData.data.map(l => ({
+      id: l.id,
+      display_name: l.display_name,
+      title: l.title,
+      district: l.district,
+      photo_url: l.photo_url,
+    }));
+    
+    // Create lookup map for TranscriptPlayer
+    legislatorMap = legislators.reduce((acc, l) => {
+      acc[l.id] = { display_name: l.display_name };
+      return acc;
+    }, {} as Record<string, { display_name: string }>);
   }
 
   return (
@@ -80,6 +107,15 @@ export default async function TranscriptPage({ params }: PageProps) {
           </div>
         )}
 
+        {/* Speaker Mapper (if diarization was used) */}
+        {transcription.status === 'completed' && speakerLabels.length > 0 && (
+          <SpeakerMapperWrapper
+            videoId={videoId}
+            speakerLabels={speakerLabels}
+            legislators={legislators}
+          />
+        )}
+
         {/* Video Player and Transcript */}
         {transcription.status === 'completed' && (
           <TranscriptPlayer
@@ -88,6 +124,7 @@ export default async function TranscriptPage({ params }: PageProps) {
             channelTitle={transcription.channel_title}
             publishedAt={transcription.published_at}
             segments={segments}
+            legislatorMap={legislatorMap}
           />
         )}
 
@@ -105,7 +142,7 @@ export default async function TranscriptPage({ params }: PageProps) {
               <div>
                 <span className="text-gray-600">Cost:</span>
                 <span className="ml-2 font-medium">
-                  ${transcription.transcription_cost.toFixed(4)}
+                  ${Number(transcription.transcription_cost).toFixed(4)}
                 </span>
               </div>
               <div>

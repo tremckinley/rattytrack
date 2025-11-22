@@ -121,23 +121,45 @@ Preferred communication style: Simple, everyday language.
 - Network binding to 0.0.0.0 for external access
 - No specific deployment platform lock-in (can deploy to Vercel, Netlify, or custom hosting)
 
-## YouTube Transcription Pipeline
+## Video Transcription System (Unified)
+**Architecture**: Unified database schema supporting multiple video sources (YouTube, uploads, livestreams) with a single `transcription_segments` table that connects directly to legislators.
+
+### Database Schema (November 2025)
+- **video_transcriptions** - Metadata for all video sources
+  - Fields: video_id (PK), title, channel_title, published_at, duration, thumbnail_url, **source** ('youtube', 'upload', 'livestream'), status, provider, diarization_enabled
+  - Replaces previous `youtube_transcriptions` table
+- **transcription_segments** - All transcript segments with speaker attribution
+  - Fields: id (serial), video_id (FK), start_time, end_time, text, speaker_name (raw label from diarization), **speaker_id (UUID FK to legislators.id)**, **source**
+  - Replaces previous `youtube_transcript_segments` table
+  - When `speaker_id` is populated via manual mapping, segments automatically appear on legislator profile pages
+
+### YouTube Transcription Pipeline
 - **Puppeteer** - Headless browser automation for ytmp3.as converter
-  - System dependency: Chromium installed via Nix package manager
-  - Configured via `CHROMIUM_PATH` environment variable (required for deployment)
-  - Falls back to Puppeteer's bundled Chrome if `CHROMIUM_PATH` not set
-  - Location: `/nix/store/.../bin/chromium` (path varies by Nix version)
 - **ytmp3.as** - Third-party YouTube to MP3 converter service
-  - Automated via Puppeteer: navigates to converter, enters URL, waits for conversion, downloads MP3
-  - Replaces previous audio stream recording approach for simpler, more reliable MVP
-  - Polling-based download detection (checks for MP3 file in output directory)
+- **ElevenLabs API** - Speech-to-text with speaker diarization (up to 32 speakers)
+  - Endpoint: `/v1/speech-to-text` with `audio_file` and `model=eleven_turbo_v2_5`
+  - Response structure: `words` array with speaker labels and timestamps
+  - Diarization produces speaker labels like `speaker_0`, `speaker_1`, etc.
 - **fluent-ffmpeg** - Audio processing for chunking large files (>25MB)
-- **OpenAI Whisper API** - Speech-to-text transcription ($0.006/minute)
-  - Requires `OPENAI_API_KEY` environment variable
+- **OpenAI Whisper API** - Alternative transcription provider ($0.006/minute)
 - **API Route**: `/api/transcribe/youtube` handles video processing workflow
-  - Dynamic import of youtube-downloader prevents webpack bundling in prerendered pages
-  - Background processing with cleanup of temporary audio files
-  - Robust error handling ensures transcriptions never stuck in 'processing' state
+
+### Speaker Mapping Workflow
+1. User transcribes video with diarization enabled
+2. System creates segments with `speaker_name` = 'speaker_0', 'speaker_1', etc.
+3. User visits `/transcripts/[videoId]` and sees "Speaker Identification" panel
+4. User manually maps each speaker label to a legislator via dropdown
+5. API route `/api/transcripts/map-speaker` updates `speaker_id` field
+6. Segments now appear on legislator profile pages at `/legislators/[slug]` via `getLegislatorStatements()`
+
+### Data Flow
+- **Data Access**: `lib/data/transcriptions.ts` (renamed from `youtube_transcriptions.ts`)
+  - Uses direct PostgreSQL via `pg` Pool for reliability
+  - Functions: getTranscription(), createTranscription(), saveTranscriptSegments(), updateSpeakerMapping(), getSpeakerLabels()
+- **Legislator Statements**: `lib/data/legislators/legislator_statements.ts`
+  - Queries `transcription_segments` WHERE `speaker_id = legislatorId`
+  - Joins with `video_transcriptions` to get video title and published date
+  - Returns StatementWithIssue[] for display on profile pages
 
 ## Required Environment Variables
 - `DATABASE_URL` - PostgreSQL connection string (auto-configured by Replit)
