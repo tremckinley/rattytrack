@@ -153,8 +153,9 @@ Preferred communication style: Simple, everyday language.
 6. Segments now appear on legislator profile pages at `/legislators/[slug]` via `getLegislatorStatements()`
 
 ### Data Flow
+- **Single Database**: All data stored in **Supabase PostgreSQL** (legislator profiles, transcriptions, segments)
 - **Data Access**: `lib/data/transcriptions.ts` (renamed from `youtube_transcriptions.ts`)
-  - Uses direct PostgreSQL via `pg` Pool for reliability
+  - Uses Supabase client with service role key for all database operations
   - Functions: getTranscription(), createTranscription(), saveTranscriptSegments(), updateSpeakerMapping(), getSpeakerLabels()
 - **Legislator Statements**: `lib/data/legislators/legislator_statements.ts`
   - Queries `transcription_segments` WHERE `speaker_id = legislatorId`
@@ -162,11 +163,11 @@ Preferred communication style: Simple, everyday language.
   - Returns StatementWithIssue[] for display on profile pages
 
 ## Required Environment Variables
-- `DATABASE_URL` - PostgreSQL connection string (auto-configured by Replit)
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
-- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (for database writes)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key (public client access)
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (server-side operations with admin privileges)
 - `OPENAI_API_KEY` - OpenAI API key for Whisper transcription
+- `ELEVENLABS_API_KEY` - ElevenLabs API key for speech-to-text with diarization
 - `CHROMIUM_PATH` - Path to system Chromium executable (deployment only)
   - Set to: `/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium`
   - Or run `which chromium` to get current path after Chromium installation
