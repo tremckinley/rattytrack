@@ -20,6 +20,10 @@ export default async function Dashboard() {
             </div>
             <div className="absolute top-0 right-10 w-1/8 md:w-1/4 h-full bg-rose-900 transform -skew-x-12 translate-x-20 hidden xl:block opacity-50"></div>
             </section>
+            <section id="coming-soon" className="p-8">
+                <h2 className="text-2xl font-bold mb-4">Coming Soon</h2>
+                <p className="text-gray-600">Dashboard features below</p>
+            </section>
             
         </div>)
 }

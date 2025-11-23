@@ -10,14 +10,14 @@ type LegislatorsPageProps = {
 export default async function Legislators({ searchParams }: LegislatorsPageProps) {
   const params = await searchParams;
   const statusParam = params.status;
-  const status: LegislatorStatusFilter = 
-    statusParam === 'inactive' ? 'inactive' : 
-    statusParam === 'all' ? 'all' : 
-    'active';
-  
+  const status: LegislatorStatusFilter =
+    statusParam === 'inactive' ? 'inactive' :
+      statusParam === 'all' ? 'all' :
+        'active';
+
   // Server-side data fetching with status filter
   const result = await getLegislators(status);
-  
+
   const getEmptyStateMessage = () => {
     if (status === 'inactive') {
       return {
@@ -54,13 +54,12 @@ export default async function Legislators({ searchParams }: LegislatorsPageProps
           <p className="text-foreground text-lg mb-4">Unable to load legislator data at this time.</p>
           <p className="">Please try refreshing the page or contact support if the issue persists.</p>
         </div>
-      ) : result.data.length === 0 ? (
-        <div className="card text-center py-12">
-          <p className="text-foreground text-lg mb-2">{emptyState.title}</p>
-          <p className="text-muted-foreground">{emptyState.message}</p>
-        </div>
       ) : (
-        <SearchableLegislators legislators={result.data} initialStatus={status} />
+        <SearchableLegislators
+          legislators={result.data}
+          initialStatus={status}
+          emptyState={emptyState}
+        />
       )}
     </>
   );
