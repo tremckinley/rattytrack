@@ -32,7 +32,7 @@ export type StatementWithIssue = {
 
 export async function getLegislatorStatements(legislatorId: string): Promise<StatementWithIssue[]> {
   const pool = getPgPool();
-  
+
   try {
     const result = await pool.query(
       `SELECT 
@@ -56,15 +56,26 @@ export async function getLegislatorStatements(legislatorId: string): Promise<Sta
       return [];
     }
 
-    const statements: StatementWithIssue[] = result.rows.map((row: any) => ({
+    interface StatementRow {
+      id: number | string;
+      text: string;
+      start_time_seconds: string | number;
+      end_time_seconds: string | number;
+      published_at: string | null;
+      video_title: string | null;
+      video_id: string | null;
+      source: string | null;
+    }
+
+    const statements: StatementWithIssue[] = result.rows.map((row: StatementRow) => ({
       id: row.id.toString(),
       text: row.text,
-      start_time_seconds: parseFloat(row.start_time_seconds),
-      end_time_seconds: parseFloat(row.end_time_seconds),
+      start_time_seconds: typeof row.start_time_seconds === 'string' ? parseFloat(row.start_time_seconds) : row.start_time_seconds,
+      end_time_seconds: typeof row.end_time_seconds === 'string' ? parseFloat(row.end_time_seconds) : row.end_time_seconds,
       meeting_date: row.published_at || '',
       meeting_title: row.video_title || 'Unknown Video',
       meeting_id: row.video_id || '',
-      video_id: row.video_id,
+      video_id: row.video_id || undefined,
       source: row.source || 'youtube',
       issues: []
     }));

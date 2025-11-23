@@ -23,7 +23,7 @@ export async function getTranscription(videoId: string): Promise<YouTubeTranscri
     .select('*')
     .eq('video_id', videoId)
     .single();
-  
+
   if (error) {
     if (error.code === 'PGRST116') {
       return null;
@@ -31,7 +31,7 @@ export async function getTranscription(videoId: string): Promise<YouTubeTranscri
     console.error('Error fetching transcription:', error);
     return null;
   }
-  
+
   return data as YouTubeTranscription;
 }
 
@@ -52,7 +52,7 @@ export async function createTranscription(data: {
     console.log(`Transcription already exists for ${data.videoId}, returning existing record`);
     return existing;
   }
-  
+
   const { data: newTranscription, error } = await supabase
     .from('video_transcriptions')
     .insert({
@@ -67,12 +67,12 @@ export async function createTranscription(data: {
     })
     .select()
     .single();
-  
+
   if (error) {
     console.error('Error creating transcription:', error);
     return null;
   }
-  
+
   console.log(`Created transcription record for ${data.videoId}`);
   return newTranscription as YouTubeTranscription;
 }
@@ -104,9 +104,9 @@ export async function updateTranscriptionStatus(
  */
 export async function saveTranscriptSegments(
   videoId: string,
-  segments: Array<{ 
-    start: number; 
-    end: number; 
+  segments: Array<{
+    start: number;
+    end: number;
     text: string;
     speakerName?: string | null;
     speakerId?: string | null;
@@ -121,13 +121,13 @@ export async function saveTranscriptSegments(
       .from('transcription_segments')
       .delete()
       .eq('video_id', videoId);
-    
+
     if (deleteError) {
       console.error('Error deleting existing segments:', deleteError);
     } else {
       console.log(`Deleted existing segments for retry`);
     }
-    
+
     // Insert all segments in batch
     if (segments.length > 0) {
       const segmentsToInsert = segments.map(seg => ({
@@ -139,19 +139,19 @@ export async function saveTranscriptSegments(
         speaker_id: seg.speakerId || null,
         source: 'youtube'
       }));
-      
+
       const { error: insertError } = await supabase
         .from('transcription_segments')
         .insert(segmentsToInsert);
-      
+
       if (insertError) {
         console.error('Error inserting segments:', insertError);
         throw insertError;
       }
-      
+
       console.log(`Inserted ${segments.length} transcript segments`);
     }
-    
+
     // Update transcription record with metadata
     const { error: updateError } = await supabase
       .from('video_transcriptions')
@@ -163,12 +163,12 @@ export async function saveTranscriptSegments(
         updated_at: new Date().toISOString()
       })
       .eq('video_id', videoId);
-    
+
     if (updateError) {
       console.error('Error updating transcription record:', updateError);
       throw updateError;
     }
-    
+
     console.log(`Updated transcription record`);
     console.log(`Successfully saved ${segments.length} segments for video ${videoId}`);
   } catch (error) {
@@ -186,12 +186,12 @@ export async function getTranscriptSegments(videoId: string): Promise<Transcript
     .select('*')
     .eq('video_id', videoId)
     .order('start_time', { ascending: true });
-  
+
   if (error) {
     console.error('Error fetching segments:', error);
     return [];
   }
-  
+
   return data as TranscriptSegment[];
 }
 
@@ -261,15 +261,15 @@ export async function updateSpeakerMapping(
     .update({ speaker_id: legislatorId })
     .eq('video_id', videoId)
     .eq('speaker_name', speakerLabel);
-  
+
   if (error) {
     console.error('Error updating speaker mapping:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error.message
     };
   }
-  
+
   return { success: true };
 }
 
@@ -285,7 +285,7 @@ export async function getSpeakerLabels(videoId: string): Promise<{
     .select('speaker_name, speaker_id')
     .eq('video_id', videoId)
     .not('speaker_name', 'is', null);
-  
+
   if (error) {
     console.error('Error fetching speaker labels:', error);
     return { labels: [], total: 0 };
@@ -297,11 +297,11 @@ export async function getSpeakerLabels(videoId: string): Promise<{
 
   // Group by speaker label
   const labelMap = new Map<string, { count: number; legislatorId: string | null }>();
-  
-  data.forEach((seg: any) => {
+
+  data.forEach((seg: { speaker_name: string; speaker_id: string | null }) => {
     const label = seg.speaker_name;
     const existing = labelMap.get(label);
-    
+
     if (existing) {
       existing.count++;
       if (seg.speaker_id && !existing.legislatorId) {
@@ -331,12 +331,12 @@ export async function getTotalTranscriptions(): Promise<number> {
   const { data, error } = await supabase
     .from('video_transcriptions')
     .select('video_id', { count: 'exact' });
-  
+
   if (error) {
     console.error('Error fetching total transcriptions:', error);
     return 0;
   }
-  
+
   return data.length;
 
 }
