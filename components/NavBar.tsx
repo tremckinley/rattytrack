@@ -18,7 +18,7 @@ export default function NavBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex mb-2 text-foreground w-full bg-white border-b border-foreground">
+    <nav className="flex mb-2 text-foreground w-full bg-white border-b border-foreground z-50">
       <Link href="/" className="ml-8 my-4 items-center justify-center">
         <Image
           src="/burgundy_logo.png"
