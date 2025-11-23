@@ -15,6 +15,7 @@ import { transcribeWithAutoChunking } from '@/lib/utils/whisper-client';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
+import { SpeakerMatch } from '@/lib/utils/speaker-matcher';
 
 interface TranscribeRequest {
   videoId: string;
@@ -212,7 +213,7 @@ async function processTranscription(
     console.log(`Transcription completed: ${transcribeResult.segments.length} segments`);
 
     // Step 4: Match speakers to legislators if diarization was used
-    let speakerMatches: Map<string, any> | null = null;
+    let speakerMatches: Map<string, SpeakerMatch> | null = null;
     if (useDiarization && transcribeResult.segments.some(s => 'speaker' in s && s.speaker)) {
       console.log('Matching speakers to legislators...');
       const { matchAllSpeakers } = await import('@/lib/utils/speaker-matcher');

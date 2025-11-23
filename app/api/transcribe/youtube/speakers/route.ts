@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       .map(v => v.speakerId)
       .filter((id): id is string => !!id);
 
-    let legislatorNames = new Map<string, string>();
+    const legislatorNames = new Map<string, string>();
     
     if (mappedSpeakerIds.length > 0) {
       const { data: legislators } = await supabase
