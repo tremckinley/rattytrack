@@ -38,8 +38,16 @@ function isAdmin(request: NextRequest): boolean {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: TranscribeRequest = await request.json();
-    const { videoId, forceRetry, provider, numSpeakers } = body;
+    const body: TranscribeRequest & { password?: string } = await request.json();
+    const { videoId, forceRetry, provider, numSpeakers, password } = body;
+
+    // Check password
+    if (password !== process.env.TRANSCRIPTION_PASSWORD) {
+      return NextResponse.json(
+        { error: 'Invalid password' },
+        { status: 401 }
+      );
+    }
 
     if (!videoId) {
       return NextResponse.json(
@@ -150,7 +158,7 @@ async function processTranscription(
     // Step 1: Download MP3 from YouTube using ytmp3.as
     // Dynamic import to prevent bundling in prerendered pages
     const { recordYouTubeAudio } = await import('@/lib/utils/youtube-downloader');
-    
+
     const mp3Path = path.join(workDir, 'audio.mp3');
     const downloadResult = await recordYouTubeAudio({
       videoId,
@@ -164,7 +172,7 @@ async function processTranscription(
     // Step 2: Check if file needs chunking (if over 25MB)
     console.log('Checking if audio needs chunking...');
     const { exceedsFileSizeLimit, splitAudioIntoChunks } = await import('@/lib/utils/audio-processor');
-    
+
     if (exceedsFileSizeLimit(mp3Path, 25)) {
       console.log('File exceeds 25MB, splitting into chunks...');
       const chunksDir = path.join(workDir, 'chunks');
@@ -184,9 +192,9 @@ async function processTranscription(
     // Step 3: Transcribe using selected provider
     const useDiarization = provider === 'elevenlabs';
     console.log(`Transcribing with ${provider} API...${useDiarization ? ' (with diarization)' : ''}`);
-    
+
     let transcribeResult;
-    
+
     if (provider === 'elevenlabs') {
       const { transcribeWithAutoChunking: transcribeElevenLabs } = await import('@/lib/utils/elevenlabs-client');
       transcribeResult = await transcribeElevenLabs(audioChunks, {
@@ -221,10 +229,10 @@ async function processTranscription(
       const segmentsWithSpeakers = transcribeResult.segments.map(seg => {
         const speaker = 'speaker' in seg ? (seg.speaker as string | undefined) : undefined;
         const speakerName: string | null = speaker || null;
-        const speakerId: string | null = speakerName && speakerMatches 
+        const speakerId: string | null = speakerName && speakerMatches
           ? speakerMatches.get(speakerName)?.legislatorId || null
           : null;
-        
+
         return {
           start: seg.start,
           end: seg.end,
@@ -241,7 +249,7 @@ async function processTranscription(
         provider,
         useDiarization
       );
-      
+
       // Mark as completed only after successful save
       await updateTranscriptionStatus(videoId, 'completed');
       console.log(`Successfully transcribed video ${videoId} using ${provider}`);

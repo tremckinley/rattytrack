@@ -133,12 +133,12 @@ export default async function YouTubePage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 items-end">
                       <a
                         href={`https://www.youtube.com/watch?v=${video.videoId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                        className="h-fit px-4 py-2 border border-gray-300 text-white rounded-lg bg-[#FF0000] hover:bg-[#FF5555] hover:text-gray-50 transition-colors font-medium"
                       >
                         Watch on YouTube
                       </a>

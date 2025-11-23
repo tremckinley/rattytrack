@@ -8,13 +8,19 @@ const openai = new OpenAI({
 
 export async function POST(req: NextRequest) {
   let meetingId: string | null = null;
-  
+
   try {
     const formData = await req.formData();
     const audioFile = formData.get('audio') as File;
     const title = formData.get('title') as string | null;
     const description = formData.get('description') as string | null;
-    
+    const password = formData.get('password') as string | null;
+
+    // Check password
+    if (password !== process.env.TRANSCRIPTION_PASSWORD) {
+      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
+    }
+
     if (!audioFile) {
       return NextResponse.json({ error: 'No audio file provided' }, { status: 400 });
     }
@@ -93,7 +99,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       meetingId: meetingId,
       text: transcription.text,
       segments: transcription.segments,
@@ -102,7 +108,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Transcription error:', error);
-    
+
     // Update meeting status to failed if we created a record
     if (meetingId) {
       await supabaseAdmin
@@ -113,14 +119,14 @@ export async function POST(req: NextRequest) {
         })
         .eq('id', meetingId);
     }
-    
+
     if (error instanceof Error) {
-      return NextResponse.json({ 
-        error: 'Transcription failed', 
-        details: error.message 
+      return NextResponse.json({
+        error: 'Transcription failed',
+        details: error.message
       }, { status: 500 });
     }
-    
+
     return NextResponse.json({ error: 'Transcription failed' }, { status: 500 });
   }
 }

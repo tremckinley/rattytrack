@@ -21,6 +21,7 @@ export default function YouTubeTranscribeButton({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [password, setPassword] = useState('');
 
   // Poll for status updates when processing
   useEffect(() => {
@@ -64,6 +65,11 @@ export default function YouTubeTranscribeButton({
   }, [pollingInterval]);
 
   const handleTranscribe = async () => {
+    if (!password) {
+      setError('Password is required');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -73,7 +79,7 @@ export default function YouTubeTranscribeButton({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ videoId }),
+        body: JSON.stringify({ videoId, password }),
       });
 
       const data = await response.json();
@@ -130,6 +136,13 @@ export default function YouTubeTranscribeButton({
   if (status === 'error') {
     return (
       <div className="flex flex-col gap-2">
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter password"
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+        />
         <button
           onClick={handleTranscribe}
           disabled={isLoading}
@@ -147,10 +160,17 @@ export default function YouTubeTranscribeButton({
   // Default: pending state
   return (
     <div className="flex flex-col gap-2">
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Enter password"
+        className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+      />
       <button
         onClick={handleTranscribe}
         disabled={isLoading}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 flex items-center gap-2 justify-center"
       >
         {isLoading && (
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

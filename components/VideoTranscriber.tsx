@@ -24,6 +24,7 @@ export default function VideoTranscriber() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [transcription, setTranscription] = useState<TranscriptionResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,13 +63,13 @@ export default function VideoTranscriber() {
 
   const handleFileSelect = (selectedFile: File) => {
     const maxSize = 25 * 1024 * 1024; // 25MB in bytes
-    
+
     if (selectedFile.size > maxSize) {
       setError('File size exceeds 25MB limit. Please upload a smaller file.');
       setFile(null);
       return;
     }
-    
+
     setFile(selectedFile);
     setTranscription(null);
     setError(null);
@@ -92,6 +93,7 @@ export default function VideoTranscriber() {
     formData.append('audio', file);
     if (title) formData.append('title', title);
     if (description) formData.append('description', description);
+    if (password) formData.append('password', password);
 
     try {
       const response = await fetch('/api/transcribe', {
@@ -109,6 +111,7 @@ export default function VideoTranscriber() {
         setFile(null);
         setTitle('');
         setDescription('');
+        setPassword('');
         // Refresh page to show new transcript in saved list
         window.location.reload();
       }
@@ -125,11 +128,10 @@ export default function VideoTranscriber() {
       <h2 className="text-2xl font-semibold">Upload New Video</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div
-          className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-            dragActive
-              ? 'border-primary bg-primary/5'
-              : 'border-border hover:border-primary/50'
-          }`}
+          className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${dragActive
+            ? 'border-primary bg-primary/5'
+            : 'border-border hover:border-primary/50'
+            }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
@@ -182,7 +184,7 @@ export default function VideoTranscriber() {
                   className="w-full px-3 py-2 border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="meeting-description" className="block text-sm font-medium mb-1">
                   Description (Optional)
@@ -196,29 +198,44 @@ export default function VideoTranscriber() {
                   className="w-full px-3 py-2 border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                 />
               </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium mb-1">
+                  Password (Required)
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter transcription password"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                  required
+                />
+              </div>
             </div>
 
             <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? (
-              <>
-                <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-                Transcribing...
-              </>
-            ) : (
-              <>
-                <FontAwesomeIcon icon={faUpload} />
-                Transcribe Audio
-              </>
-            )}
-          </button>
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+                  Transcribing...
+                </>
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faUpload} />
+                  Transcribe Audio
+                </>
+              )}
+            </button>
           </>
         )}
       </form>
-      
+
       <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
         <h3 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">
           📌 Large File Support
