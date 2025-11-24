@@ -104,6 +104,14 @@
     @apply shadow-sm bg-white text-foreground text-sm border border-foreground;
   }
 
+  .block {
+    @apply shadow-sm bg-white text-foreground border border-foreground w-full p-4;
+  }
+
+  .sub-block {
+    @apply shadow-sm bg-gray-50 text-foreground border border-foreground w-full p-2;
+  }
+
   .active-nav-link {
     @apply border-b-2 border-capyred text-capyred font-bold;
   }

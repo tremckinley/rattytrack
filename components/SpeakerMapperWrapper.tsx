@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp, faUserCheck, faUserTag } from '@fortawesome/free-solid-svg-icons';
 import SpeakerMapper from './SpeakerMapper';
 
 interface SpeakerLabel {
@@ -50,7 +50,7 @@ export default function SpeakerMapperWrapper({
     <div className="mb-6">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full bg-white rounded-lg shadow-md p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className={isExpanded ? "block flex items-center justify-between hover:bg-gray-50 transition-colors border-b-0" : "block flex items-center justify-between hover:bg-gray-50 transition-colors"}
       >
         <div className="flex items-center gap-3">
           <div className="text-left">
@@ -60,11 +60,12 @@ export default function SpeakerMapperWrapper({
             <p className="text-sm text-gray-600">
               {unmappedCount > 0 ? (
                 <>
+                <FontAwesomeIcon icon={faUserTag} className="text-green-600" /> 
                   {unmappedCount} of {speakerLabels.length} speaker
                   {speakerLabels.length !== 1 ? 's' : ''} not yet identified
                 </>
               ) : (
-                <>All {speakerLabels.length} speakers identified</>
+                <> <FontAwesomeIcon icon={faUserCheck} className="text-green-600" /> All {speakerLabels.length} speakers identified</>
               )}
             </p>
           </div>
@@ -81,7 +82,7 @@ export default function SpeakerMapperWrapper({
       </button>
 
       {isExpanded && (
-        <div className="mt-4">
+        <div className="">
           <SpeakerMapper
             videoId={videoId}
             speakerLabels={speakerLabels}

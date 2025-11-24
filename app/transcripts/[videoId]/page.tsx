@@ -107,6 +107,17 @@ export default async function TranscriptPage({ params }: PageProps) {
           </div>
         )}
 
+      {/* Video Title */}
+      <div className="block bg-rose-950 text-background shadow-lg mb-6">
+        <h1 className="text-3xl font-bold mb-2">{transcription.title}</h1>
+        <div className="flex items-center gap-4 text-gray-100">
+          <span>{transcription.channel_title}</span>
+          <span>•</span>
+          <span>{formatDate(transcription.published_at)}</span>
+        </div>
+      </div>
+
+
         {/* Speaker Mapper (if diarization was used) */}
         {transcription.status === 'completed' && speakerLabels.length > 0 && (
           <SpeakerMapperWrapper
@@ -129,7 +140,7 @@ export default async function TranscriptPage({ params }: PageProps) {
         )}
 
         {/* Metadata */}
-        {transcription.status === 'completed' && transcription.transcription_cost && (
+        {/* {transcription.status === 'completed' && transcription.transcription_cost && (
           <div className="mt-8 bg-white rounded-lg shadow-md p-6">
             <h3 className="font-semibold text-gray-900 mb-4">
               Transcription Details
@@ -153,7 +164,7 @@ export default async function TranscriptPage({ params }: PageProps) {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

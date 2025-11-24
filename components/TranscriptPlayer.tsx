@@ -84,20 +84,10 @@ export default function TranscriptPlayer({
 
   return (
     <div className="space-y-6">
-      {/* Video Title */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{title}</h1>
-        <div className="flex items-center gap-4 text-gray-600">
-          <span>{channelTitle}</span>
-          <span>•</span>
-          <span>{formatDate(publishedAt)}</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Video Player */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="aspect-video">
+        <div className="h-fit p-0 overflow-hidden flex items-start border border-foreground lg:col-span-2">
+          <div className="aspect-video w-full">
             <iframe
               ref={iframeRef}
               src={`https://www.youtube.com/embed/${videoId}`}
@@ -106,11 +96,41 @@ export default function TranscriptPlayer({
               allowFullScreen
               className="w-full h-full"
             />
+            <div className="bg-white shadow-md p-6">
+
+            <h3 className="font-semibold text-gray-900 mb-4">Export Transcript</h3>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              const text = segments.map(s => `[${formatTimestamp(s.start_time)}] ${s.text}`).join('\n\n');
+              const blob = new Blob([text], { type: 'text/plain' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `transcript-${videoId}.txt`;
+              a.click();
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            Download as TXT
+          </button>
+          <button
+            onClick={() => {
+              const text = segments.map(s => s.text).join(' ');
+              navigator.clipboard.writeText(text);
+              alert('Transcript copied to clipboard!');
+            }}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+          >
+            Copy to Clipboard
+          </button>
+        </div>
+          </div>
           </div>
         </div>
 
         {/* Transcript */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+        <div className="block p-2 overflow-hidden flex flex-col lg:col-span-3">
           {/* Search Bar */}
           <div className="p-4 border-b border-gray-200">
             <input
@@ -153,11 +173,12 @@ export default function TranscriptPlayer({
                       </button>
                       {segment.speaker_name && (
                         <span
-                          className={`text-xs px-2 py-1 rounded font-medium ${
+                          className={`text-xs px-2 py-1 font-medium overflow-hidden text-ellipsis ${
                             isActiveSegment(segment)
                               ? 'bg-purple-100 text-purple-700'
                               : 'bg-gray-100 text-gray-600'
                           }`}
+                          style={{ maxWidth: '100px', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                         >
                           {segment.speaker_id && legislatorMap[segment.speaker_id]
                             ? legislatorMap[segment.speaker_id].display_name
@@ -198,37 +219,6 @@ export default function TranscriptPlayer({
               </div>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Download Options */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Export Transcript</h3>
-        <div className="flex gap-3">
-          <button
-            onClick={() => {
-              const text = segments.map(s => `[${formatTimestamp(s.start_time)}] ${s.text}`).join('\n\n');
-              const blob = new Blob([text], { type: 'text/plain' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `transcript-${videoId}.txt`;
-              a.click();
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            Download as TXT
-          </button>
-          <button
-            onClick={() => {
-              const text = segments.map(s => s.text).join(' ');
-              navigator.clipboard.writeText(text);
-              alert('Transcript copied to clipboard!');
-            }}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-          >
-            Copy to Clipboard
-          </button>
         </div>
       </div>
     </div>

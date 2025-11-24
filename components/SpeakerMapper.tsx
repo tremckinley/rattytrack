@@ -97,11 +97,11 @@ export default function SpeakerMapper({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
+    <div className="block border-t-0 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <FontAwesomeIcon icon={faUserTie} className="text-blue-600" />
+            <FontAwesomeIcon icon={faUserTie} className="text-capyred" />
             Map Speakers to Legislators
           </h3>
           <p className="text-sm text-gray-600 mt-1">
@@ -132,7 +132,7 @@ export default function SpeakerMapper({
           return (
             <div
               key={speaker.label}
-              className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
+              className="sub-block flex items-center gap-4 border border-gray-200"
             >
               <div className="flex-shrink-0 w-32">
                 <div className="text-sm font-medium text-gray-900">{speaker.label}</div>
@@ -145,7 +145,7 @@ export default function SpeakerMapper({
                 <select
                   value={mappings[speaker.label] || ''}
                   onChange={(e) => handleMappingChange(speaker.label, e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-foreground focus:ring-2 focus:ring-capyred focus:border-transparent focus:rounded-none"
                 >
                   <option value="">Unassigned</option>
                   {legislators.map(legislator => (
