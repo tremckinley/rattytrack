@@ -340,3 +340,30 @@ export async function getTotalTranscriptions(): Promise<number> {
   return data.length;
 
 }
+
+export async function getTotalTrackedLegislators(): Promise<number> {
+  const { data, error } = await supabase
+    .rpc('get_unique_speakers');
+
+  if (error) {
+    console.error('Error fetching total tracked legislators:', error);
+    return 0;
+  }
+
+  return data.length;
+}
+
+export async function getTotalHoursProcessed(): Promise<number> {
+  const { data, error } = await supabase
+    .from('video_transcriptions')
+    .select('duration')
+
+  const totalDurationMinutes = data?.reduce((total, item) => total + item.duration, 0);
+
+  if (error || !totalDurationMinutes) {
+    console.error('Error fetching total hours processed:', error);
+    return 0;
+  }
+
+  return totalDurationMinutes / 60;
+}
