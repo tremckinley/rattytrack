@@ -1,0 +1,89 @@
+# **CapyTrackAI: User Research & UX Strategy**
+
+**Design Philosophy:** Civic Brutalism (Efficiency, Transparency, Sharp Edges, High Contrast)
+
+## **1\. Primary User Personas & Stories**
+
+### **A. The Professional: Anthony, Policy Consultant**
+
+**Profile:** Anthony works for a firm lobbying for sustainable urban planning. He tracks 15 different municipalities. He bills by the hour and cannot afford to watch video.
+
+* **The Problem:** "I have to monitor 12 hours of footage a week across 4 cities to see if anyone mentioned 'zoning variances'. It's inefficient."  
+* **User Story 1 (The Search):** "As a busy consultant, I want to **search across multiple municipalities** for specific keywords (like 'ADU' or 'Variance'), so that I can instantly find the 3 minutes of video relevant to my client."  
+* **User Story 2 (The Export):** "As a consultant, I want to **export a PDF summary** of a specific agenda item, including the vote count and key quotes, so I can email a briefing to my client within 15 minutes of the meeting ending."
+
+### **B. The Watchdog: Mary, Local Journalist/Suburban Citizen**
+
+**Profile:** Mary runs a Substack about her suburb and contributes to the local paper. She cares about accountability and spotting hypocrisy.
+
+* **The Problem:** "Councilmember Smith says he loves parks, but I feel like he votes against funding them every time. I need proof, not just vibes."  
+* **User Story 1 (The Fact Check):** "As a journalist, I want to **compare a legislator's spoken rhetoric against their actual voting record** side-by-side, so I can expose contradictions in my next article."  
+* **User Story 2 (The Timeline):** "As a writer, I want to view a **chronological timeline** of a specific issue (e.g., 'The Downtown Library'), so I can tell the full story of how the project stalled over two years."
+
+### **C. The Advocate: Sam, The Single-Issue Voter (New Persona)**
+
+**Profile:** Sam is a busy parent and a cyclist. He doesn't care about the budget or zoning, he *only* cares about bike lanes and road safety. He never remembers to check the city website.
+
+* **The Problem:** "I only find out about changes to my street after the vote has already happened."  
+* **User Story 1 (The Alert):** "As an advocate, I want to **set up proactive email/SMS alerts** for specific phrases (e.g., 'Protected Bike Lane'), so I only have to log in when my issue is at stake."  
+* **User Story 2 (The Mobilization):** "As an advocate, I want to **share a specific video clip** of a council member making a controversial statement to Twitter/X, so I can rally my neighbors to attend the next meeting."
+
+### **D. The Campaign Manager: Elena, Opposition Researcher (New Persona)**
+
+**Profile:** Elena is managing a challenger's campaign for a seat in District 4\. She is looking for "attack ad" material or weak points in the incumbent's record.
+
+* **The Problem:** "I need to find the 'hot mic' moments or the times the incumbent was absent for crucial votes."  
+* **User Story 1 (The Attendance Hawk):** "As a campaign manager, I want to see a **heatmap of attendance and voting abstentions**, so I can attack the incumbent for not doing their job."  
+* **User Story 2 (The Sentiment Filter):** "As a researcher, I want to filter transcripts by **negative sentiment**, so I can quickly find moments where the incumbent lost their temper or spoke rudely to constituents."
+
+## **2\. UX/UI Requirements & Page Map**
+
+Based on these stories, here is the required architecture, styled for the **Modern Editorial/Brutalist** look.
+
+### **1\. The Dashboard (The "Command Center")**
+
+* **Core Function:** Discovery & High-Level Pulse.  
+* **Key Modules:**  
+  * **"Watchdog Alerts" (For Sam):** A sharp, high-contrast block listing new hits on the user's saved keywords.  
+    * *UI Pointer:* Use the "Capy Red" (\#be123c) for the alert border to induce urgency.  
+  * **"Trend Line" (For Anthony):** A sparkline graph showing the frequency of top keywords (e.g., "Housing" is up 40% this month).  
+  * **"Upcoming Docket":** A calendar view of future votes, not just past ones.
+
+### **2\. The Global Search (The "Engine")**
+
+* **Core Function:** The primary tool for Anthony and Elena.  
+* **Key Features:**  
+  * **Faceted Filtering:** Left sidebar filters for *Date Range*, *Speaker*, *Sentiment*, and *Vote Outcome*.  
+  * **Contextual Results:** Don't just show the video title. Show the **exact snippet** of text where the keyword appears, with a timestamp.  
+  * **"Play from text":** Clicking the text snippet immediately plays the video from that second.
+
+### **3\. The Legislator Profile (The "Dossier")**
+
+* **Core Function:** Accountability (Mary & Elena).  
+* **Key Modules:**  
+  * **The "Say vs. Do" Split:** A visual component. Left side: "What they said" (AI summary of rhetoric). Right side: "How they voted" (Actual record).  
+  * **Donor/Financial Card:** A Brutalist data table showing top donors. This implies "who owns them."  
+  * **Attendance Heatmap:** A grid of boxes (Github style) showing presence at meetings.
+
+### **4\. The Meeting "Deep Dive" Page**
+
+* **Core Function:** Consumption & Evidence Gathering.  
+* **Key Modules:**  
+  * **The Interactive Transcript:** Runs down the right side of the video. Searchable.  
+  * **"Smart Chapters":** AI-generated timestamps that break a 4-hour meeting into "Agenda Item 1," "Public Comment," etc.  
+  * **Clip & Share Tool:** A "Scissor" icon tool to define a start/end time and generate a shareable link.
+
+## **3\. Visual UX Pointers (The "CapyTrack" Style)**
+
+How to apply the **Neo-Brutalist** aesthetic to these specific functions:
+
+1. **Data as Decor:**  
+   * Don't hide the metadata. Display the "Confidence Score," "Sentiment Rating," and "Word Count" in small, mono-spaced fonts right on the cards. This appeals to Anthony (The Pro).  
+   * *Style:* font-mono text-xs uppercase tracking-widest text-stone-500  
+2. **Explicit Boundaries:**  
+   * Use **hard borders** (border-2 border-stone-900) to separate the "Transcript" from the "Analysis." This prevents the interface from feeling "mushy" or subjective. It feels like a legal document.  
+3. **Color Coding for Accountability:**  
+   * Use the **Status Colors** aggressively.  
+   * If a Legislator voted "No," the background of that table row should be a faint red (bg-rose-50), and the text should be sharp red. No ambiguity.  
+4. **"Redacted" Aesthetics:**  
+   * For loading states or private data, use black rectangular blocks (like redacted text) instead of spinning circles. This fits the "Intelligence/Government" theme.
