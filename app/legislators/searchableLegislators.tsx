@@ -58,6 +58,7 @@ export default function SearchableLegislators({ legislators, initialStatus, empt
                         placeholder="Search by name, position, etc."
                         value={searchValue}
                         onChange={(e) => setSearchValue(e.target.value)}
+                        className="h-11"
                     />
                 </div>
 

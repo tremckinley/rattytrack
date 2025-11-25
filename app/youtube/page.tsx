@@ -54,16 +54,24 @@ export default async function YouTubePage() {
   ) : [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
+          <div className="flex justify-between items-center">
           <Link
             href="/"
             className="text-blue-600 hover:text-blue-700 font-medium mb-4 inline-block"
           >
             ← Back to Dashboard
           </Link>
+          <Link 
+            href="/uploads" 
+            className="text-blue-600 hover:text-blue-700 font-medium mb-4 inline-block"
+          >
+            Upload Video ↑
+          </Link>
+          </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Memphis City Council Videos
           </h1>
@@ -99,7 +107,6 @@ export default async function YouTubePage() {
                       href={`https://www.youtube.com/watch?v=${video.videoId}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block"
                     >
                       <img
                         src={video.thumbnailUrl}

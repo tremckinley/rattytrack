@@ -9,7 +9,7 @@ export default function LegislatorCard(params: Legislator) {
   return (
     <div className="card m-0 p-4 w-full">
       {/*Profile header*/}
-      <div className="flex items-center">
+      <div className="flex items-center gap-4">
         {params.photo_url ? (
           <Image
             src={params.photo_url}
@@ -22,21 +22,21 @@ export default function LegislatorCard(params: Legislator) {
         )}
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-lg text-foreground">{params.display_name}</h3>
+            <h3 className="font-bold text-3xl text-foreground">{params.display_name}</h3>
             {params.is_active === false && (
-              <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full">
+              <span className="text-lg px-2 py-0.5 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full">
                 Former
               </span>
             )}
           </div>
-          <p className="text-gray-600">{params.title}</p>
-          <p className="text-xs text-gray-600">{params.district}</p>
+          <p className="text-lg text-gray-600">{params.title}</p>
+          <p className="text-lg text-gray-600">{params.district}</p>
         </div>
       </div>
       <div className="p-2 flex flex-col my-2">
         <div className="flex justify-between">
-          <span>Party</span>
-          <span>{params.party_affiliation}</span>
+          {params.party_affiliation && <span>Party</span>}
+          {params.party_affiliation && <span>{params.party_affiliation}</span>}
         </div>
         <div className="flex justify-between my-2">
           <div>

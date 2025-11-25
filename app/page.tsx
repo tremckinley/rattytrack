@@ -15,7 +15,7 @@ export default async function Dashboard() {
 
     return (
         <div className="max-w-screen md:mx-24 mt-16">
-            <section id="dashboard-banner" className="bg-rose-950 p-8 relative overflow-hidden">
+            <section id="dashboard-banner" className="bg-rose-950 p-8 relative overflow-hidden shadow-solid">
                 <h1 className="text-4xl my-4 font-bold text-white">CAPYTRACK AI</h1>
                 <div className="grid grid-cols-2 w-fit lg:w-[70%] lg:flex">
                     <TotalCard title="Videos Analyzed" total={totalVideos} icon={solidIcons.faPlay} />
