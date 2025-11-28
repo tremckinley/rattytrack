@@ -1,0 +1,149 @@
+Created transcription record for UYledm4cVNc
+Starting background transcription for UYledm4cVNc
+ POST /api/transcribe/youtube 200 in 2507ms
+Starting MP3 download for video UYledm4cVNc
+ ✓ Compiled in 394ms (265 modules)
+ GET /youtube 200 in 400ms
+ ✓ Compiled in 174ms (265 modules)
+ GET /youtube 200 in 297ms
+ GET /api/transcribe/youtube?videoId=UYledm4cVNc 200 in 243ms
+Navigating to https://ytmp3.as/AOPR/
+Entering URL and submitting
+Conversion started
+Download button clicked
+ POST /api/transcribe/youtube 200 in 156ms
+Waiting for download to complete (up to 3 minutes)...
+ ✓ Compiled in 176ms (265 modules)
+ GET /youtube 200 in 269ms
+Renamed Memphis City Council Committee Meetings_ November 18, 2025 [UYledm4cVNc].mp3 to audio.mp3
+Download completed successfully: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/audio.mp3
+Browser closed
+Checking if audio needs chunking...
+File size: 40.33 MB
+File exceeds 25MB, splitting into chunks...
+ GET /api/transcribe/youtube?videoId=UYledm4cVNc 200 in 150ms
+Splitting audio into 10 chunks of 600 seconds each
+Chunk 1/10 created
+Chunk 2/10 created
+Chunk 3/10 created
+Chunk 4/10 created
+Chunk 5/10 created
+Chunk 6/10 created
+Chunk 7/10 created
+Chunk 8/10 created
+Chunk 9/10 created
+Chunk 10/10 created
+Audio ready: 10 chunk(s)
+Transcribing with elevenlabs API... (with diarization)
+Transcribing 10 audio chunks with Eleven Labs...
+Processing chunk 1/10...
+Transcribing /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_000.mp3 with Eleven Labs to https://api.elevenlabs.io/v1/speech-to-text...
+Making request to https://api.elevenlabs.io/v1/speech-to-text with model_id=scribe_v1, diarize=true
+ElevenLabs response status: 200 OK
+Saved ElevenLabs response to /tmp/elevenlabs-response-debug.json
+ElevenLabs response: 257 words, language: eng
+Transcription completed: 12 segments, 600.0s, $0.0600, speakers: 2
+Processing chunk 2/10...
+Transcribing /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_001.mp3 with Eleven Labs to https://api.elevenlabs.io/v1/speech-to-text...
+Making request to https://api.elevenlabs.io/v1/speech-to-text with model_id=scribe_v1, diarize=true
+ElevenLabs response status: 200 OK
+Saved ElevenLabs response to /tmp/elevenlabs-response-debug.json
+ElevenLabs response: 2662 words, language: eng
+Transcription completed: 127 segments, 599.1s, $0.0599, speakers: 11
+Processing chunk 3/10...
+Transcribing /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_002.mp3 with Eleven Labs to https://api.elevenlabs.io/v1/speech-to-text...
+Making request to https://api.elevenlabs.io/v1/speech-to-text with model_id=scribe_v1, diarize=true
+ElevenLabs response status: 200 OK
+Saved ElevenLabs response to /tmp/elevenlabs-response-debug.json
+ElevenLabs response: 1511 words, language: eng
+Transcription completed: 85 segments, 599.9s, $0.0600, speakers: 4
+Processing chunk 4/10...
+Transcribing /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_003.mp3 with Eleven Labs to https://api.elevenlabs.io/v1/speech-to-text...
+Making request to https://api.elevenlabs.io/v1/speech-to-text with model_id=scribe_v1, diarize=true
+ElevenLabs response status: 200 OK
+Saved ElevenLabs response to /tmp/elevenlabs-response-debug.json
+ElevenLabs response: 2067 words, language: eng
+Transcription completed: 97 segments, 600.0s, $0.0600, speakers: 5
+Processing chunk 5/10...
+Transcribing /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_004.mp3 with Eleven Labs to https://api.elevenlabs.io/v1/speech-to-text...
+Making request to https://api.elevenlabs.io/v1/speech-to-text with model_id=scribe_v1, diarize=true
+ElevenLabs response status: 200 OK
+Saved ElevenLabs response to /tmp/elevenlabs-response-debug.json
+ElevenLabs response: 2629 words, language: eng
+Transcription completed: 148 segments, 599.9s, $0.0600, speakers: 5
+Processing chunk 6/10...
+Transcribing /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_005.mp3 with Eleven Labs to https://api.elevenlabs.io/v1/speech-to-text...
+Making request to https://api.elevenlabs.io/v1/speech-to-text with model_id=scribe_v1, diarize=true
+ElevenLabs response status: 200 OK
+Saved ElevenLabs response to /tmp/elevenlabs-response-debug.json
+ElevenLabs response: 2193 words, language: eng
+Transcription completed: 132 segments, 600.0s, $0.0600, speakers: 6
+Processing chunk 7/10...
+Transcribing /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_006.mp3 with Eleven Labs to https://api.elevenlabs.io/v1/speech-to-text...
+Making request to https://api.elevenlabs.io/v1/speech-to-text with model_id=scribe_v1, diarize=true
+ElevenLabs response status: 200 OK
+Saved ElevenLabs response to /tmp/elevenlabs-response-debug.json
+ElevenLabs response: 3393 words, language: eng
+Transcription completed: 120 segments, 600.0s, $0.0600, speakers: 4
+Processing chunk 8/10...
+Transcribing /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_007.mp3 with Eleven Labs to https://api.elevenlabs.io/v1/speech-to-text...
+Making request to https://api.elevenlabs.io/v1/speech-to-text with model_id=scribe_v1, diarize=true
+ElevenLabs response status: 200 OK
+Saved ElevenLabs response to /tmp/elevenlabs-response-debug.json
+ElevenLabs response: 2645 words, language: eng
+Transcription completed: 146 segments, 600.0s, $0.0600, speakers: 5
+Processing chunk 9/10...
+Transcribing /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_008.mp3 with Eleven Labs to https://api.elevenlabs.io/v1/speech-to-text...
+Making request to https://api.elevenlabs.io/v1/speech-to-text with model_id=scribe_v1, diarize=true
+ElevenLabs response status: 200 OK
+Saved ElevenLabs response to /tmp/elevenlabs-response-debug.json
+ElevenLabs response: 2854 words, language: eng
+Transcription completed: 121 segments, 600.0s, $0.0600, speakers: 7
+Processing chunk 10/10...
+Transcribing /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_009.mp3 with Eleven Labs to https://api.elevenlabs.io/v1/speech-to-text...
+Making request to https://api.elevenlabs.io/v1/speech-to-text with model_id=scribe_v1, diarize=true
+ElevenLabs response status: 200 OK
+Saved ElevenLabs response to /tmp/elevenlabs-response-debug.json
+ElevenLabs response: 441 words, language: eng
+Transcription completed: 25 segments, 91.4s, $0.0091, speakers: 4
+All chunks transcribed: 1013 total segments, $0.5490 total cost
+Transcription completed: 1013 segments
+Matching speakers to legislators...
+Matched 11 unique speakers
+Deleted existing segments for retry
+Error inserting segments: {
+  code: '23505',
+  details: 'Key (id)=(1) already exists.',
+  hint: null,
+  message: 'duplicate key value violates unique constraint "transcription_segments_pkey"'
+}
+Save segments failed: {
+  code: '23505',
+  details: 'Key (id)=(1) already exists.',
+  hint: null,
+  message: 'duplicate key value violates unique constraint "transcription_segments_pkey"'
+}
+Database save failed: {
+  code: '23505',
+  details: 'Key (id)=(1) already exists.',
+  hint: null,
+  message: 'duplicate key value violates unique constraint "transcription_segments_pkey"'
+}
+Transcription failed for UYledm4cVNc: {
+  code: '23505',
+  details: 'Key (id)=(1) already exists.',
+  hint: null,
+  message: 'duplicate key value violates unique constraint "transcription_segments_pkey"'
+}
+Cleaning up temporary files...
+Deleted: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_000.mp3
+Deleted: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_001.mp3
+Deleted: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_002.mp3
+Deleted: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_003.mp3
+Deleted: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_004.mp3
+Deleted: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_005.mp3
+Deleted: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_006.mp3
+Deleted: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_007.mp3
+Deleted: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_008.mp3
+Deleted: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700/chunks/chunk_009.mp3
+Deleted work directory: /tmp/youtube-transcribe-UYledm4cVNc-1764360954700
