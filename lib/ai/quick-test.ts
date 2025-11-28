@@ -6,7 +6,7 @@ import { analyzeSegment } from './transcript-analyzer';
 async function main() {
     console.log('Testing AI Transcript Analyzer...\n');
 
-    const testText = "I strongly support expanding the bike lane network on Main Street.";
+    const testText = "Reducing the police budget should not be on the table.";
     console.log(`Input: "${testText}"\n`);
 
     console.log('Analyzing...');

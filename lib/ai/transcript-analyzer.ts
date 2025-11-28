@@ -1,12 +1,13 @@
 // AI-powered transcript analysis using Transformers.js
 // Provides issue categorization and sentiment analysis for civic meeting transcripts
 
-import { pipeline, Pipeline } from '@xenova/transformers';
+
+import { pipeline } from '@xenova/transformers';
 import { ISSUE_CATEGORIES, type IssueCategory } from './issue-categories';
 
 // Lazy-loaded model pipelines
-let classificationPipeline: Pipeline | null = null;
-let sentimentPipeline: Pipeline | null = null;
+let classificationPipeline: any = null;
+let sentimentPipeline: any = null;
 
 /**
  * Configuration for AI analysis
@@ -56,7 +57,7 @@ export interface SegmentAnalysis {
 /**
  * Initialize the classification model (lazy loading)
  */
-async function getClassificationPipeline(): Promise<Pipeline> {
+async function getClassificationPipeline(): Promise<any> {
     if (!classificationPipeline) {
         console.log('Loading classification model (first run only, ~400MB)...');
         const startTime = Date.now();
@@ -72,7 +73,7 @@ async function getClassificationPipeline(): Promise<Pipeline> {
 /**
  * Initialize the sentiment model (lazy loading)
  */
-async function getSentimentPipeline(): Promise<Pipeline> {
+async function getSentimentPipeline(): Promise<any> {
     if (!sentimentPipeline) {
         console.log('Loading sentiment model (first run only, ~250MB)...');
         const startTime = Date.now();
@@ -100,7 +101,7 @@ export async function categorizeIssues(text: string): Promise<IssueCategorizatio
         const classifier = await getClassificationPipeline();
 
         // Run zero-shot classification
-        const result = await classifier(text, ISSUE_CATEGORIES, {
+        const result = await classifier(text, ISSUE_CATEGORIES as unknown as string[], {
             multi_label: true // Allow multiple categories per segment
         });
 

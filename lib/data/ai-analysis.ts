@@ -1,19 +1,8 @@
 // Database operations for AI analysis results
 // Handles saving issue categorization and sentiment analysis to segment_issues table
 
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin as supabase } from '@/lib/utils/supabase-admin';
 import type { IssueCategorization, SentimentAnalysis } from '@/lib/ai/transcript-analyzer';
-
-// Use service role key for server-side operations
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false
-    }
-});
 
 /**
  * Sentiment label type matching database enum

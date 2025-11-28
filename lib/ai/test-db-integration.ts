@@ -1,11 +1,19 @@
 // Test database integration for AI analysis
 // Run with: npx tsx lib/ai/test-db-integration.ts
 
-import { analyzeSegment } from './transcript-analyzer';
-import { saveSegmentAnalysis, getActiveIssues } from '../data/ai-analysis';
+import * as dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables BEFORE importing any other modules
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 async function main() {
+    // Dynamic imports to ensure env vars are loaded first
+    const { analyzeSegment } = await import('./transcript-analyzer');
+    const { saveSegmentAnalysis, getActiveIssues } = await import('../data/ai-analysis');
+
     console.log('Testing AI Analysis Database Integration\n');
+    console.log('This test will check if the AI analysis database integration is working correctly.\n');
 
     // Test 1: Check if issues exist in database
     console.log('Step 1: Checking for existing issues...');
@@ -21,7 +29,7 @@ async function main() {
 
     // Test 2: Analyze a sample segment
     console.log('\nStep 2: Analyzing sample segment...');
-    const testText = "I strongly support expanding the bike lane network on Main Street.";
+    const testText = "Reducing the police budget should not be on the table.";
     console.log(`Text: "${testText}"`);
 
     const analysis = await analyzeSegment(testText);
