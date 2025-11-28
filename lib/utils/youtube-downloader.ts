@@ -47,7 +47,7 @@ export async function recordYouTubeAudio(options: DownloadOptions): Promise<Down
     const chromiumPath = findChromiumExecutable();
     
     browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
       executablePath: chromiumPath,
       args: [
         '--no-sandbox',
