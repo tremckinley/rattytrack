@@ -170,24 +170,25 @@ async function processTranscription(
       throw new Error(downloadResult.error || 'Download failed');
     }
 
-    // Step 2: Check if file needs chunking (if over 25MB)
-    console.log('Checking if audio needs chunking...');
-    const { exceedsFileSizeLimit, splitAudioIntoChunks } = await import('@/lib/utils/audio-processor');
+    // Step 2 (disabled): Check if file needs chunking (if over 25MB)
+    // console.log('Checking if audio needs chunking...');
+    // const { exceedsFileSizeLimit, splitAudioIntoChunks } = await import('@/lib/utils/audio-processor');
 
-    if (exceedsFileSizeLimit(mp3Path, 25)) {
-      console.log('File exceeds 25MB, splitting into chunks...');
-      const chunksDir = path.join(workDir, 'chunks');
-      audioChunks = await splitAudioIntoChunks({
-        inputPath: mp3Path,
-        outputDir: chunksDir,
-        chunkDuration: 600, // 10 minutes per chunk
-      });
-      // Delete the large MP3 file
-      fs.unlinkSync(mp3Path);
-    } else {
-      audioChunks = [mp3Path];
-    }
-
+    // if (exceedsFileSizeLimit(mp3Path, 25)) {
+    //   console.log('File exceeds 25MB, splitting into chunks...');
+    //   const chunksDir = path.join(workDir, 'chunks');
+    //   audioChunks = await splitAudioIntoChunks({
+    //     inputPath: mp3Path,
+    //     outputDir: chunksDir,
+    //     chunkDuration: 600, // 10 minutes per chunk
+    //   });
+    //   // Delete the large MP3 file
+    //   fs.unlinkSync(mp3Path);
+    // } else {
+    //   audioChunks = [mp3Path];
+    // }
+    console.log('Audio chunking disabled');
+    audioChunks = [mp3Path];
     console.log(`Audio ready: ${audioChunks.length} chunk(s)`);
 
     // Step 3: Transcribe using selected provider
