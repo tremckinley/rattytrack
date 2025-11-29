@@ -225,25 +225,26 @@ async function processTranscription(
       console.log(`Matched ${speakerMatches.size} unique speakers`);
     }
 
+    // Prepare segments with speakers
+    const segmentsWithSpeakers = transcribeResult.segments.map(seg => {
+      const speaker = 'speaker' in seg ? (seg.speaker as string | undefined) : undefined;
+      const speakerName: string | null = speaker || null;
+      const speakerId: string | null = speakerName && speakerMatches
+        ? speakerMatches.get(speakerName)?.legislatorId || null
+        : null;
+
+      return {
+        start: seg.start,
+        end: seg.end,
+        text: seg.text,
+        speakerName,
+        speakerId,
+      };
+    });
+
     // Step 5: Save to database with speaker information
     // Wrap in try-catch to ensure status is updated even if partial save occurs
     try {
-      const segmentsWithSpeakers = transcribeResult.segments.map(seg => {
-        const speaker = 'speaker' in seg ? (seg.speaker as string | undefined) : undefined;
-        const speakerName: string | null = speaker || null;
-        const speakerId: string | null = speakerName && speakerMatches
-          ? speakerMatches.get(speakerName)?.legislatorId || null
-          : null;
-
-        return {
-          start: seg.start,
-          end: seg.end,
-          text: seg.text,
-          speakerName,
-          speakerId,
-        };
-      });
-
       await saveTranscriptSegments(
         videoId,
         segmentsWithSpeakers,
@@ -257,12 +258,43 @@ async function processTranscription(
       console.log(`Successfully transcribed video ${videoId} using ${provider}`);
     } catch (dbError) {
       console.error('Database save failed:', dbError);
-      // Even if save fails, mark as error so it's not stuck in processing
-      await updateTranscriptionStatus(
-        videoId,
-        'error',
-        `Database error: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`
-      );
+
+      // Fallback: Save to local file to prevent token wastage
+      try {
+        const backupDir = path.join(process.cwd(), 'transcripts_backup');
+        if (!fs.existsSync(backupDir)) {
+          fs.mkdirSync(backupDir, { recursive: true });
+        }
+
+        const backupFile = path.join(backupDir, `${videoId}_${Date.now()}_backup.json`);
+        const backupData = {
+          videoId,
+          provider,
+          timestamp: new Date().toISOString(),
+          segments: segmentsWithSpeakers,
+          cost: transcribeResult.cost,
+          originalError: dbError instanceof Error ? dbError.message : String(dbError)
+        };
+
+        fs.writeFileSync(backupFile, JSON.stringify(backupData, null, 2));
+        console.log(`Transcript backed up locally to: ${backupFile}`);
+
+        // Update status with backup info
+        await updateTranscriptionStatus(
+          videoId,
+          'error',
+          `Database error: ${dbError instanceof Error ? dbError.message : 'Unknown error'}. Backup saved to ${path.basename(backupFile)}`
+        );
+      } catch (backupError) {
+        console.error('Backup save also failed:', backupError);
+        // Even if save fails, mark as error so it's not stuck in processing
+        await updateTranscriptionStatus(
+          videoId,
+          'error',
+          `Database error: ${dbError instanceof Error ? dbError.message : 'Unknown error'}. Backup failed.`
+        );
+      }
+
       throw dbError; // Re-throw to trigger outer error handler
     }
   } catch (error) {
