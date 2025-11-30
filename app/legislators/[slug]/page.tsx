@@ -88,8 +88,7 @@ export default async function LegislatorPage({ params }: Props) {
                     <div id="tracked-comments" 
                         className="bg-sidebar-foreground/10 background rounded-lg p-3 m-1 border border-accent-foreground/30"
                     >
-                        <FontAwesomeIcon icon={faComments} className="mr-2" /><br className="md:hidden"/><span>Tracked Statements</span>
-                        <p className="text-xl font-bold">{legislator.stats?.[0].total_segments || 0 }</p>
+
                     </div>
                     <div id="bills-sponsored" className="bg-sidebar-foreground/10 background rounded-lg p-3 m-1 border border-accent-foreground/30">
                         <FontAwesomeIcon icon={faUserPen} className="mr-2 w-full"/><br className="md:hidden"/><span>Bills Sponsored</span>
