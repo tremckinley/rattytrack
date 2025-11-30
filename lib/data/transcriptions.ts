@@ -365,5 +365,5 @@ export async function getTotalHoursProcessed(): Promise<number> {
     return 0;
   }
 
-  return totalDurationMinutes / 60;
+  return Math.round(totalDurationMinutes / 60);
 }
