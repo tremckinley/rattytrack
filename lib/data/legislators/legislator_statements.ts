@@ -1,17 +1,4 @@
-import { supabase } from '../../utils/supabase';
-import { Pool } from 'pg';
-
-let pgPool: Pool | null = null;
-
-function getPgPool(): Pool {
-  if (!pgPool) {
-    pgPool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-    });
-  }
-  return pgPool;
-}
+import { supabaseAdmin } from '../../utils/supabase-admin';
 
 export type StatementWithIssue = {
   id: string;
@@ -31,58 +18,58 @@ export type StatementWithIssue = {
 };
 
 export async function getLegislatorStatements(legislatorId: string): Promise<StatementWithIssue[]> {
-  const pool = getPgPool();
-
   try {
-    const result = await pool.query(
-      `SELECT 
-        s.id,
-        s.text,
-        s.start_time AS start_time_seconds,
-        s.end_time AS end_time_seconds,
-        s.video_id,
-        s.source,
-        v.title AS video_title,
-        v.published_at
-       FROM transcription_segments s
-       LEFT JOIN video_transcriptions v ON s.video_id = v.video_id
-       WHERE s.speaker_id = $1
-       ORDER BY v.published_at DESC, s.start_time ASC
-       LIMIT 50`,
-      [legislatorId]
-    );
+    const { data, error } = await supabaseAdmin
+      .from('transcription_segments')
+      .select(`
+        id,
+        text,
+        start_time,
+        end_time,
+        video_id,
+        source,
+        video_transcriptions (
+          title,
+          published_at
+        )
+      `)
+      .eq('speaker_id', legislatorId)
+      .order('video_transcriptions(published_at)', { ascending: false })
+      .order('start_time', { ascending: true })
+      .limit(50);
 
-    if (result.rows.length === 0) {
+    if (error) {
+      console.error('Error fetching legislator statements from Supabase:', error);
       return [];
     }
 
-    interface StatementRow {
-      id: number | string;
-      text: string;
-      start_time_seconds: string | number;
-      end_time_seconds: string | number;
-      published_at: string | null;
-      video_title: string | null;
-      video_id: string | null;
-      source: string | null;
+    if (!data || data.length === 0) {
+      return [];
     }
 
-    const statements: StatementWithIssue[] = result.rows.map((row: StatementRow) => ({
-      id: row.id.toString(),
-      text: row.text,
-      start_time_seconds: typeof row.start_time_seconds === 'string' ? parseFloat(row.start_time_seconds) : row.start_time_seconds,
-      end_time_seconds: typeof row.end_time_seconds === 'string' ? parseFloat(row.end_time_seconds) : row.end_time_seconds,
-      meeting_date: row.published_at || '',
-      meeting_title: row.video_title || 'Unknown Video',
-      meeting_id: row.video_id || '',
-      video_id: row.video_id || undefined,
-      source: row.source || 'youtube',
-      issues: []
-    }));
+    // Transform the data to match our type
+    const statements: StatementWithIssue[] = data.map((row: any) => {
+      const videoTranscription = Array.isArray(row.video_transcriptions)
+        ? row.video_transcriptions[0]
+        : row.video_transcriptions;
+
+      return {
+        id: row.id.toString(),
+        text: row.text,
+        start_time_seconds: typeof row.start_time === 'string' ? parseFloat(row.start_time) : row.start_time,
+        end_time_seconds: typeof row.end_time === 'string' ? parseFloat(row.end_time) : row.end_time,
+        meeting_date: videoTranscription?.published_at || '',
+        meeting_title: videoTranscription?.title || 'Unknown Video',
+        meeting_id: row.video_id || '',
+        video_id: row.video_id || undefined,
+        source: row.source || 'youtube',
+        issues: []
+      };
+    });
 
     return statements;
   } catch (error) {
-    console.error('Error fetching legislator statements from PostgreSQL:', error);
+    console.error('Error fetching legislator statements from Supabase:', error);
     return [];
   }
 }
