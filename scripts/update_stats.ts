@@ -11,12 +11,17 @@
  *   tsx scripts/update_stats.ts
  */
 
-import { supabase } from '../lib/utils/supabase';
+// Load environment variables first
+require('dotenv').config({ path: '.env.local' });
+require('dotenv').config();
 
 async function updateStatistics() {
     console.log('Starting legislator statistics calculation...');
 
     try {
+        // Dynamic import after env is loaded
+        const { supabase } = await import('../lib/utils/supabase');
+
         // Call the database function to calculate statistics
         const { data, error } = await supabase.rpc('calculate_legislator_statistics', {
             p_period_type: 'all_time',

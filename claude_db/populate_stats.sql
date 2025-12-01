@@ -7,7 +7,9 @@ CREATE OR REPLACE FUNCTION calculate_legislator_statistics(
   p_start_date date DEFAULT '1900-01-01',
   p_end_date date DEFAULT CURRENT_DATE
 )
-RETURNS void AS $$
+RETURNS void 
+SECURITY DEFINER
+AS $$
 DECLARE
   v_legislator record;
   v_total_speaking_time integer;
