@@ -61,7 +61,7 @@ export async function saveSegmentAnalysis(
             sentiment_score: sentiment.score,
             sentiment_label: sentimentScoreToLabel(sentiment.score),
             sentiment_confidence: sentiment.confidence,
-            is_ai_generated: true,
+            manually_added: false,
             is_manually_verified: false
         }));
 
@@ -123,7 +123,7 @@ async function getOrCreateIssue(name: string): Promise<{ id: string; name: strin
             .insert({
                 name,
                 slug,
-                is_ai_generated: true,
+                manually_added: false,
                 is_active: true
             })
             .select('id, name')
@@ -202,7 +202,7 @@ export async function deleteSegmentAnalysis(segmentId: string): Promise<boolean>
             .from('segment_issues')
             .delete()
             .eq('segment_id', segmentId)
-            .eq('is_ai_generated', true);
+            .eq('manually_added', false);
 
         if (error) {
             console.error('Error deleting segment analysis:', error);

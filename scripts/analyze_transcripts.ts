@@ -12,18 +12,18 @@
  */
 
 // Load environment variables first
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
-dotenv.config();
-
-import { supabaseAdmin } from '../lib/utils/supabase-admin';
-import { analyzeSegment } from '../lib/ai/transcript-analyzer';
-import { saveSegmentAnalysis } from '../lib/data/ai-analysis';
+require('dotenv').config({ path: '.env.local' });
+require('dotenv').config();
 
 async function analyzeUntaggedSegments() {
     console.log('🔍 Finding untagged transcript segments...\n');
 
     try {
+        // Dynamic imports after env is loaded
+        const { supabaseAdmin } = await import('../lib/utils/supabase-admin');
+        const { analyzeSegment } = await import('../lib/ai/transcript-analyzer');
+        const { saveSegmentAnalysis } = await import('../lib/data/ai-analysis');
+
         // Get segments that haven't been analyzed yet
         // We check which segments don't have entries in segment_issues
         const { data: allSegments, error: fetchError } = await supabaseAdmin
