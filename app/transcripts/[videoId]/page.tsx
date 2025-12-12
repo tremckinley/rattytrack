@@ -1,12 +1,14 @@
 // Transcript viewer page - Server Component
-// Displays YouTube video with timestamped transcript
+// Displays YouTube video with timestamped transcript and agenda timeline
 
 import { getTranscriptionWithSegments, getSpeakerLabels } from '@/lib/data/transcriptions';
 import { getLegislators } from '@/lib/data/legislators/legislator_card';
+import { getAgendaItemsForVideo } from '@/lib/data/client/agenda-items-client';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import TranscriptPlayer from '@/components/TranscriptPlayer';
 import SpeakerMapperWrapper from '@/components/SpeakerMapperWrapper';
+import AgendaTimeline from '@/components/AgendaTimeline';
 
 interface PageProps {
   params: Promise<{ videoId: string }>;
@@ -42,7 +44,7 @@ export default async function TranscriptPage({ params }: PageProps) {
   if (transcription.status === 'completed' && transcription.diarization_enabled) {
     const speakerData = await getSpeakerLabels(videoId);
     speakerLabels = speakerData.labels;
-    
+
     const legislatorData = await getLegislators('all');
     legislators = legislatorData.data.map(l => ({
       id: l.id,
@@ -51,13 +53,18 @@ export default async function TranscriptPage({ params }: PageProps) {
       district: l.district,
       photo_url: l.photo_url,
     }));
-    
+
     // Create lookup map for TranscriptPlayer
     legislatorMap = legislators.reduce((acc, l) => {
       acc[l.id] = { display_name: l.display_name };
       return acc;
     }, {} as Record<string, { display_name: string }>);
   }
+
+  // Fetch agenda items for this video
+  const agendaItems = transcription.status === 'completed'
+    ? await getAgendaItemsForVideo(videoId)
+    : [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -107,15 +114,15 @@ export default async function TranscriptPage({ params }: PageProps) {
           </div>
         )}
 
-      {/* Video Title */}
-      <div className="block bg-rose-950 text-background shadow-lg mb-6">
-        <h1 className="text-3xl font-bold mb-2">{transcription.title}</h1>
-        <div className="flex items-center gap-4 text-gray-100">
-          <span>{transcription.channel_title}</span>
-          <span>•</span>
-          <span>{formatDate(transcription.published_at)}</span>
+        {/* Video Title */}
+        <div className="block bg-rose-950 text-background shadow-lg mb-6">
+          <h1 className="text-3xl font-bold mb-2">{transcription.title}</h1>
+          <div className="flex items-center gap-4 text-gray-100">
+            <span>{transcription.channel_title}</span>
+            <span>•</span>
+            <span>{formatDate(transcription.published_at)}</span>
+          </div>
         </div>
-      </div>
 
 
         {/* Speaker Mapper (if diarization was used) */}
@@ -125,6 +132,17 @@ export default async function TranscriptPage({ params }: PageProps) {
             speakerLabels={speakerLabels}
             legislators={legislators}
           />
+        )}
+
+        {/* Agenda Timeline (if agenda items exist) */}
+        {transcription.status === 'completed' && agendaItems.length > 0 && (
+          <div className="mb-6 bg-white rounded-lg shadow-md p-6">
+            <AgendaTimeline
+              agendaItems={agendaItems}
+              segments={segments}
+              legislatorMap={legislatorMap}
+            />
+          </div>
         )}
 
         {/* Video Player and Transcript */}

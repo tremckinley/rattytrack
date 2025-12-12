@@ -1,0 +1,87 @@
+﻿node.exe : C:\Users\t
+remc\Web_Dev\RattyTra
+ck\rattytrack\node_mo
+dules\@supabase\supab
+ase-js\src\lib\helper
+s.ts:86
+At C:\Program Files\n
+odejs\npx.ps1:29 
+char:3
++   & $NODE_EXE 
+$NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (C:\User   
+ s\tremc\...b\hel    
+pers.ts:86:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+    throw new 
+Error('supabaseUrl 
+is required.')
+          ^
+
+
+Error: supabaseUrl 
+is required.
+    at 
+validateSupabaseUrl (
+C:\Users\tremc\Web_De
+v\RattyTrack\rattytra
+ck\node_modules\@supa
+base\supabase-js\src\
+lib\helpers.ts:86:11)
+    at new 
+SupabaseClient (C:\Us
+ers\tremc\Web_Dev\Rat
+tyTrack\rattytrack\no
+de_modules\@supabase\
+supabase-js\src\Supab
+aseClient.ts:110:40)
+    at createClient (
+C:\Users\tremc\Web_De
+v\RattyTrack\rattytra
+ck\node_modules\@supa
+base\supabase-js\src\
+index.ts:46:10)
+    at <anonymous> (C
+:\Users\tremc\Web_Dev
+\RattyTrack\rattytrac
+k\lib\utils\supabase-
+admin.ts:9:30)
+    at 
+Object.<anonymous> (C
+:\Users\tremc\Web_Dev
+\RattyTrack\rattytrac
+k\lib\utils\supabase-
+admin.ts:18:1)
+    at 
+Module._compile (node
+:internal/modules/cjs
+/loader:1554:14)
+    at 
+Object.transformer (C
+:\Users\tremc\Web_Dev
+\RattyTrack\rattytrac
+k\node_modules\tsx\di
+st\register-D46fvsV_.
+cjs:3:1104)
+    at Module.load (n
+ode:internal/modules/
+cjs/loader:1289:32)
+    at 
+Function._load (node:
+internal/modules/cjs/
+loader:1108:12)
+    at TracingChannel
+.traceSync (node:diag
+nostics_channel:322:1
+4)
+
+Node.js v22.14.0
