@@ -1,0 +1,68 @@
+name: Scrape Council Documents
+
+on:
+  # Run every Friday at 1pm CT (7pm UTC) - documents posted by 12pm CT
+  schedule:
+    - cron: '0 19 * * 5'
+  
+  # Backup run on Saturday at 9am CT (3pm UTC) - catch any late posts
+  # schedule:
+  #   - cron: '0 15 * * 6'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Maximum number of documents to process (leave empty for all)'
+        required: false
+        type: number
+      dry_run:
+        description: 'Dry run mode (no changes made)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run document scraper
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          ARGS=""
+          
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          
+          if [ -n "${{ inputs.limit }}" ]; then
+            ARGS="$ARGS --limit ${{ inputs.limit }}"
+          fi
+          
+          npm run scrape:documents -- $ARGS
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Document Scraper Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dry run**: ${{ inputs.dry_run || 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Limit**: ${{ inputs.limit || 'None' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the job logs for detailed results." >> $GITHUB_STEP_SUMMARY
