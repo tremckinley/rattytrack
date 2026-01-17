@@ -17,11 +17,33 @@ interface DownloadResult {
 }
 
 /**
- * Find system Chromium executable path
- * Falls back to Puppeteer's bundled Chrome if not set
+ * Find Chrome/Chromium executable path
+ * Returns undefined to use Puppeteer's bundled Chrome
  */
 function findChromiumExecutable(): string | undefined {
-  return process.env.CHROMIUM_PATH || undefined;
+  // Check environment variable first
+  if (process.env.CHROMIUM_PATH && fs.existsSync(process.env.CHROMIUM_PATH)) {
+    return process.env.CHROMIUM_PATH;
+  }
+
+  // On Windows, check common Chrome installation paths
+  if (process.platform === 'win32') {
+    const possiblePaths = [
+      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+      `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe`,
+    ];
+
+    for (const chromePath of possiblePaths) {
+      if (fs.existsSync(chromePath)) {
+        console.log(`Found Chrome at: ${chromePath}`);
+        return chromePath;
+      }
+    }
+  }
+
+  // Return undefined to let Puppeteer use its bundled Chrome
+  return undefined;
 }
 
 /**
@@ -30,7 +52,7 @@ function findChromiumExecutable(): string | undefined {
  */
 export async function recordYouTubeAudio(options: DownloadOptions): Promise<DownloadResult> {
   const { videoId, outputPath } = options;
-  
+
   let browser: Browser | null = null;
   const outputDir = path.dirname(outputPath);
   let tempDownloadFile: string | null = null; // Track the temporary download
@@ -43,12 +65,13 @@ export async function recordYouTubeAudio(options: DownloadOptions): Promise<Down
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    // Configure browser
+    // Configure browser - let Puppeteer auto-detect if no valid path found
     const chromiumPath = findChromiumExecutable();
-    
+    console.log(`Using Chrome at: ${chromiumPath || 'Puppeteer bundled Chrome'}`);
+
     browser = await puppeteer.launch({
       headless: true,
-      executablePath: chromiumPath,
+      ...(chromiumPath ? { executablePath: chromiumPath } : {}),
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -70,19 +93,19 @@ export async function recordYouTubeAudio(options: DownloadOptions): Promise<Down
     const converterUrl = 'https://ytmp3.as/AOPR/';
     console.log(`Navigating to ${converterUrl}`);
     await page.goto(converterUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    
+
     // Wait for the input field to be ready
     await page.waitForSelector('#v');
-    
+
     // Enter the YouTube URL
     const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
     console.log('Entering URL and submitting');
     await page.type('#v', youtubeUrl);
-    
+
     // Click the convert button
     await page.click('body > form > div:nth-child(2) > button:nth-child(3)');
     console.log('Conversion started');
-    
+
     // Wait for the download button to appear and click it
     try {
       await page.waitForSelector('body > form > div:nth-child(2) > button:nth-child(1)', { timeout: 120000 }); // 2 minutes for conversion
@@ -91,32 +114,32 @@ export async function recordYouTubeAudio(options: DownloadOptions): Promise<Down
     } catch (error) {
       throw new Error('Timeout waiting for conversion to complete');
     }
-    
+
     // Wait a bit for download to initiate
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     // Poll for downloaded file
     console.log('Waiting for download to complete (up to 3 minutes)...');
     const downloadStartTime = Date.now();
     const downloadTimeout = 180000; // 3 minutes
     let downloadedFile: string | null = null;
-    
+
     while (Date.now() - downloadStartTime < downloadTimeout) {
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       const files = fs.readdirSync(outputDir);
       const mp3File = files.find(f => f.endsWith('.mp3'));
-      
+
       if (mp3File) {
         const filePath = path.join(outputDir, mp3File);
         const stats = fs.statSync(filePath);
-        
+
         // Make sure file has content and isn't still being written
         if (stats.size > 0) {
           // Wait a bit to ensure write is complete
           await new Promise(resolve => setTimeout(resolve, 1000));
           const newStats = fs.statSync(filePath);
-          
+
           // If size hasn't changed, download is complete
           if (newStats.size === stats.size) {
             downloadedFile = mp3File;
@@ -132,7 +155,7 @@ export async function recordYouTubeAudio(options: DownloadOptions): Promise<Down
 
     const downloadedPath = path.join(outputDir, downloadedFile);
     tempDownloadFile = downloadedPath; // Track for cleanup
-    
+
     // Atomically replace outputPath with the new download
     if (downloadedPath !== outputPath) {
       // Remove existing outputPath only when we have a successful new download
@@ -157,7 +180,7 @@ export async function recordYouTubeAudio(options: DownloadOptions): Promise<Down
     };
   } catch (error) {
     console.error('Error downloading YouTube MP3:', error);
-    
+
     // Clean up only the temporary download from this attempt
     // Never delete outputPath (preserves previous successful downloads)
     if (tempDownloadFile && fs.existsSync(tempDownloadFile)) {

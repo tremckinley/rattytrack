@@ -91,13 +91,15 @@ export default async function MeetingPage({ params }: PageProps) {
 
                 {/* Two-column layout for video and documents */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    {/* Video Section */}
+                    {/* Video Section - only show if no transcript (TranscriptPlayer has its own video) */}
                     <div className="lg:col-span-2">
-                        <MeetingVideoSection
-                            videoId={meeting.video_id}
-                            videoUrl={meeting.video_url}
-                            title={meeting.title}
-                        />
+                        {!hasTranscript && (
+                            <MeetingVideoSection
+                                videoId={meeting.video_id}
+                                videoUrl={meeting.video_url}
+                                title={meeting.title}
+                            />
+                        )}
                     </div>
 
                     {/* Sidebar: Documents and Attendees */}
