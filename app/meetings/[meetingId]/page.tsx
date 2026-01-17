@@ -14,6 +14,7 @@ import MeetingAttendeesSection from '@/components/MeetingAttendeesSection';
 import TranscriptPlayer from '@/components/TranscriptPlayer';
 import SpeakerMapperWrapper from '@/components/SpeakerMapperWrapper';
 import AgendaTimeline from '@/components/AgendaTimeline';
+import MeetingTranscribeButton from '@/components/MeetingTranscribeButton';
 
 interface PageProps {
     params: Promise<{ meetingId: string }>;
@@ -150,14 +151,17 @@ export default async function MeetingPage({ params }: PageProps) {
                     </div>
                 )}
 
-                {/* No Transcript Message */}
+                {/* No Transcript - Show Transcribe Button */}
                 {!hasTranscript && meeting.video_id && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
                         <h3 className="font-semibold text-yellow-900 mb-2">Transcript Not Available</h3>
                         <p className="text-yellow-800">
                             This meeting has a video but has not been transcribed yet.
-                            Visit the <Link href="/youtube" className="text-blue-600 hover:underline">YouTube page</Link> to transcribe it.
                         </p>
+                        <MeetingTranscribeButton
+                            videoId={meeting.video_id}
+                            meetingId={meeting.id}
+                        />
                     </div>
                 )}
 
