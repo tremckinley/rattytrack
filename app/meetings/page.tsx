@@ -109,7 +109,7 @@ export default async function MeetingsPage({ searchParams }: PageProps) {
                                                     📹 Video
                                                 </span>
                                             )}
-                                            {meeting.transcription_status === 'completed' && (
+                                            {meeting.has_transcript && (
                                                 <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
                                                     📝 Transcribed
                                                 </span>

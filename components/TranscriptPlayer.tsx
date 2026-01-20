@@ -33,6 +33,52 @@ interface FullSegment {
 type DisplayItem = CondensedSection | FullSegment;
 
 /**
+ * Merge consecutive segments from the same speaker into single blocks
+ * This improves readability by avoiding fragmented short lines
+ */
+function mergeConsecutiveSpeakerSegments(segments: TranscriptSegment[]): TranscriptSegment[] {
+  if (segments.length === 0) return [];
+
+  const merged: TranscriptSegment[] = [];
+  let currentMerged: TranscriptSegment | null = null;
+
+  for (const segment of segments) {
+    if (!currentMerged) {
+      // Start a new merged segment
+      currentMerged = { ...segment };
+      continue;
+    }
+
+    // Check if this segment should be merged with the current one
+    // Same speaker (or both null/undefined) and within 5 seconds gap
+    const sameSpeaker =
+      (currentMerged.speaker_name === segment.speaker_name) ||
+      (!currentMerged.speaker_name && !segment.speaker_name);
+    const withinTimeGap = segment.start_time - currentMerged.end_time < 5;
+
+    if (sameSpeaker && withinTimeGap) {
+      // Merge: extend the current segment
+      currentMerged = {
+        ...currentMerged,
+        text: currentMerged.text + ' ' + segment.text,
+        end_time: segment.end_time,
+      };
+    } else {
+      // Different speaker or large gap: save current and start new
+      merged.push(currentMerged);
+      currentMerged = { ...segment };
+    }
+  }
+
+  // Don't forget the last merged segment
+  if (currentMerged) {
+    merged.push(currentMerged);
+  }
+
+  return merged;
+}
+
+/**
  * Detect which opening section a segment belongs to based on its text
  */
 function detectOpeningSection(text: string): OpeningSection {
@@ -85,13 +131,19 @@ function isRollCallStart(text: string): boolean {
 
 /**
  * Process segments to condense opening sections
+ * Also skips any content before the first detected opening section (ads, dead time)
+ * Merges consecutive segments from the same speaker for better readability
  */
-function processSegmentsForDisplay(segments: TranscriptSegment[]): DisplayItem[] {
+function processSegmentsForDisplay(rawSegments: TranscriptSegment[]): DisplayItem[] {
+  // First, merge consecutive segments from the same speaker
+  const segments = mergeConsecutiveSpeakerSegments(rawSegments);
+
   const displayItems: DisplayItem[] = [];
   let rollCallFound = false;
   let currentOpeningSection: OpeningSection = null;
   let sectionStart: number | null = null;
   let sectionEnd: number = 0;
+  let meetingStarted = false; // Track if we've found the first meeting section
 
   const sectionNames: Record<string, string> = {
     'call_to_order': 'Call to Order',
@@ -108,11 +160,27 @@ function processSegmentsForDisplay(segments: TranscriptSegment[]): DisplayItem[]
     }
   }
 
+  // Second pass: find the first opening section (Call to Order or Invocation)
+  // Skip everything before this point (ads, dead time, etc.)
+  let firstOpeningSectionIndex = -1;
+  for (let i = 0; i < segments.length; i++) {
+    const section = detectOpeningSection(segments[i].text);
+    if (section === 'call_to_order' || section === 'invocation') {
+      firstOpeningSectionIndex = i;
+      break;
+    }
+  }
+
   // If no roll call found, check first ~5 minutes for opening sections only
   const maxOpeningTime = rollCallIndex === -1 ? 300 : segments[rollCallIndex]?.start_time || 300;
 
   for (let i = 0; i < segments.length; i++) {
     const segment = segments[i];
+
+    // Skip segments before the first detected opening section (pre-meeting content)
+    if (firstOpeningSectionIndex !== -1 && i < firstOpeningSectionIndex) {
+      continue; // Skip ads, dead time, etc.
+    }
 
     // Once we're past the opening sections, show everything
     if (segment.start_time >= maxOpeningTime || (rollCallIndex !== -1 && i >= rollCallIndex)) {
@@ -149,6 +217,7 @@ function processSegmentsForDisplay(segments: TranscriptSegment[]): DisplayItem[]
     const detectedSection = detectOpeningSection(segment.text);
 
     if (detectedSection) {
+      meetingStarted = true;
       if (currentOpeningSection !== detectedSection) {
         // Finalize previous section if exists
         if (currentOpeningSection && sectionStart !== null) {
@@ -167,10 +236,11 @@ function processSegmentsForDisplay(segments: TranscriptSegment[]): DisplayItem[]
     } else if (currentOpeningSection) {
       // Continue current section even without keywords (e.g., middle of prayer)
       sectionEnd = segment.end_time;
-    } else {
-      // No section detected in opening period, show anyway
+    } else if (meetingStarted) {
+      // Only show segments after the meeting has started
       displayItems.push({ type: 'full', segment });
     }
+    // If meeting hasn't started yet and no section detected, skip the segment
   }
 
   // Finalize any remaining section

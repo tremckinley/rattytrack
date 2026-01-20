@@ -86,9 +86,10 @@ export interface MeetingsFilterOptions {
 
 /**
  * Get meetings with optional filters
+ * Also checks video_transcriptions for actual transcript status
  */
 export async function getMeetings(options: MeetingsFilterOptions = {}): Promise<{
-    meetings: Meeting[];
+    meetings: (Meeting & { has_transcript: boolean })[];
     total: number;
 }> {
     const { limit = 50, offset = 0, meetingType, dateFrom, dateTo, attendeeId } = options;
@@ -139,8 +140,35 @@ export async function getMeetings(options: MeetingsFilterOptions = {}): Promise<
         return { meetings: [], total: 0 };
     }
 
+    const meetingsData = data as Meeting[];
+
+    // Get video IDs that have completed transcriptions
+    const videoIds = meetingsData
+        .map(m => m.video_id)
+        .filter((id): id is string => id !== null);
+
+    let transcribedVideoIds: Set<string> = new Set();
+
+    if (videoIds.length > 0) {
+        const { data: transcriptions } = await supabase
+            .from('video_transcriptions')
+            .select('video_id')
+            .in('video_id', videoIds)
+            .eq('status', 'completed');
+
+        if (transcriptions) {
+            transcribedVideoIds = new Set(transcriptions.map(t => t.video_id));
+        }
+    }
+
+    // Add has_transcript flag to each meeting
+    const meetingsWithTranscriptFlag = meetingsData.map(meeting => ({
+        ...meeting,
+        has_transcript: meeting.video_id ? transcribedVideoIds.has(meeting.video_id) : false,
+    }));
+
     return {
-        meetings: data as Meeting[],
+        meetings: meetingsWithTranscriptFlag,
         total: count || 0,
     };
 }
