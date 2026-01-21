@@ -15,6 +15,9 @@ import TranscriptPlayer from '@/components/TranscriptPlayer';
 import SpeakerMapperWrapper from '@/components/SpeakerMapperWrapper';
 import AgendaTimeline from '@/components/AgendaTimeline';
 import MeetingTranscribeButton from '@/components/MeetingTranscribeButton';
+import VotingSummary from '@/components/VotingSummary';
+import MeetingSummaryWrapper from '@/components/MeetingSummaryWrapper';
+import { getMeetingSummary } from '@/lib/data/meeting-summaries';
 
 interface PageProps {
     params: Promise<{ meetingId: string }>;
@@ -40,6 +43,8 @@ export default async function MeetingPage({ params }: PageProps) {
     let legislatorMap: Record<string, { display_name: string }> = {};
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let agendaItems: any[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let meetingSummary: any = null;
 
     if (meeting.video_id && hasTranscript) {
         const transcriptData = await getTranscriptionWithSegments(meeting.video_id);
@@ -67,6 +72,9 @@ export default async function MeetingPage({ params }: PageProps) {
 
         // Fetch agenda items
         agendaItems = await getAgendaItemsForVideo(meeting.video_id);
+
+        // Fetch meeting summary
+        meetingSummary = await getMeetingSummary(meeting.video_id);
     }
 
     return (
@@ -88,6 +96,14 @@ export default async function MeetingPage({ params }: PageProps) {
                     hasTranscript={hasTranscript}
                     hasDocuments={documents.length > 0}
                 />
+
+                {/* AI Meeting Summary (for transcribed meetings) */}
+                {hasTranscript && meeting.video_id && (
+                    <MeetingSummaryWrapper
+                        initialSummary={meetingSummary}
+                        videoId={meeting.video_id}
+                    />
+                )}
 
                 {/* Two-column layout for video and documents */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -138,6 +154,14 @@ export default async function MeetingPage({ params }: PageProps) {
                     </div>
                 )}
 
+                {/* Voting Summary (if votes exist) */}
+                {transcription?.status === 'completed' && agendaItems.some(item => item.vote_result) && (
+                    <VotingSummary
+                        agendaItems={agendaItems}
+                        legislators={legislators.map(l => ({ id: l.id, display_name: l.display_name }))}
+                    />
+                )}
+
                 {/* Transcript Section */}
                 {transcription?.status === 'completed' && meeting.video_id && (
                     <div className="bg-white rounded-lg shadow-md p-6">
@@ -149,6 +173,7 @@ export default async function MeetingPage({ params }: PageProps) {
                             publishedAt={transcription.published_at}
                             segments={segments}
                             legislatorMap={legislatorMap}
+                            agendaItems={agendaItems}
                         />
                     </div>
                 )}

@@ -2,9 +2,11 @@
 
 // Interactive transcript player with video embed
 // Allows clicking timestamps to jump to specific times
+// Enhanced with chapter navigation for agenda items
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { TranscriptSegment } from '@/lib/types/youtube';
+import type { AgendaItem } from '@/types/LegislatorIntelligence';
 
 interface TranscriptPlayerProps {
   videoId: string;
@@ -13,6 +15,7 @@ interface TranscriptPlayerProps {
   publishedAt: string;
   segments: TranscriptSegment[];
   legislatorMap?: Record<string, { display_name: string }>;
+  agendaItems?: AgendaItem[];
 }
 
 // Opening section types that should be condensed
@@ -290,10 +293,13 @@ export default function TranscriptPlayer({
   publishedAt,
   segments,
   legislatorMap = {},
+  agendaItems = [],
 }: TranscriptPlayerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentTime, setCurrentTime] = useState(0);
+  const [showChapterSidebar, setShowChapterSidebar] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const transcriptRef = useRef<HTMLDivElement>(null);
 
   // Process segments to condense opening sections
   const displayItems = useMemo(() => processSegmentsForDisplay(segments), [segments]);
@@ -309,6 +315,25 @@ export default function TranscriptPlayer({
     });
   }, [displayItems, searchQuery]);
 
+  // Determine active chapter based on current time
+  const activeChapterId = useMemo(() => {
+    if (!agendaItems.length) return null;
+
+    // Sort agenda items by start_time to ensure proper ordering
+    const sortedItems = [...agendaItems].sort((a, b) =>
+      (a.start_time || 0) - (b.start_time || 0)
+    );
+
+    // Find the chapter that contains the current time
+    for (let i = sortedItems.length - 1; i >= 0; i--) {
+      const item = sortedItems[i];
+      if (item.start_time && currentTime >= item.start_time) {
+        return item.id;
+      }
+    }
+    return sortedItems[0]?.id || null;
+  }, [agendaItems, currentTime]);
+
   // Handle timestamp click - update video player
   const handleTimestampClick = (seconds: number) => {
     // Update iframe src to jump to timestamp
@@ -317,6 +342,13 @@ export default function TranscriptPlayer({
       iframeRef.current.src = newSrc;
     }
     setCurrentTime(seconds);
+  };
+
+  // Handle chapter click - jump to chapter start time
+  const handleChapterClick = (item: AgendaItem) => {
+    if (item.start_time) {
+      handleTimestampClick(item.start_time);
+    }
   };
 
   // Highlight active segment based on current time
@@ -334,162 +366,252 @@ export default function TranscriptPlayer({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Video Player */}
-        <div className="h-fit p-0 overflow-hidden flex items-start border border-foreground lg:col-span-2">
-          <div className="aspect-video w-full">
-            <iframe
-              ref={iframeRef}
-              src={`https://www.youtube.com/embed/${videoId}`}
-              title={title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full h-full"
-            />
-            <div className="bg-white shadow-md p-6">
+      {/* Chapter Sidebar Toggle (mobile) */}
+      {agendaItems.length > 0 && (
+        <button
+          onClick={() => setShowChapterSidebar(!showChapterSidebar)}
+          className="lg:hidden flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+        >
+          <span>📑</span>
+          {showChapterSidebar ? 'Hide Chapters' : 'Show Chapters'}
+        </button>
+      )}
 
-              <h3 className="font-semibold text-gray-900 mb-4">Export Transcript</h3>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    const text = segments.map(s => `[${formatTimestamp(s.start_time)}] ${s.text}`).join('\n\n');
-                    const blob = new Blob([text], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `transcript-${videoId}.txt`;
-                    a.click();
-                  }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Download as TXT
-                </button>
-                <button
-                  onClick={() => {
-                    const text = segments.map(s => s.text).join(' ');
-                    navigator.clipboard.writeText(text);
-                    alert('Transcript copied to clipboard!');
-                  }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                >
-                  Copy to Clipboard
-                </button>
+      <div className="flex gap-6">
+        {/* Chapter Navigation Sidebar */}
+        {agendaItems.length > 0 && showChapterSidebar && (
+          <div className="hidden lg:block w-64 flex-shrink-0">
+            <div className="sticky top-4 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+              <div className="p-3 bg-gray-50 border-b border-gray-200">
+                <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
+                  <span>📑</span> Agenda Chapters
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">{agendaItems.length} items</p>
+              </div>
+              <div className="max-h-[500px] overflow-y-auto">
+                {agendaItems
+                  .sort((a, b) => a.item_number - b.item_number)
+                  .map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleChapterClick(item)}
+                      className={`w-full text-left px-3 py-2 border-b border-gray-100 hover:bg-blue-50 transition-colors ${activeChapterId === item.id
+                        ? 'bg-blue-100 border-l-4 border-l-blue-600'
+                        : ''
+                        }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${item.vote_result === 'passed'
+                          ? 'bg-green-100 text-green-700'
+                          : item.vote_result === 'failed'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-gray-100 text-gray-600'
+                          }`}>
+                          {item.item_number}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm truncate ${activeChapterId === item.id ? 'font-medium text-blue-900' : 'text-gray-700'
+                            }`}>
+                            {item.title}
+                          </p>
+                          {item.start_time && (
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {formatTimestamp(item.start_time)}
+                              {item.end_time && ` - ${formatTimestamp(item.end_time)}`}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Transcript */}
-        <div className="block p-2 overflow-hidden flex flex-col lg:col-span-3">
-          {/* Search Bar */}
-          <div className="p-4 border-b border-gray-200">
-            <input
-              type="text"
-              placeholder="Search transcript..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            {searchQuery && (
-              <p className="text-sm text-gray-600 mt-2">
-                Found {filteredItems.length} of {displayItems.length} items
-              </p>
-            )}
-          </div>
-
-          {/* Transcript Segments */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[600px]">
-            {filteredItems.length > 0 ? (
-              filteredItems.map((item, index) => {
-                // Condensed section (Call to Order, Invocation, etc.)
-                if (item.type === 'condensed') {
-                  return (
-                    <div
-                      key={`condensed-${index}`}
-                      className="group cursor-pointer p-3 rounded-lg transition-colors bg-gray-100 hover:bg-gray-200 border border-gray-200"
-                      onClick={() => handleTimestampClick(item.startTime)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <button
-                          className="font-mono text-sm px-2 py-1 rounded bg-gray-300 text-gray-700 group-hover:bg-blue-600 group-hover:text-white transition-colors"
-                        >
-                          {formatTimestamp(item.startTime)}
-                        </button>
-                        <span className="font-medium text-gray-700 italic">
-                          {item.sectionName}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                }
-
-                // Full segment
-                const segment = item.segment;
-                return (
-                  <div
-                    key={segment.id}
-                    className={`group cursor-pointer p-3 rounded-lg transition-colors ${isActiveSegment(segment)
-                      ? 'bg-blue-50 border border-blue-200 segment-active'
-                      : 'hover:bg-gray-50'
+        {/* Mobile Chapter List (collapsible) */}
+        {agendaItems.length > 0 && showChapterSidebar && (
+          <div className="lg:hidden w-full mb-4 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+            <div className="p-3 bg-gray-50 border-b border-gray-200">
+              <h3 className="font-semibold text-gray-900 text-sm">📑 Agenda Chapters</h3>
+            </div>
+            <div className="max-h-48 overflow-y-auto">
+              {agendaItems
+                .sort((a, b) => a.item_number - b.item_number)
+                .map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleChapterClick(item)}
+                    className={`w-full text-left px-3 py-2 border-b border-gray-100 hover:bg-blue-50 transition-colors text-sm ${activeChapterId === item.id ? 'bg-blue-100' : ''
                       }`}
-                    onClick={() => handleTimestampClick(segment.start_time)}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 flex items-center gap-2">
-                        <button
-                          className={`font-mono text-sm px-2 py-1 rounded transition-colors ${isActiveSegment(segment)
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-200 text-gray-700 group-hover:bg-blue-600 group-hover:text-white'
-                            }`}
-                        >
-                          {formatTimestamp(segment.start_time)}
-                        </button>
-                        {segment.speaker_name && (
-                          <span
-                            className={`text-xs px-2 py-1 font-medium overflow-hidden text-ellipsis ${isActiveSegment(segment)
-                              ? 'bg-purple-100 text-purple-700'
-                              : 'bg-gray-100 text-gray-600'
-                              }`}
-                            style={{ maxWidth: '100px', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                          >
-                            {segment.speaker_id && legislatorMap[segment.speaker_id]
-                              ? legislatorMap[segment.speaker_id].display_name
-                              : segment.speaker_name}
-                          </span>
-                        )}
-                      </div>
-                      <p
-                        className={`text-sm leading-relaxed ${isActiveSegment(segment) ? 'text-gray-900 font-medium' : 'text-gray-700'
-                          }`}
-                      >
-                        {searchQuery ? (
-                          // Highlight search terms
-                          segment.text.split(new RegExp(`(${searchQuery})`, 'gi')).map((part: string, i: number) =>
-                            part.toLowerCase() === searchQuery.toLowerCase() ? (
-                              <mark key={i} className="bg-yellow-200">
-                                {part}
-                              </mark>
-                            ) : (
-                              part
-                            )
-                          )
-                        ) : (
-                          segment.text
-                        )}
-                      </p>
-                    </div>
+                    <span className="font-medium">{item.item_number}.</span> {item.title}
+                  </button>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* Main Content Area */}
+        <div className="flex-1 min-w-0">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Video Player */}
+            <div className="h-fit p-0 overflow-hidden flex items-start border border-foreground lg:col-span-2">
+              <div className="aspect-video w-full">
+                <iframe
+                  ref={iframeRef}
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  title={title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
+                <div className="bg-white shadow-md p-6">
+
+                  <h3 className="font-semibold text-gray-900 mb-4">Export Transcript</h3>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        const text = segments.map(s => `[${formatTimestamp(s.start_time)}] ${s.text}`).join('\n\n');
+                        const blob = new Blob([text], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `transcript-${videoId}.txt`;
+                        a.click();
+                      }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      Download as TXT
+                    </button>
+                    <button
+                      onClick={() => {
+                        const text = segments.map(s => s.text).join(' ');
+                        navigator.clipboard.writeText(text);
+                        alert('Transcript copied to clipboard!');
+                      }}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Copy to Clipboard
+                    </button>
                   </div>
-                );
-              })
-            ) : (
-              <div className="text-center text-gray-500 py-8">
-                {searchQuery ? (
-                  <p>No segments found matching &quot;{searchQuery}&quot;</p>
-                ) : (
-                  <p>No transcript segments available</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Transcript */}
+            <div className="block p-2 overflow-hidden flex flex-col lg:col-span-3">
+              {/* Search Bar */}
+              <div className="p-4 border-b border-gray-200">
+                <input
+                  type="text"
+                  placeholder="Search transcript..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {searchQuery && (
+                  <p className="text-sm text-gray-600 mt-2">
+                    Found {filteredItems.length} of {displayItems.length} items
+                  </p>
                 )}
               </div>
-            )}
+
+              {/* Transcript Segments */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[600px]">
+                {filteredItems.length > 0 ? (
+                  filteredItems.map((item, index) => {
+                    // Condensed section (Call to Order, Invocation, etc.)
+                    if (item.type === 'condensed') {
+                      return (
+                        <div
+                          key={`condensed-${index}`}
+                          className="group cursor-pointer p-3 rounded-lg transition-colors bg-gray-100 hover:bg-gray-200 border border-gray-200"
+                          onClick={() => handleTimestampClick(item.startTime)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <button
+                              className="font-mono text-sm px-2 py-1 rounded bg-gray-300 text-gray-700 group-hover:bg-blue-600 group-hover:text-white transition-colors"
+                            >
+                              {formatTimestamp(item.startTime)}
+                            </button>
+                            <span className="font-medium text-gray-700 italic">
+                              {item.sectionName}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Full segment
+                    const segment = item.segment;
+                    return (
+                      <div
+                        key={segment.id}
+                        className={`group cursor-pointer p-3 rounded-lg transition-colors ${isActiveSegment(segment)
+                          ? 'bg-blue-50 border border-blue-200 segment-active'
+                          : 'hover:bg-gray-50'
+                          }`}
+                        onClick={() => handleTimestampClick(segment.start_time)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0 flex items-center gap-2">
+                            <button
+                              className={`font-mono text-sm px-2 py-1 rounded transition-colors ${isActiveSegment(segment)
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-200 text-gray-700 group-hover:bg-blue-600 group-hover:text-white'
+                                }`}
+                            >
+                              {formatTimestamp(segment.start_time)}
+                            </button>
+                            {segment.speaker_name && (
+                              <span
+                                className={`text-xs px-2 py-1 font-medium overflow-hidden text-ellipsis ${isActiveSegment(segment)
+                                  ? 'bg-purple-100 text-purple-700'
+                                  : 'bg-gray-100 text-gray-600'
+                                  }`}
+                                style={{ maxWidth: '100px', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                              >
+                                {segment.speaker_id && legislatorMap[segment.speaker_id]
+                                  ? legislatorMap[segment.speaker_id].display_name
+                                  : segment.speaker_name}
+                              </span>
+                            )}
+                          </div>
+                          <p
+                            className={`text-sm leading-relaxed ${isActiveSegment(segment) ? 'text-gray-900 font-medium' : 'text-gray-700'
+                              }`}
+                          >
+                            {searchQuery ? (
+                              // Highlight search terms
+                              segment.text.split(new RegExp(`(${searchQuery})`, 'gi')).map((part: string, i: number) =>
+                                part.toLowerCase() === searchQuery.toLowerCase() ? (
+                                  <mark key={i} className="bg-yellow-200">
+                                    {part}
+                                  </mark>
+                                ) : (
+                                  part
+                                )
+                              )
+                            ) : (
+                              segment.text
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center text-gray-500 py-8">
+                    {searchQuery ? (
+                      <p>No segments found matching &quot;{searchQuery}&quot;</p>
+                    ) : (
+                      <p>No transcript segments available</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
