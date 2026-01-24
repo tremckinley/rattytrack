@@ -1,13 +1,18 @@
 import { getLegislatorProfile } from "@/lib/data/legislators/legislator_profile"
 import { getLegislatorIssueMetricsDirect } from "@/lib/data/legislator_issue_metrics"
 import { getKeyQuotesForLegislator } from "@/lib/data/client/key-quotes-client"
+import { getVotingRecordsForLegislator, getVotingSummary } from "@/lib/data/voting-records"
+import { getAttendanceForLegislator } from "@/lib/data/attendance"
 import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUserPen, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { faUserPen, faArrowLeft, faCheckCircle, faXmarkCircle, faGavel } from "@fortawesome/free-solid-svg-icons";
 import UserIcon from "@/components/userIcon";
 import TopIssuesCard from "@/components/TopIssuesCard";
+import IssueSpeakingDashboard, { IssueCategory } from "@/components/IssueSpeakingDashboard";
 import KeyQuotesCard from "@/components/KeyQuotesCard";
+import VotingRecordsCard from "@/components/VotingRecordsCard";
+import AttendanceHeatmap from "@/components/AttendanceHeatmap";
 import { notFound } from "next/navigation";
 import { Legislator } from "@/types/Legislator";
 
@@ -25,6 +30,13 @@ export default async function LegislatorPage({ params }: Props) {
 
     // Fetch key quotes for this legislator (10 max as per user preference)
     const keyQuotes = await getKeyQuotesForLegislator(legislator.id, { limit: 10 });
+
+    // Fetch voting records
+    const votingRecords = await getVotingRecordsForLegislator(legislator.id, { limit: 15 });
+    const votingSummary = await getVotingSummary(legislator.id);
+
+    // Fetch attendance records for heatmap
+    const attendanceData = await getAttendanceForLegislator(legislator.id);
 
     // Try to get sentiment-enhanced issue metrics (requires schema improvements to be applied)
     let issueMetrics = await getLegislatorIssueMetricsDirect(legislator.id, 5);
@@ -47,8 +59,20 @@ export default async function LegislatorPage({ params }: Props) {
         }
     }
 
+    // Mock data fallback for demo purposes
+    if (issueMetrics.length === 0) {
+        issueMetrics = [
+            { issue_id: '1', issue_name: 'budget', total_mentions: 15, positive_mentions: 10, negative_mentions: 2, neutral_mentions: 3, average_sentiment_score: 0.4, total_speaking_time_seconds: 1200 },
+            { issue_id: '2', issue_name: 'public_safety', total_mentions: 12, positive_mentions: 8, negative_mentions: 1, neutral_mentions: 3, average_sentiment_score: 0.5, total_speaking_time_seconds: 900 },
+            { issue_id: '3', issue_name: 'housing', total_mentions: 9, positive_mentions: 5, negative_mentions: 2, neutral_mentions: 2, average_sentiment_score: 0.2, total_speaking_time_seconds: 720 },
+            { issue_id: '4', issue_name: 'infrastructure', total_mentions: 7, positive_mentions: 4, negative_mentions: 2, neutral_mentions: 1, average_sentiment_score: 0.1, total_speaking_time_seconds: 540 },
+            { issue_id: '5', issue_name: 'environment', total_mentions: 5, positive_mentions: 4, negative_mentions: 0, neutral_mentions: 1, average_sentiment_score: 0.6, total_speaking_time_seconds: 420 },
+        ];
+    }
+
+
     return (
-        <main className="md:grid md:grid-cols-[1fr_2fr] h-screen">
+        <main className="md:grid md:grid-cols-[1fr_2fr] min-h-screen">
             <div>
                 <Link href="./" className="ml-4">
                     <FontAwesomeIcon icon={faArrowLeft} />Back</Link>
@@ -83,15 +107,35 @@ export default async function LegislatorPage({ params }: Props) {
                         )}
                     </div>
 
-                    <div id="legislator-stats" className="flex w-1/4 justify-center md:inline-block md:w-3/4 text-center">
-                        <div id="tracked-comments"
-                            className="bg-sidebar-foreground/10 background rounded-lg p-3 m-1 border border-accent-foreground/30"
-                        >
-
+                    <div id="legislator-stats" className="flex w-full justify-center md:inline-block md:w-3/4 text-center">
+                        {/* Voting Summary Stats */}
+                        <div className="grid grid-cols-3 gap-2 w-full mb-4">
+                            <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 border border-green-200 dark:border-green-800">
+                                <FontAwesomeIcon icon={faCheckCircle} className="text-green-600 dark:text-green-400 mb-1" />
+                                <p className="text-lg font-bold text-green-700 dark:text-green-300">{votingSummary.yesVotes}</p>
+                                <p className="text-xs text-green-600 dark:text-green-400">Yes Votes</p>
+                            </div>
+                            <div className="bg-red-50 dark:bg-red-900/30 rounded-lg p-3 border border-red-200 dark:border-red-800">
+                                <FontAwesomeIcon icon={faXmarkCircle} className="text-red-600 dark:text-red-400 mb-1" />
+                                <p className="text-lg font-bold text-red-700 dark:text-red-300">{votingSummary.noVotes}</p>
+                                <p className="text-xs text-red-600 dark:text-red-400">No Votes</p>
+                            </div>
+                            <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                                <FontAwesomeIcon icon={faGavel} className="text-blue-600 dark:text-blue-400 mb-1" />
+                                <p className="text-lg font-bold text-blue-700 dark:text-blue-300">{votingSummary.totalVotes}</p>
+                                <p className="text-xs text-blue-600 dark:text-blue-400">Total Votes</p>
+                            </div>
                         </div>
+
                         <div id="bills-sponsored" className="bg-sidebar-foreground/10 background rounded-lg p-3 m-1 border border-accent-foreground/30">
                             <FontAwesomeIcon icon={faUserPen} className="mr-2 w-full" /><br className="md:hidden" /><span>Bills Sponsored</span>
-                            <p className="text-xl font-bold">{legislator.stats?.[0].bills_sponsored || 0}</p>
+                            <p className="text-xl font-bold">{legislator.stats?.[0]?.bills_sponsored || 0}</p>
+                        </div>
+
+                        {/* Attendance Rate */}
+                        <div className="bg-sidebar-foreground/10 rounded-lg p-3 m-1 border border-accent-foreground/30">
+                            <p className="text-sm text-gray-600">Attendance</p>
+                            <p className="text-xl font-bold">{votingSummary.attendanceRate}%</p>
                         </div>
                     </div>
                     <div className="mt-8">
@@ -103,8 +147,21 @@ export default async function LegislatorPage({ params }: Props) {
 
                 </section>
             </div>
-            <section id="statements-section" className="">
-                <TopIssuesCard issueMetrics={issueMetrics} />
+            <section id="statements-section" className="overflow-y-auto p-2 space-y-4">
+                <AttendanceHeatmap attendanceData={attendanceData} weeks={26} />
+                <VotingRecordsCard votes={votingRecords} maxVotes={10} />
+                <IssueSpeakingDashboard
+                    issues={issueMetrics.map(m => ({
+                        issueId: m.issue_id,
+                        issueName: m.issue_name,
+                        totalMentions: m.total_mentions,
+                        positiveMentions: m.positive_mentions,
+                        negativeMentions: m.negative_mentions,
+                        neutralMentions: m.neutral_mentions,
+                        speakingTimeSeconds: m.total_speaking_time_seconds,
+                        statements: [],
+                    }))}
+                />
                 <KeyQuotesCard quotes={keyQuotes} maxQuotes={10} />
             </section>
 
