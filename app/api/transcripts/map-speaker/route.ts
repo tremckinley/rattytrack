@@ -1,8 +1,10 @@
 // API route for updating speaker-to-legislator mappings
 // Updates all segments with a given speaker label to point to a legislator
+// Also learns the mapping to improve future suggestions
 
 import { NextRequest, NextResponse } from 'next/server';
 import { updateSpeakerMapping } from '@/lib/data/transcriptions';
+import { learnSpeakerMapping } from '@/lib/utils/speaker-matcher';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +26,11 @@ export async function POST(request: NextRequest) {
         { error: result.error || 'Failed to update speaker mapping' },
         { status: 500 }
       );
+    }
+
+    // Learn this mapping if it's assigning a legislator (not unassigning)
+    if (legislatorId) {
+      await learnSpeakerMapping(speakerLabel, legislatorId, videoId);
     }
 
     return NextResponse.json({ success: true });
