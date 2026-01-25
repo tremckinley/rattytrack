@@ -9,9 +9,11 @@ import {
   updateTranscriptionStatus,
   saveTranscriptSegments,
   deleteTranscription,
+  getTranscriptSegments,
 } from '@/lib/data/transcriptions';
 import { cleanupAudioFiles } from '@/lib/utils/audio-processor';
 import { transcribeWithAutoChunking } from '@/lib/utils/whisper-client';
+import { runIntelligencePipeline } from '@/lib/ai/intelligence-pipeline';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -256,6 +258,35 @@ async function processTranscription(
       // Mark as completed only after successful save
       await updateTranscriptionStatus(videoId, 'completed');
       console.log(`Successfully transcribed video ${videoId} using ${provider}`);
+
+      // Step 6: Trigger Intelligence Pipeline (Issue Categorization, Robert's Rules, etc.)
+      console.log(`Triggering intelligence pipeline for video ${videoId}...`);
+
+      // Fetch segments from DB to get their actual IDs for foreign key relationships
+      const dbSegments = await getTranscriptSegments(videoId);
+
+      if (dbSegments.length > 0) {
+        // Run pipeline in background
+        runIntelligencePipeline({
+          videoId,
+          segments: dbSegments.map(s => ({
+            id: s.id as unknown as number, // Cast UUID/Int to number for pipeline compatibility
+            text: s.text,
+            start_time: s.start_time,
+            end_time: s.end_time,
+            speaker_id: s.speaker_id
+          }))
+        }).then(result => {
+          console.log(`Intelligence pipeline completed for ${videoId}:`, {
+            categorizedCount: result.savedCategorizations,
+            quotesCount: result.savedQuotes,
+            agendaItemsCount: result.savedAgendaItems,
+            positionsCount: result.savedPositions
+          });
+        }).catch(err => {
+          console.error(`Intelligence pipeline failed for ${videoId}:`, err);
+        });
+      }
     } catch (dbError) {
       console.error('Database save failed:', dbError);
 

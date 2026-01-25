@@ -13,6 +13,7 @@ import {
 } from './position-aggregator';
 import { analyzeSegment } from './transcript-analyzer';
 
+import { saveSegmentAnalysis } from '@/lib/data/ai-analysis';
 import { createAgendaItems, linkSegmentsToAgendaItems, getAgendaItemsByVideo, getAgendaItemAtTime } from '@/lib/data/agenda-items';
 import { saveKeyQuotes } from '@/lib/data/key-quotes';
 import { savePositions } from '@/lib/data/legislator-positions';
@@ -35,6 +36,7 @@ const CONFIG = {
     // Whether to run each step
     ENABLE_ROBERT_RULES: true,
     ENABLE_VOTE_EXTRACTION: true,
+    ENABLE_ISSUE_CATEGORIZATION: true,
     ENABLE_QUOTE_DETECTION: true,
     ENABLE_POSITION_AGGREGATION: true,
 
@@ -80,6 +82,7 @@ export interface PipelineOutput {
 
     // Database save results
     savedAgendaItems: number;
+    savedCategorizations: number;
     savedQuotes: number;
     savedPositions: number;
 
@@ -110,6 +113,7 @@ export async function runIntelligencePipeline(
         quotesDetected: [],
         positionsAggregated: [],
         savedAgendaItems: 0,
+        savedCategorizations: 0,
         savedQuotes: 0,
         savedPositions: 0,
         errors
@@ -200,6 +204,42 @@ export async function runIntelligencePipeline(
             );
 
             onProgress?.('Vote Extraction', output.eventsDetected.length, output.eventsDetected.length);
+        }
+
+        // ====================================================================
+        // STEP 2.5: Issue Categorization
+        // ====================================================================
+        if (CONFIG.ENABLE_ISSUE_CATEGORIZATION) {
+            const total = input.segments.length;
+            onProgress?.('Issue Categorization', 0, total);
+
+            for (let i = 0; i < input.segments.length; i++) {
+                const segment = input.segments[i];
+
+                try {
+                    // Run AI analysis
+                    const analysis = await analyzeSegment(segment.text);
+
+                    // Save to database
+                    const result = await saveSegmentAnalysis(
+                        String(segment.id),
+                        analysis.issues,
+                        analysis.sentiment
+                    );
+
+                    if (result.success) {
+                        output.savedCategorizations += result.issuesSaved;
+                    }
+                } catch (error) {
+                    console.error(`Error categorizing segment ${segment.id}:`, error);
+                }
+
+                if (i % CONFIG.PROGRESS_INTERVAL === 0) {
+                    onProgress?.('Issue Categorization', i + 1, total);
+                }
+            }
+
+            onProgress?.('Issue Categorization', total, total);
         }
 
         // ====================================================================
