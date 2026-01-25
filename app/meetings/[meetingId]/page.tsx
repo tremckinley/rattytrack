@@ -13,18 +13,21 @@ import MeetingDocumentsSection from '@/components/MeetingDocumentsSection';
 import MeetingAttendeesSection from '@/components/MeetingAttendeesSection';
 import TranscriptPlayer from '@/components/TranscriptPlayer';
 import SpeakerMapperWrapper from '@/components/SpeakerMapperWrapper';
-import AgendaTimeline from '@/components/AgendaTimeline';
-import MeetingTranscribeButton from '@/components/MeetingTranscribeButton';
 import VotingSummary from '@/components/VotingSummary';
 import MeetingSummaryWrapper from '@/components/MeetingSummaryWrapper';
+import IssueSpeakingDashboard from '@/components/IssueSpeakingDashboard';
 import { getMeetingSummary } from '@/lib/data/meeting-summaries';
+import { getMeetingIssueMetrics } from '@/lib/data/meeting_issue_metrics';
 
 interface PageProps {
     params: Promise<{ meetingId: string }>;
+    searchParams: Promise<{ t?: string }>;
 }
 
-export default async function MeetingPage({ params }: PageProps) {
+export default async function MeetingPage({ params, searchParams }: PageProps) {
     const { meetingId } = await params;
+    const { t } = await searchParams;
+    const initialTime = t ? parseInt(t as string) : 0;
 
     // Fetch meeting and associated data
     const { meeting, documents, attendees, hasTranscript } = await getFullMeetingData(meetingId);
@@ -45,6 +48,7 @@ export default async function MeetingPage({ params }: PageProps) {
     let agendaItems: any[] = [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let meetingSummary: any = null;
+    let issueMetrics: any[] = [];
 
     if (meeting.video_id && hasTranscript) {
         const transcriptData = await getTranscriptionWithSegments(meeting.video_id);
@@ -75,129 +79,185 @@ export default async function MeetingPage({ params }: PageProps) {
 
         // Fetch meeting summary
         meetingSummary = await getMeetingSummary(meeting.video_id);
+
+        // Fetch issue metrics for this meeting
+        issueMetrics = await getMeetingIssueMetrics(meeting.video_id);
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                {/* Navigation */}
-                <div className="mb-8">
+        <div className="min-h-screen bg-gray-50 pb-20">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Breadcrumbs */}
+                <div className="mb-6">
                     <Link
                         href="/meetings"
-                        className="text-blue-600 hover:text-blue-700 font-medium mb-4 inline-block"
+                        className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
                     >
-                        ← Back to Meetings
+                        <span>←</span> Back to Meetings
                     </Link>
                 </div>
 
-                {/* Meeting Header */}
-                <MeetingHeader
-                    meeting={meeting}
-                    hasTranscript={hasTranscript}
-                    hasDocuments={documents.length > 0}
-                />
-
-                {/* AI Meeting Summary (for transcribed meetings) */}
-                {hasTranscript && meeting.video_id && (
-                    <MeetingSummaryWrapper
-                        initialSummary={meetingSummary}
-                        videoId={meeting.video_id}
+                {/* 1. Header & Summary Row */}
+                <div className="grid grid-cols-1 gap-6 mb-8">
+                    <MeetingHeader
+                        meeting={meeting}
+                        hasTranscript={hasTranscript}
+                        hasDocuments={documents.length > 0}
                     />
-                )}
 
-                {/* Two-column layout for video and documents */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    {/* Video Section - only show if no transcript (TranscriptPlayer has its own video) */}
-                    <div className="lg:col-span-2">
-                        {!hasTranscript && (
-                            <MeetingVideoSection
-                                videoId={meeting.video_id}
-                                videoUrl={meeting.video_url}
-                                title={meeting.title}
-                            />
+                    {hasTranscript && meeting.video_id && (
+                        <MeetingSummaryWrapper
+                            initialSummary={meetingSummary}
+                            videoId={meeting.video_id}
+                        />
+                    )}
+                </div>
+
+                {/* 2. Primary Content: Video/Transcript & Sidebar */}
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
+                    {/* Main Content Area (75%) */}
+                    <div className="lg:col-span-3 space-y-8">
+                        {/* Transcript Player - Primary Focus */}
+                        {transcription?.status === 'completed' && meeting.video_id ? (
+                            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                                <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white">
+                                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                        📺 Interactive Meeting Player
+                                    </h2>
+                                </div>
+                                <TranscriptPlayer
+                                    videoId={meeting.video_id}
+                                    title={meeting.title}
+                                    channelTitle={transcription.channel_title}
+                                    publishedAt={transcription.published_at}
+                                    segments={segments}
+                                    legislatorMap={legislatorMap}
+                                    agendaItems={agendaItems}
+                                    initialTime={initialTime}
+                                />
+                            </div>
+                        ) : (
+                            /* Fallback Video Player if no transcript */
+                            meeting.video_id && (
+                                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                                    <MeetingVideoSection
+                                        videoId={meeting.video_id}
+                                        videoUrl={meeting.video_url}
+                                        title={meeting.title}
+                                    />
+                                    {!hasTranscript && (
+                                        <div className="p-6 bg-yellow-50 border-t border-yellow-100">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                <div>
+                                                    <h3 className="font-semibold text-yellow-900 flex items-center gap-2">
+                                                        <span>✨</span> Transcript Available Soon
+                                                    </h3>
+                                                    <p className="text-yellow-800 text-sm">
+                                                        This meeting has not been transcribed yet. Click to start the process.
+                                                    </p>
+                                                </div>
+                                                <div className="flex-shrink-0">
+                                                    {/* We can re-import MeetingTranscribeButton if needed, or inline it */}
+                                                    <Link
+                                                        href={`/transcribe?meetingId=${meeting.id}`}
+                                                        className="inline-block px-6 py-2 bg-yellow-600 text-white rounded-lg font-bold hover:bg-yellow-700 transition-colors shadow-md"
+                                                    >
+                                                        Transcribe Now
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                    }
+                                </div>
+                            )
+                        )}
+
+                        {/* Speaker Identification / Mapper */}
+                        {transcription?.status === 'completed' && speakerLabels.length > 0 && meeting.video_id && (
+                            <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                                <SpeakerMapperWrapper
+                                    videoId={meeting.video_id}
+                                    speakerLabels={speakerLabels}
+                                    legislators={legislators}
+                                />
+                            </div>
+                        )}
+
+                        {/* Voting Section */}
+                        {transcription?.status === 'completed' && agendaItems.some(item => item.vote_result) && (
+                            <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                                <VotingSummary
+                                    agendaItems={agendaItems}
+                                    legislators={legislators.map(l => ({ id: l.id, display_name: l.display_name }))}
+                                />
+                            </div>
                         )}
                     </div>
 
-                    {/* Sidebar: Documents and Attendees */}
-                    <div className="space-y-6">
+                    {/* Sidebar Area (25%) */}
+                    <div className="lg:col-span-1 space-y-6">
                         {/* Documents Section */}
-                        <MeetingDocumentsSection
-                            documents={documents}
-                            agendaUrl={meeting.agenda_url}
-                            minutesUrl={meeting.minutes_url}
-                        />
+                        <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                            <MeetingDocumentsSection
+                                documents={documents}
+                                agendaUrl={meeting.agenda_url}
+                                minutesUrl={meeting.minutes_url}
+                            />
+                        </div>
 
                         {/* Attendees Section */}
                         {attendees.length > 0 && (
-                            <MeetingAttendeesSection attendees={attendees} />
+                            <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                                <MeetingAttendeesSection attendees={attendees} />
+                            </div>
+                        )}
+
+                        {/* Quick Insight (Placeholder/Stats) */}
+                        {transcription?.status === 'completed' && (
+                            <div className="bg-indigo-600 rounded-xl shadow-lg p-5 text-white">
+                                <h3 className="font-bold flex items-center gap-2 mb-3">
+                                    <span>🧠</span> Meeting Stats
+                                </h3>
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex justify-between border-b border-indigo-500 pb-2">
+                                        <span className="opacity-80">Duration</span>
+                                        <span className="font-mono text-indigo-100">{Math.round((meeting.video_duration_seconds || 0) / 60)} mins</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-indigo-500 pb-2">
+                                        <span className="opacity-80">Topics</span>
+                                        <span className="font-mono text-indigo-100">{issueMetrics.length} detected</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="opacity-80">Speakers</span>
+                                        <span className="font-mono text-indigo-100">{speakerLabels.length} identified</span>
+                                    </div>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>
 
-                {/* Speaker Mapper (if diarization was used) */}
-                {transcription?.status === 'completed' && speakerLabels.length > 0 && meeting.video_id && (
-                    <SpeakerMapperWrapper
-                        videoId={meeting.video_id}
-                        speakerLabels={speakerLabels}
-                        legislators={legislators}
-                    />
-                )}
-
-                {/* Agenda Timeline (if agenda items exist) */}
-                {transcription?.status === 'completed' && agendaItems.length > 0 && (
-                    <div className="mb-6 bg-white rounded-lg shadow-md p-6">
-                        <AgendaTimeline
-                            agendaItems={agendaItems}
-                            segments={segments}
-                            legislatorMap={legislatorMap}
-                        />
-                    </div>
-                )}
-
-                {/* Voting Summary (if votes exist) */}
-                {transcription?.status === 'completed' && agendaItems.some(item => item.vote_result) && (
-                    <VotingSummary
-                        agendaItems={agendaItems}
-                        legislators={legislators.map(l => ({ id: l.id, display_name: l.display_name }))}
-                    />
-                )}
-
-                {/* Transcript Section */}
-                {transcription?.status === 'completed' && meeting.video_id && (
-                    <div className="bg-white rounded-lg shadow-md p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Meeting Transcript</h2>
-                        <TranscriptPlayer
-                            videoId={meeting.video_id}
-                            title={meeting.title}
-                            channelTitle={transcription.channel_title}
-                            publishedAt={transcription.published_at}
-                            segments={segments}
-                            legislatorMap={legislatorMap}
-                            agendaItems={agendaItems}
-                        />
-                    </div>
-                )}
-
-                {/* No Transcript - Show Transcribe Button */}
-                {!hasTranscript && meeting.video_id && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                        <h3 className="font-semibold text-yellow-900 mb-2">Transcript Not Available</h3>
-                        <p className="text-yellow-800">
-                            This meeting has a video but has not been transcribed yet.
-                        </p>
-                        <MeetingTranscribeButton
-                            videoId={meeting.video_id}
-                            meetingId={meeting.id}
-                        />
+                {/* 3. Bottom Row: Intelligence & Deep Dive */}
+                {transcription?.status === 'completed' && issueMetrics.length > 0 && (
+                    <div className="mt-8 border-t border-gray-200 pt-8">
+                        <div className="mb-6 flex items-center justify-between">
+                            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                                <span>🎯</span> Issue Focus Areas
+                            </h2>
+                            <p className="text-gray-500 text-sm">Key statements categorized by topic</p>
+                        </div>
+                        <IssueSpeakingDashboard issues={issueMetrics} />
                     </div>
                 )}
 
                 {/* No Video Message */}
                 {!meeting.video_id && (
-                    <div className="bg-gray-100 border border-gray-200 rounded-lg p-6">
-                        <h3 className="font-semibold text-gray-900 mb-2">No Video Available</h3>
-                        <p className="text-gray-700">
-                            This meeting does not have video available yet.
+                    <div className="bg-white border border-gray-200 rounded-xl p-8 text-center shadow-md">
+                        <div className="text-4xl mb-4 text-gray-300">📹</div>
+                        <h3 className="font-bold text-xl text-gray-900 mb-2">No Video Available</h3>
+                        <p className="text-gray-600 max-w-md mx-auto">
+                            This meeting record exists but no video or transcript has been linked yet.
                         </p>
                     </div>
                 )}

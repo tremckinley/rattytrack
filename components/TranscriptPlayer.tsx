@@ -16,6 +16,7 @@ interface TranscriptPlayerProps {
   segments: TranscriptSegment[];
   legislatorMap?: Record<string, { display_name: string }>;
   agendaItems?: AgendaItem[];
+  initialTime?: number;
 }
 
 // Opening section types that should be condensed
@@ -294,6 +295,7 @@ export default function TranscriptPlayer({
   segments,
   legislatorMap = {},
   agendaItems = [],
+  initialTime = 0,
 }: TranscriptPlayerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentTime, setCurrentTime] = useState(0);
@@ -363,6 +365,17 @@ export default function TranscriptPlayer({
       activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [currentTime]);
+
+  // Handle initial time from prop
+  useEffect(() => {
+    if (initialTime > 0) {
+      // Delay slightly to ensure iframe is ready (optional but safer)
+      const timer = setTimeout(() => {
+        handleTimestampClick(initialTime);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [initialTime, videoId]);
 
   return (
     <div className="space-y-6">

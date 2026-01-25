@@ -11,26 +11,30 @@ const navLinks: { name: string; href: string }[] = [
   // { name: "YouTube", href: "/youtube" }
 ];
 
+import GlobalSearch from "./GlobalSearch";
+
 export default function NavBar() {
   //Get the current URL pathname
   const pathname = usePathname();
 
   return (
-    <nav className="flex mb-2 text-foreground w-full bg-white border-b border-foreground z-50">
-      <Link href="/" className="ml-8 my-4 items-center justify-center">
-        <Image
-          src="/burgundy_logo.png"
-          alt="capytrack logo"
-          width={100}
-          height={50}
-          className="w-16 md:w-24 h-auto"
-          priority
-        />
-        <span className="font-extrabold hidden md:block">CapyTrackAI</span>
-      </Link>
-      <Link href="/" className="md:hidden inline-block mt-4 text-capyred"></Link>
-      <div className="mx-8 flex-1 flex items-end">
-        <ul className="flex text-lg w-full justify-center h-full items-end">
+    <nav className="flex items-center px-4 md:px-8 py-2 text-foreground w-full bg-white border-b border-foreground z-50">
+      <div className="flex items-center flex-shrink-0">
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/burgundy_logo.png"
+            alt="capytrack logo"
+            width={100}
+            height={50}
+            className="w-12 md:w-16 h-auto"
+            priority
+          />
+          <span className="font-extrabold hidden lg:block text-xl">CapyTrackAI</span>
+        </Link>
+      </div>
+
+      <div className="flex-1 flex justify-center px-4">
+        <ul className="flex text-lg h-full items-center">
           {navLinks.map((link, idx) => {
             const isActive = pathname.split("/")[1] === link.href.split("/")[1];
             return (
@@ -38,18 +42,20 @@ export default function NavBar() {
                 <li
                   className={
                     isActive
-                      ? "hover:bg-gray-200 mx-4 self-end pt-4 px-4 pb-1 active-nav-link"
-                      : "hover:bg-gray-200 mx-4 self-end pt-4 px-4 pb-1"
+                      ? "hover:text-blue-600 mx-2 md:mx-4 px-2 py-1 active-nav-link"
+                      : "hover:text-blue-600 mx-2 md:mx-4 px-2 py-1"
                   }
-                  key={link.name}
                 >
-
                   {link.name}
                 </li>
               </Link>
             );
           })}
         </ul>
+      </div>
+
+      <div className="flex-shrink-0">
+        <GlobalSearch />
       </div>
     </nav>
   );
