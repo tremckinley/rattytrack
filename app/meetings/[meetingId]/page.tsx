@@ -146,29 +146,10 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
                                         title={meeting.title}
                                     />
                                     {!hasTranscript && (
-                                        <div className="p-6 bg-yellow-50 border-t border-yellow-100">
-                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                <div>
-                                                    <h3 className="font-semibold text-yellow-900 flex items-center gap-2">
-                                                        <span>✨</span> Transcript Available Soon
-                                                    </h3>
-                                                    <p className="text-yellow-800 text-sm">
-                                                        This meeting has not been transcribed yet. Click to start the process.
-                                                    </p>
-                                                </div>
-                                                <div className="flex-shrink-0">
-                                                    {/* We can re-import MeetingTranscribeButton if needed, or inline it */}
-                                                    <Link
-                                                        href={`/transcribe?meetingId=${meeting.id}`}
-                                                        className="inline-block px-6 py-2 bg-yellow-600 text-white rounded-lg font-bold hover:bg-yellow-700 transition-colors shadow-md"
-                                                    >
-                                                        Transcribe Now
-                                                    </Link>
-                                                </div>
-                                            </div>
+                                        <div className="p-6 bg-gray-50 border-t border-gray-100 italic text-gray-500 text-sm">
+                                            Transcript is not yet available for this meeting.
                                         </div>
-                                    )
-                                    }
+                                    )}
                                 </div>
                             )
                         )}

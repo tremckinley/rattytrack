@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/utils/supabase/client";
+import { signOut, getIsAdminAction } from "@/app/auth/actions";
+import { LogOut, Shield, User } from "lucide-react";
 
 const navLinks: { name: string; href: string }[] = [
   { name: "Dashboard", href: "/" },
@@ -12,10 +16,61 @@ const navLinks: { name: string; href: string }[] = [
 ];
 
 import GlobalSearch from "./GlobalSearch";
+import UserMenu from "./UserMenu";
 
 export default function NavBar() {
-  //Get the current URL pathname
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
+  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const fetchRole = async (userId: string) => {
+      console.log("Fetching role via server action for:", userId);
+      try {
+        const isAdminRole = await getIsAdminAction();
+        console.log("Server action role result:", isAdminRole);
+        setIsAdmin(isAdminRole);
+      } catch (err) {
+        console.error("Unexpected error fetching role:", err);
+        setIsAdmin(false);
+      }
+    };
+
+    const initAuth = async () => {
+      // 1. Check current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        console.log("Found existing session for:", session.user.email);
+        setUser(session.user);
+        await fetchRole(session.user.id);
+      } else {
+        console.log("No active session found.");
+      }
+
+      // 2. Listen for changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log("Auth event:", event, "User:", session?.user?.email);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+
+        if (currentUser) {
+          await fetchRole(currentUser.id);
+        } else {
+          setIsAdmin(false);
+        }
+      });
+
+      return subscription;
+    };
+
+    const authSub = initAuth();
+
+    return () => {
+      authSub.then(sub => sub.unsubscribe());
+    };
+  }, [supabase]);
 
   return (
     <nav className="flex items-center px-4 md:px-8 py-2 text-foreground w-full bg-white border-b border-foreground z-50">
@@ -54,8 +109,20 @@ export default function NavBar() {
         </ul>
       </div>
 
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 flex items-center gap-4">
         <GlobalSearch />
+
+        {user ? (
+          <UserMenu user={user} isAdmin={isAdmin} />
+        ) : (
+          <Link
+            href="/login"
+            className="px-4 py-1.5 bg-rose-950 text-white rounded-full text-sm font-bold hover:bg-rose-900 transition-colors flex items-center gap-2"
+          >
+            <User size={16} />
+            Sign In
+          </Link>
+        )}
       </div>
     </nav>
   );

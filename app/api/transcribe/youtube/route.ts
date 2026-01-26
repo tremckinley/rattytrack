@@ -18,6 +18,7 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { SpeakerMatch } from '@/lib/utils/speaker-matcher';
+import { requireAdmin } from '@/lib/utils/auth-utils';
 
 interface TranscribeRequest {
   videoId: string;
@@ -26,31 +27,13 @@ interface TranscribeRequest {
   numSpeakers?: number;
 }
 
-/**
- * Check if user is admin
- */
-function isAdmin(request: NextRequest): boolean {
-  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
-  const userEmail = request.headers.get('x-user-email'); // Set this in middleware if using auth
-  return adminEmails.includes(userEmail || '');
-}
-
-/**
- * POST /api/transcribe/youtube
- * Transcribe a YouTube video or return existing transcription
- */
 export async function POST(request: NextRequest) {
   try {
-    const body: TranscribeRequest & { password?: string } = await request.json();
-    const { videoId, forceRetry, provider, numSpeakers, password } = body;
+    // Check for admin session
+    await requireAdmin();
 
-    // Check password
-    if (password !== process.env.TRANSCRIPTION_PASSWORD) {
-      return NextResponse.json(
-        { error: 'Invalid password' },
-        { status: 401 }
-      );
-    }
+    const body: TranscribeRequest = await request.json();
+    const { videoId, forceRetry, provider, numSpeakers } = body;
 
     if (!videoId) {
       return NextResponse.json(
@@ -78,14 +61,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Handle retry (admin only)
+    // Handle retry
     if (forceRetry) {
-      if (!isAdmin(request)) {
-        return NextResponse.json(
-          { error: 'Only admins can retry transcriptions' },
-          { status: 403 }
-        );
-      }
 
       if (existingTranscription) {
         await deleteTranscription(videoId);
