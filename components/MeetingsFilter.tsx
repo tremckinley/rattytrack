@@ -51,11 +51,11 @@ export default function MeetingsFilter({
     const hasFilters = type || from || to || attendee;
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="block bg-capyred text-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex flex-wrap gap-4">
                 {/* Meeting Type */}
                 <div className="flex-1 min-w-[200px]">
-                    <label className="font-medium text-gray-700">
+                    <label className="font-medium text-white">
                         Meeting Type
                     </label>
                     <select
@@ -72,7 +72,7 @@ export default function MeetingsFilter({
 
                 {/* Date From */}
                 <div className="flex-1 min-w-[150px]">
-                    <label className="font-medium text-gray-700">
+                    <label className="font-medium text-white">
                         From Date
                     </label>
                     <input
@@ -85,7 +85,7 @@ export default function MeetingsFilter({
 
                 {/* Date To */}
                 <div className="flex-1 min-w-[150px]">
-                    <label className="font-medium text-gray-700">
+                    <label className="font-medium text-white">
                         To Date
                     </label>
                     <input
@@ -98,7 +98,7 @@ export default function MeetingsFilter({
 
                 {/* Attendee */}
                 <div className="flex-1 min-w-[200px]">
-                    <label className="font-medium text-gray-700">
+                    <label className="font-medium text-white">
                         Council Member
                     </label>
                     <select
@@ -118,7 +118,7 @@ export default function MeetingsFilter({
             <div className="flex gap-3 mt-4">
                 <button
                     onClick={applyFilters}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    className="px-4 py-2 border border-gray-300 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                     Apply Filters
                 </button>

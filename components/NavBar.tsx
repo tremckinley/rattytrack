@@ -70,7 +70,7 @@ export default function NavBar() {
     return () => {
       authSub.then(sub => sub.unsubscribe());
     };
-  }, [supabase]);
+  }, [supabase, pathname]);
 
   return (
     <nav className="flex justify-between items-center px-4 md:px-8 py-2 text-foreground w-full bg-white border-b border-foreground z-50">
