@@ -4,6 +4,17 @@ import { updateSession } from "@/lib/utils/supabase/middleware";
 export async function middleware(request: NextRequest) {
     const { response, user, supabase } = await updateSession(request);
 
+    // Define public routes that don't require authentication
+    const publicRoutes = ["/login", "/signup"];
+    const isPublicRoute = 
+        publicRoutes.includes(request.nextUrl.pathname) || 
+        request.nextUrl.pathname.startsWith("/auth");
+
+    // Redirect unauthenticated users to login page if they try to access a non-public route
+    if (!user && !isPublicRoute) {
+        return Response.redirect(new URL("/login", request.url));
+    }
+
     // Protected Admin Routes
     if (request.nextUrl.pathname.startsWith("/admin")) {
         if (!user) {

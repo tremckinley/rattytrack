@@ -73,7 +73,7 @@ export default function NavBar() {
   }, [supabase]);
 
   return (
-    <nav className="flex items-center px-4 md:px-8 py-2 text-foreground w-full bg-white border-b border-foreground z-50">
+    <nav className="flex justify-between items-center px-4 md:px-8 py-2 text-foreground w-full bg-white border-b border-foreground z-50">
       <div className="flex items-center flex-shrink-0">
         <Link href="/" className="flex items-center gap-2">
           <Image
@@ -88,7 +88,7 @@ export default function NavBar() {
         </Link>
       </div>
 
-      <div className="flex-1 flex justify-center px-4">
+      <div className="flex-0 flex justify-center px-4">
         <ul className="flex text-lg h-full items-center">
           {navLinks.map((link, idx) => {
             const isActive = pathname.split("/")[1] === link.href.split("/")[1];
@@ -109,7 +109,7 @@ export default function NavBar() {
         </ul>
       </div>
 
-      <div className="flex-shrink-0 flex items-center gap-4">
+      <div className="flex flex-1 items-center justify-end gap-4">
         <GlobalSearch />
 
         {user ? (
@@ -117,7 +117,7 @@ export default function NavBar() {
         ) : (
           <Link
             href="/login"
-            className="px-4 py-1.5 bg-rose-950 text-white rounded-full text-sm font-bold hover:bg-rose-900 transition-colors flex items-center gap-2"
+            className="px-4 py-1.5 min-w-fit bg-rose-950 text-white rounded-full text-xs hover:bg-rose-900 transition-colors flex items-center gap-2"
           >
             <User size={16} />
             Sign In

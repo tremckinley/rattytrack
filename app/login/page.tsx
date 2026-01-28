@@ -16,7 +16,7 @@ export default function LoginPage() {
         <div className="flex items-center justify-center min-h-[70vh]">
             <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-xl border border-gray-100">
                 <div className="text-center">
-                    <h1 className="text-3xl font-extrabold text-rose-950">Welcome Back</h1>
+                    <h1 className="text-3xl font-extrabold text-rose-950">Welcome</h1>
                     <p className="mt-2 text-gray-500">Sign in to your CapyTrack account</p>
                 </div>
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
                     className="space-y-4"
                 >
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+                        <label className="font-semibold text-gray-700">Email Address</label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                             <input
@@ -59,7 +59,7 @@ export default function LoginPage() {
 
                     <div>
                         <div className="flex items-center justify-between mb-1">
-                            <label className="block text-sm font-semibold text-gray-700">Password</label>
+                            <label className="font-semibold text-gray-700">Password</label>
                             <Link href="/auth/forgot-password" className="text-sm text-rose-700 hover:underline">
                                 Forgot password?
                             </Link>
