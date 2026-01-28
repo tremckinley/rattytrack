@@ -55,7 +55,7 @@ export default function MeetingsFilter({
             <div className="flex flex-wrap gap-4">
                 {/* Meeting Type */}
                 <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="font-medium text-gray-700">
                         Meeting Type
                     </label>
                     <select
@@ -72,7 +72,7 @@ export default function MeetingsFilter({
 
                 {/* Date From */}
                 <div className="flex-1 min-w-[150px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="font-medium text-gray-700">
                         From Date
                     </label>
                     <input
@@ -85,7 +85,7 @@ export default function MeetingsFilter({
 
                 {/* Date To */}
                 <div className="flex-1 min-w-[150px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="font-medium text-gray-700">
                         To Date
                     </label>
                     <input
@@ -98,7 +98,7 @@ export default function MeetingsFilter({
 
                 {/* Attendee */}
                 <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="font-medium text-gray-700">
                         Council Member
                     </label>
                     <select
