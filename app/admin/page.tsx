@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/utils/supabase/server";
 import AutomationCenter from "@/components/admin/AutomationCenter";
 import TranscriptionHub from "@/components/admin/TranscriptionHub";
+import UserManagement from "@/components/admin/UserManagement";
 import HelpModal from "@/components/admin/HelpModal";
-import { Shield, Zap, FileText, Settings } from "lucide-react";
+import { Shield, Zap, FileText, Settings, Users } from "lucide-react";
 
 export default async function AdminPage() {
     const supabase = await createClient();
@@ -35,6 +36,14 @@ export default async function AdminPage() {
                                 <h2 className="text-xl font-bold border-none">Automation Center</h2>
                             </div>
                             <AutomationCenter />
+                        </section>
+
+                        <section>
+                            <div className="flex items-center gap-2 mb-4 text-rose-950">
+                                <Users size={20} className="fill-current" />
+                                <h2 className="text-xl font-bold border-none">User Management</h2>
+                            </div>
+                            <UserManagement />
                         </section>
 
                         <section>

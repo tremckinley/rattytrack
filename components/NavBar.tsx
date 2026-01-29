@@ -110,7 +110,7 @@ export default function NavBar() {
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-4">
-        <GlobalSearch />
+        {user && <GlobalSearch />}
 
         {user ? (
           <UserMenu user={user} isAdmin={isAdmin} />

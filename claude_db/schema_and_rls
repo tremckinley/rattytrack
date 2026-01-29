@@ -813,24 +813,12 @@ WITH CHECK (auth.uid() = supabase_user_id);
 -- Admins can view all users
 CREATE POLICY "Admins can view all users"
 ON users FOR SELECT
-USING (
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE supabase_user_id = auth.uid()
-        AND role = 'admin'
-    )
-);
+USING (public.user_role() = 'admin');
 
 -- Admins can update any user
 CREATE POLICY "Admins can update any user"
 ON users FOR UPDATE
-USING (
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE supabase_user_id = auth.uid()
-        AND role = 'admin'
-    )
-);
+USING (public.user_role() = 'admin');
 
 -- ============================================================================
 -- USER BOOKMARKS POLICIES
