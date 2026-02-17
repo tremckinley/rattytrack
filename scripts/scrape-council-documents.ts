@@ -53,21 +53,21 @@ interface MeetingDocument {
 }
 
 /**
- * Check if a document URL already exists in the database
+ * Get existing document by URL
  */
-async function documentExists(sourceUrl: string): Promise<boolean> {
+async function getDocumentByUrl(sourceUrl: string): Promise<{ id: string, meeting_date: string, document_type: string } | null> {
     const { data, error } = await supabase
         .from('meeting_documents')
-        .select('id')
+        .select('id, meeting_date, document_type')
         .eq('source_url', sourceUrl)
         .maybeSingle();
 
     if (error) {
         console.error(`Error checking document existence: ${error.message}`);
-        return false;
+        return null;
     }
 
-    return data !== null;
+    return data;
 }
 
 /**
@@ -201,8 +201,33 @@ async function processDocument(doc: ScrapedDocument): Promise<{
     extracted: boolean;
 }> {
     // Check if already exists
-    const exists = await documentExists(doc.url);
-    if (exists) {
+    const existingDoc = await getDocumentByUrl(doc.url);
+    const meetingDate = doc.meetingDate
+        ? doc.meetingDate.toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0];
+
+    if (existingDoc) {
+        // Update if metadata has changed (e.g. better date extraction or classification)
+        if (existingDoc.meeting_date !== meetingDate || existingDoc.document_type !== doc.documentType) {
+            if (!isDryRun) {
+                const { error } = await supabase
+                    .from('meeting_documents')
+                    .update({
+                        meeting_date: meetingDate,
+                        document_type: doc.documentType,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', existingDoc.id);
+
+                if (error) {
+                    console.error(`Error updating document metadata: ${error.message}`);
+                    return { status: 'error', extracted: false };
+                }
+                console.log(`  🔄 Updated metadata for: ${doc.title} (${meetingDate}, ${doc.documentType})`);
+            } else {
+                console.log(`  [DRY RUN] Would update: ${doc.title}`);
+            }
+        }
         return { status: 'exists', extracted: false };
     }
 
@@ -212,10 +237,6 @@ async function processDocument(doc: ScrapedDocument): Promise<{
     }
 
     // Create document record
-    const meetingDate = doc.meetingDate
-        ? doc.meetingDate.toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0]; // Fallback to today
-
     const docRecord: MeetingDocument = {
         meeting_date: meetingDate,
         document_type: doc.documentType,

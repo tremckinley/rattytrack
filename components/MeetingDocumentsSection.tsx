@@ -18,6 +18,7 @@ const DOCUMENT_TYPE_INFO: Record<string, { label: string; icon: string }> = {
     'pz_regular_docs': { label: 'Planning & Zoning Documents', icon: '🏗️' },
     'pz_committee_docs': { label: 'P&Z Committee Documents', icon: '🏗️' },
     'minutes': { label: 'Meeting Minutes', icon: '📝' },
+    'budget': { label: 'Budget Presentations', icon: '💰' },
     'additional': { label: 'Additional Documents', icon: '📎' },
 };
 

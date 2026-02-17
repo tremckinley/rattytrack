@@ -114,6 +114,11 @@ export default async function MeetingsPage({ searchParams }: PageProps) {
                                                     📝 Transcribed
                                                 </span>
                                             )}
+                                            {meeting.has_documents && (
+                                                <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded">
+                                                    📄 Documents
+                                                </span>
+                                            )}
                                         </div>
                                         <h2 className="text-lg font-semibold text-gray-900 mb-1">
                                             {meeting.title}

@@ -12,6 +12,7 @@
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import * as cheerio from 'cheerio';
+import { scrapeAgendaPage, ScrapedDocument } from '../lib/data/agenda-scraper';
 
 dotenv.config({ path: '.env.local' });
 
@@ -285,6 +286,10 @@ async function fetchAllChannelVideos(): Promise<YouTubeVideo[]> {
                 parsedDate,
                 meetingType: parsedDate ? meetingType : null,
             });
+
+            if (title.includes('January 27') || title.includes('February 3')) {
+                console.log(`[DEBUG] Found YouTube video: "${title}", parsedDate=${parsedDate?.toISOString().split('T')[0]}, meetingType=${meetingType}`);
+            }
         }
 
         nextPageToken = data.nextPageToken;
@@ -299,55 +304,54 @@ async function fetchAllChannelVideos(): Promise<YouTubeVideo[]> {
 async function fetchAndParseMeetings(): Promise<ParsedMeeting[]> {
     console.log('📥 Fetching meeting data from city website...');
 
-    const response = await fetch(MEMPHIS_AGENDA_URL);
-    const html = await response.text();
-    const $ = cheerio.load(html);
+    try {
+        const scrapedDocs = await scrapeAgendaPage();
+        const meetingsMap = new Map<string, ParsedMeeting>();
 
-    const meetings = new Map<string, ParsedMeeting>();
+        for (const doc of scrapedDocs) {
+            if (!doc.meetingDate) continue;
 
-    $('a[href*=".pdf"]').each((_, element) => {
-        const $el = $(element);
-        const href = $el.attr('href') || '';
-        const text = $el.text().trim();
+            const dateStr = doc.meetingDate.toISOString().split('T')[0];
 
-        if (!href) return;
+            // Map granular document types to meeting types
+            let meetingType: 'Regular Meeting' | 'Committee Meeting' | null = null;
+            if (doc.documentType === 'regular_agenda' || doc.documentType === 'regular_docs' || doc.documentType === 'pz_regular_docs') {
+                meetingType = 'Regular Meeting';
+            } else if (doc.documentType === 'committee_agenda' || doc.documentType === 'committee_docs' || doc.documentType === 'pz_committee_docs') {
+                meetingType = 'Committee Meeting';
+            }
 
-        const date = parseDateFromUrl(href);
-        if (!date) return;
+            if (!meetingType) continue;
 
-        const meetingType = getMeetingTypeFromUrl(text, href);
-        if (!meetingType) return;
+            const key = `${dateStr}-${meetingType}`;
 
-        const twoYearsAgo = new Date();
-        twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-        if (date < twoYearsAgo) return;
+            if (!meetingsMap.has(key)) {
+                meetingsMap.set(key, {
+                    date: doc.meetingDate,
+                    meetingType,
+                    agendaUrl: null,
+                    documentsUrl: null,
+                    minutesUrl: null,
+                });
+            }
 
-        const key = `${date.toISOString().split('T')[0]}-${meetingType}`;
+            const meeting = meetingsMap.get(key)!;
 
-        if (!meetings.has(key)) {
-            meetings.set(key, {
-                date,
-                meetingType,
-                agendaUrl: null,
-                documentsUrl: null,
-                minutesUrl: null,
-            });
+            if (doc.documentType === 'regular_agenda' || doc.documentType === 'committee_agenda') {
+                meeting.agendaUrl = doc.url;
+            } else if (doc.documentType === 'regular_docs' || doc.documentType === 'committee_docs' || doc.documentType === 'pz_regular_docs' || doc.documentType === 'pz_committee_docs') {
+                meeting.documentsUrl = doc.url;
+            } else if (doc.documentType === 'minutes') {
+                meeting.minutesUrl = doc.url;
+            }
         }
 
-        const meeting = meetings.get(key)!;
-        const textLower = text.toLowerCase();
-
-        if (textLower.includes('agenda') && !textLower.includes('document')) {
-            meeting.agendaUrl = href;
-        } else if (textLower.includes('document')) {
-            meeting.documentsUrl = href;
-        } else if (textLower.includes('minute')) {
-            meeting.minutesUrl = href;
-        }
-    });
-
-    console.log(`   Found ${meetings.size} meetings from website`);
-    return Array.from(meetings.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
+        console.log(`   Found ${meetingsMap.size} meetings from website`);
+        return Array.from(meetingsMap.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
+    } catch (error) {
+        console.error('Error fetching/parsing meetings:', error);
+        return [];
+    }
 }
 
 // ================== DATABASE OPERATIONS ==================
@@ -391,6 +395,16 @@ async function createMeetingRecords(meetings: ParsedMeeting[], videos: YouTubeVi
             .lt('scheduled_start', `${dateStr}T23:59:59`)
             .eq('meeting_type', meeting.meetingType)
             .single();
+
+        if (dateStr === '2026-01-27' || dateStr === '2026-02-03') {
+            const { count } = await supabase
+                .from('meetings')
+                .select('*', { count: 'exact', head: true })
+                .gte('scheduled_start', `${dateStr}T00:00:00`)
+                .lt('scheduled_start', `${dateStr}T23:59:59`);
+
+            console.log(`[DEBUG] ${dateStr} ${meeting.meetingType}: count=${count}, existing=${existing ? 'YES' : 'NO'}`);
+        }
 
         if (existing) {
             // Update with document URLs or video if missing
@@ -447,8 +461,9 @@ async function createMeetingRecords(meetings: ParsedMeeting[], videos: YouTubeVi
             const { error } = await supabase.from('meetings').insert(insertData);
 
             if (error) {
-                console.error(`❌ Error creating meeting "${title}":`, error);
+                console.error(`❌ Error creating meeting "${title}":`, JSON.stringify(error, null, 2));
             } else {
+                console.log(`[DEBUG] Successfully created meeting: ${title}`);
                 if (matchingVideo) {
                     console.log(`✨ Created with video: ${title}`);
                 } else {

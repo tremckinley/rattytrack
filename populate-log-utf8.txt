@@ -1,0 +1,35 @@
+﻿[dotenv@17.2.3] injecting env (9) from .env.local -- tip: ≡ƒæÑ sync secrets across teammates & machines: https://dotenvx.com/ops
+≡ƒôÑ Fetching meeting data from city website...
+Fetching agenda page: https://memphistn.gov/city-council-meeting-agenda/
+≡ƒô║ Fetching videos from YouTube channel...
+Found 523 document links
+   Found 136 meetings from website
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "The Chairwoman&#39;s Recap, January 13, 2026"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "The Chairman&#39;s Recap, December 16, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "The Chairman&#39;s Recap, December 2, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "The Chairman&#39;s Recap, November 18, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "The Chairman&#39;s Recap, November 4, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "The Chairman&#39;s Recap, October 21, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "The Chairman&#39;s Recap, October 7, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "The Chairman&#39;s Recap, September 23, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "The Chairman&#39;s Recap, September 9, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "Budget Wrap-up - June 9, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "Budget Wrap-up - June 3, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "Budget Wrap-up - May 21, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "Budget Hearing - May 14, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "Budget Hearing - May 13, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "Budget Hearing - May 12, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "Budget Hearing - May 7, 2025"
+   ΓÅ¡∩╕Å  Skipping non-meeting video: "Budget Hearing - May 5, 2025"
+   Found 58 meeting videos (filtered)
+
+≡ƒô¥ Processing 136 meetings...
+
+
+≡ƒôè Summary:
+   Created new meetings: 0
+   Linked videos: 0
+   Updated with documents: 0
+   Skipped (already exist): 136
+
+Γ£à Done!

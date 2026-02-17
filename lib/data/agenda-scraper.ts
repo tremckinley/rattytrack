@@ -20,6 +20,7 @@ export type DocumentType =
     | 'pz_regular_docs'
     | 'pz_committee_docs'
     | 'minutes'
+    | 'budget'
     | 'additional';
 
 /**
@@ -57,29 +58,73 @@ export function parseAgendaHtml(html: string): ScrapedDocument[] {
     const $ = cheerio.load(html);
     const documents: ScrapedDocument[] = [];
 
-    // Find all PDF links on the page
+    // The page structure typically uses tables or divs with headers
+    // Let's look for table rows first as that seems to be the current structure
+    $('tr').each((_, row) => {
+        const $row = $(row);
+        const $tds = $row.find('td');
+
+        if ($tds.length < 2) return;
+
+        // Try to find a date in the first column
+        const firstColText = $tds.first().text().trim();
+        const rowDate = extractMeetingDate(firstColText, '');
+
+        if (rowDate) {
+            // Find all PDF links in this row
+            $row.find('a[href*=".pdf"]').each((_, element) => {
+                const $link = $(element);
+                const href = $link.attr('href');
+                const linkText = $link.text().trim();
+
+                if (!href) return;
+
+                const url = normalizeUrl(href);
+                if (!url) return;
+
+                // Skip duplicates
+                if (documents.some(d => d.url === url)) return;
+
+                // For these links, we trust the row date as the meeting date
+                // unless it's a Minutes document which might have its own date
+                let meetingDate = rowDate;
+                if (linkText.toLowerCase().includes('minutes')) {
+                    const minutesDate = extractMeetingDate(linkText, url);
+                    if (minutesDate) meetingDate = minutesDate;
+                }
+
+                const documentType = classifyDocument(linkText, url);
+
+                documents.push({
+                    title: linkText || 'Unnamed Document',
+                    url,
+                    documentType,
+                    meetingDate,
+                    rawLinkText: linkText
+                });
+            });
+        }
+    });
+
+    // Fallback for any PDF links not in a row with a date
     $('a[href*=".pdf"]').each((_, element) => {
         const $link = $(element);
         const href = $link.attr('href');
         const linkText = $link.text().trim();
 
-        if (!href || !linkText) return;
+        if (!href) return;
 
-        // Normalize URL
         const url = normalizeUrl(href);
         if (!url) return;
 
-        // Skip duplicates
+        // Skip if already found in row processing
         if (documents.some(d => d.url === url)) return;
 
-        // Classify document type
+        const meetingDate = extractMeetingDate(linkText, url);
         const documentType = classifyDocument(linkText, url);
 
-        // Try to extract meeting date
-        const meetingDate = extractMeetingDate(linkText, url);
-
         documents.push({
-            title: linkText,
+            title: linkText || 'Unnamed Document',
             url,
             documentType,
             meetingDate,
@@ -120,13 +165,18 @@ function classifyDocument(linkText: string, url: string): DocumentType {
         return 'minutes';
     }
 
+    // Budget
+    if (text.includes('budget')) {
+        return 'budget';
+    }
+
     // Planning & Zoning Committee
     if (text.includes('planning') && text.includes('zoning') && text.includes('committee')) {
         return 'pz_committee_docs';
     }
 
     // Planning & Zoning Regular
-    if (text.includes('planning') && text.includes('zoning')) {
+    if ((text.includes('planning') && text.includes('zoning')) || text.startsWith('pz-')) {
         return 'pz_regular_docs';
     }
 
@@ -160,6 +210,12 @@ function classifyDocument(linkText: string, url: string): DocumentType {
     if (urlLower.includes('regular-agenda')) {
         return 'regular_agenda';
     }
+    if (urlLower.includes('regular-docs')) {
+        return 'regular_docs';
+    }
+    if (urlLower.includes('minutes')) {
+        return 'minutes';
+    }
 
     // Default to additional for unclassified documents
     return 'additional';
@@ -171,28 +227,56 @@ function classifyDocument(linkText: string, url: string): DocumentType {
 function extractMeetingDate(linkText: string, url: string): Date | null {
     // Try to extract date from common patterns
 
-    // Pattern: "7 Jan, 2025" or "21 Oct, 2025"
+    // Pattern: "7 Jan, 2025" or "21 Oct, 2025" or "January 13, 2026"
     const pattern1 = linkText.match(/(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*,?\s+(\d{4})/i);
     if (pattern1) {
         const [, day, month, year] = pattern1;
         return parseDate(day, month, year);
     }
 
-    // Pattern: "01-07-2025" or "12-16-2025" in text
-    const pattern2 = linkText.match(/(\d{1,2})-(\d{1,2})-(\d{4})/);
+    // Reverse Pattern: "January 13, 2026"
+    const pattern1Rev = linkText.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[laryuubpchteocmbeh]*\s+(\d{1,2}),?\s+(\d{4})/i);
+    if (pattern1Rev) {
+        const [, month, day, year] = pattern1Rev;
+        return parseDate(day, month, year);
+    }
+
+    // Pattern: "01-07-2025" or "12-16-2025" or "01.13.2026" in text
+    const pattern2 = linkText.match(/(\d{1,2})[.-](\d{1,2})[.-](\d{4})/);
     if (pattern2) {
         const [, month, day, year] = pattern2;
         return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     }
 
-    // Try to extract from URL: patterns like "01.07.2025" or "01-07-2025" or "1-7-2025"
-    const urlPattern1 = url.match(/(\d{1,2})[.-](\d{1,2})[.-](\d{4})/);
+    // Strip the uploads path to avoid false positives with YYYY/MM directories
+    const filename = url.split('/').pop() || url;
+
+    // Try to extract from filename: patterns like "01.07.2025" or "01-07-2025" or "1-7-2025"
+    const urlPattern1 = filename.match(/(\d{1,2})[.-](\d{1,2})[.-](\d{4})/);
     if (urlPattern1) {
         const [, month, day, year] = urlPattern1;
         return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     }
 
-    // URL pattern: uploads/YYYY/MM/filename
+    // Pattern for encoded dates in filenames like 11326 (Jan 13, 2026)
+    // Only match if it's likely a date (M DD YY or MM DD YY)
+    const urlPatternShort = filename.match(/[^\d]?(\d{1,2})(\d{2})(\d{2})[^\d]?/);
+    if (urlPatternShort) {
+        let [, month, day, yearShort] = urlPatternShort;
+        // If first match group has 3 digits, it might be M DD or MM D?
+        // But our regex says \d{1,2} \d{2} \d{2}
+
+        const year = parseInt(yearShort) < 30 ? 2000 + parseInt(yearShort) : 1900 + parseInt(yearShort);
+        const m = parseInt(month);
+        const d = parseInt(day);
+
+        // Basic validation: month 1-12, day 1-31
+        if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+            return new Date(year, m - 1, d);
+        }
+    }
+
+    // Fallback URL pattern: uploads/YYYY/MM/filename
     const urlPattern2 = url.match(/uploads\/(\d{4})\/(\d{2})\//);
     if (urlPattern2) {
         // Can't get exact day from this, use first of month

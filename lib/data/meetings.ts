@@ -89,7 +89,7 @@ export interface MeetingsFilterOptions {
  * Also checks video_transcriptions for actual transcript status
  */
 export async function getMeetings(options: MeetingsFilterOptions = {}): Promise<{
-    meetings: (Meeting & { has_transcript: boolean })[];
+    meetings: (Meeting & { has_transcript: boolean; has_documents: boolean })[];
     total: number;
 }> {
     const { limit = 50, offset = 0, meetingType, dateFrom, dateTo, attendeeId } = options;
@@ -161,14 +161,23 @@ export async function getMeetings(options: MeetingsFilterOptions = {}): Promise<
         }
     }
 
-    // Add has_transcript flag to each meeting
-    const meetingsWithTranscriptFlag = meetingsData.map(meeting => ({
-        ...meeting,
-        has_transcript: meeting.video_id ? transcribedVideoIds.has(meeting.video_id) : false,
+    // Add flags for each meeting
+    const meetingsWithFlags = await Promise.all(meetingsData.map(async (meeting) => {
+        // Check if there are documents for this meeting
+        const { count: docCount } = await supabase
+            .from('meeting_documents')
+            .select('id', { count: 'exact', head: true })
+            .eq('meeting_id', meeting.id);
+
+        return {
+            ...meeting,
+            has_transcript: meeting.video_id ? transcribedVideoIds.has(meeting.video_id) : false,
+            has_documents: (docCount || 0) > 0 || !!meeting.agenda_url || !!meeting.minutes_url
+        };
     }));
 
     return {
-        meetings: meetingsWithTranscriptFlag,
+        meetings: meetingsWithFlags,
         total: count || 0,
     };
 }
@@ -217,20 +226,92 @@ export async function getMeetingByVideoId(videoId: string): Promise<Meeting | nu
 
 /**
  * Get documents associated with a meeting
+ * Merges directly linked documents with date-matched documents for completeness
  */
-export async function getMeetingDocuments(meetingId: string): Promise<MeetingDocument[]> {
-    const { data, error } = await supabase
+export async function getMeetingDocuments(
+    meetingId: string,
+    meetingDate?: string | null,
+    meetingType?: string | null
+): Promise<MeetingDocument[]> {
+    const allDocsMap = new Map<string, MeetingDocument>();
+
+    // 1. Get documents specifically linked to this meeting ID
+    const { data: directDocs, error: directError } = await supabase
         .from('meeting_documents')
         .select('*')
-        .eq('meeting_id', meetingId)
-        .order('document_type', { ascending: true });
+        .eq('meeting_id', meetingId);
 
-    if (error) {
-        console.error('Error fetching meeting documents:', error);
-        return [];
+    if (directError) {
+        console.error('Error fetching meeting documents:', directError);
     }
 
-    return data as MeetingDocument[];
+    if (directDocs) {
+        directDocs.forEach(doc => allDocsMap.set(doc.source_url, doc as MeetingDocument));
+    }
+
+    // 2. Get documents by date for fallback/completeness
+    if (meetingDate) {
+        // Robustly extract YYYY-MM-DD
+        const dateStr = new Date(meetingDate).toISOString().split('T')[0];
+
+        const { data: dateDocs, error: dateError } = await supabase
+            .from('meeting_documents')
+            .select('*')
+            .eq('meeting_date', dateStr);
+
+        if (dateError) {
+            console.error('Error fetching meeting documents by date:', dateError);
+        }
+
+        if (dateDocs) {
+            dateDocs.forEach(doc => {
+                // Only add if not already present (prefer direct link if it exists)
+                if (!allDocsMap.has(doc.source_url)) {
+                    allDocsMap.set(doc.source_url, doc as MeetingDocument);
+                }
+            });
+        }
+    }
+
+    const allDocs = Array.from(allDocsMap.values());
+
+    // 3. Filter based on meeting type if possible
+    if (meetingType && allDocs.length > 0) {
+        const typeLower = meetingType.toLowerCase();
+        const isRegular = typeLower.includes('regular');
+        const isCommittee = typeLower.includes('committee');
+
+        return allDocs.filter(doc => {
+            const docType = doc.document_type;
+
+            // Regular meeting documents
+            if (isRegular) {
+                return [
+                    'regular_agenda',
+                    'regular_docs',
+                    'pz_regular_docs',
+                    'minutes',
+                    'budget',
+                    'additional'
+                ].includes(docType);
+            }
+
+            // Committee meeting documents
+            if (isCommittee) {
+                return [
+                    'committee_agenda',
+                    'committee_docs',
+                    'pz_committee_docs',
+                    'budget',
+                    'additional'
+                ].includes(docType);
+            }
+
+            return true; // If we don't know the type, show all for that date
+        }).sort((a, b) => a.document_type.localeCompare(b.document_type));
+    }
+
+    return allDocs.sort((a, b) => a.document_type.localeCompare(b.document_type));
 }
 
 /**
@@ -281,7 +362,7 @@ export async function getFullMeetingData(meetingId: string): Promise<{
     }
 
     const [documents, attendees] = await Promise.all([
-        getMeetingDocuments(meetingId),
+        getMeetingDocuments(meetingId, meeting.scheduled_start, meeting.meeting_type),
         getMeetingAttendees(meetingId),
     ]);
 
