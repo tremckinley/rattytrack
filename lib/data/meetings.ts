@@ -423,3 +423,32 @@ export async function getLegislatorsForFilter(): Promise<Array<{ id: string; dis
 
     return data;
 }
+
+/**
+ * Get the most recent meetings for the dashboard feed
+ */
+export async function getRecentMeetings(limit: number = 5): Promise<(Meeting & { has_transcript: boolean; has_documents: boolean })[]> {
+    const result = await getMeetings({ limit, offset: 0 });
+    return result.meetings;
+}
+
+/**
+ * Get upcoming meetings (scheduled in the future)
+ */
+export async function getUpcomingMeetings(limit: number = 5): Promise<Meeting[]> {
+    const now = new Date().toISOString();
+
+    const { data, error } = await supabase
+        .from('meetings')
+        .select('*')
+        .gt('scheduled_start', now)
+        .order('scheduled_start', { ascending: true })
+        .limit(limit);
+
+    if (error) {
+        console.error('Error fetching upcoming meetings:', error);
+        return [];
+    }
+
+    return (data || []) as Meeting[];
+}

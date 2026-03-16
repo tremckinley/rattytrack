@@ -244,3 +244,108 @@ export async function deleteQuotesForSegment(segmentId: string): Promise<boolean
 
     return true;
 }
+
+// ============================================================================
+// DASHBOARD QUERIES
+// ============================================================================
+
+export interface DashboardQuote {
+    id: string;
+    quote_text: string;
+    impact_level: string;
+    quote_type: string | null;
+    speaker_name: string | null;
+    legislator_id: string | null;
+    video_id: string | null;
+    video_title: string | null;
+    start_time: number | null;
+    created_at: string;
+}
+
+/**
+ * Get recent high-impact quotes for the dashboard with speaker and video info
+ */
+export async function getRecentHighImpactQuotes(limit: number = 5): Promise<DashboardQuote[]> {
+    // First get the quotes with segment info
+    const { data, error } = await supabase
+        .from('key_quotes')
+        .select(`
+            id,
+            quote_text,
+            impact_level,
+            quote_type,
+            legislator_id,
+            created_at,
+            segment:segment_id (
+                video_id,
+                start_time,
+                speaker_name
+            )
+        `)
+        .in('impact_level', ['critical', 'high'])
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+    if (error) {
+        console.error('Error fetching recent high-impact quotes:', error);
+        return [];
+    }
+
+    if (!data || data.length === 0) {
+        return [];
+    }
+
+    // Get video titles for each unique video_id
+    const videoIds = [...new Set(
+        data
+            .map((q: any) => q.segment?.video_id)
+            .filter(Boolean)
+    )];
+
+    let videoTitles: Map<string, string> = new Map();
+    if (videoIds.length > 0) {
+        const { data: videos } = await supabase
+            .from('video_transcriptions')
+            .select('video_id, title')
+            .in('video_id', videoIds);
+
+        if (videos) {
+            videos.forEach((v: any) => videoTitles.set(v.video_id, v.title));
+        }
+    }
+
+    // Get legislator names
+    const legislatorIds = [...new Set(
+        data
+            .map((q: any) => q.legislator_id)
+            .filter(Boolean)
+    )];
+
+    let legislatorNames: Map<string, string> = new Map();
+    if (legislatorIds.length > 0) {
+        const { data: legislators } = await supabase
+            .from('legislators')
+            .select('id, display_name')
+            .in('id', legislatorIds);
+
+        if (legislators) {
+            legislators.forEach((l: any) => legislatorNames.set(l.id, l.display_name));
+        }
+    }
+
+    return data.map((q: any) => ({
+        id: q.id,
+        quote_text: q.quote_text,
+        impact_level: q.impact_level,
+        quote_type: q.quote_type,
+        speaker_name: q.legislator_id
+            ? legislatorNames.get(q.legislator_id) || q.segment?.speaker_name || null
+            : q.segment?.speaker_name || null,
+        legislator_id: q.legislator_id,
+        video_id: q.segment?.video_id || null,
+        video_title: q.segment?.video_id ? videoTitles.get(q.segment.video_id) || null : null,
+        start_time: q.segment?.start_time || null,
+        created_at: q.created_at,
+    }));
+}

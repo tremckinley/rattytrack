@@ -1,20 +1,57 @@
 import TotalCard from "@/components/TotalCard"
+import DashboardSearch from "@/components/dashboard/DashboardSearch"
+import RecentMeetingsFeed from "@/components/dashboard/RecentMeetingsFeed"
+import UpcomingDocket from "@/components/dashboard/UpcomingDocket"
+import DashboardTopIssues from "@/components/dashboard/DashboardTopIssues"
+import DashboardQuotes from "@/components/dashboard/DashboardQuotes"
+import LegislatorQuickGlance from "@/components/dashboard/LegislatorQuickGlance"
+import VotingActivitySummary from "@/components/dashboard/VotingActivitySummary"
+import TopicTrendLines from "@/components/dashboard/TopicTrendLines"
+import WatchdogAlerts from "@/components/dashboard/WatchdogAlerts"
 
 import "./globals.css";
 import * as solidIcons from "@fortawesome/free-solid-svg-icons";
 import { getTotalTranscriptions, getTotalTrackedLegislators } from "@/lib/data/transcriptions";
-import { getTotalIssues } from "@/lib/data/issues";
+import { getTotalIssues, getTopIssuesOverall } from "@/lib/data/issues";
 import { getTotalHoursProcessed } from "@/lib/data/transcriptions";
+import { getRecentMeetings, getUpcomingMeetings } from "@/lib/data/meetings";
+import { getRecentHighImpactQuotes } from "@/lib/data/key-quotes";
+import { getOverallVotingActivity } from "@/lib/data/voting-records";
+import { getActiveLegislatorsWithStats } from "@/lib/data/legislators/legislator_card";
+import { getKeywordTrends } from "@/lib/data/dashboard";
 
 
 export default async function Dashboard() {
-    const totalVideos = await getTotalTranscriptions();
-    const totalLegislators = await getTotalTrackedLegislators();
-    const totalIssues = await getTotalIssues();
-    const totalHoursProcessed = await getTotalHoursProcessed();
+    // Fetch all dashboard data in parallel
+    const [
+        totalVideos,
+        totalLegislators,
+        totalIssues,
+        totalHoursProcessed,
+        recentMeetings,
+        upcomingMeetings,
+        topIssues,
+        quotes,
+        votingActivity,
+        legislators,
+        trends,
+    ] = await Promise.all([
+        getTotalTranscriptions(),
+        getTotalTrackedLegislators(),
+        getTotalIssues(),
+        getTotalHoursProcessed(),
+        getRecentMeetings(5),
+        getUpcomingMeetings(5),
+        getTopIssuesOverall(6),
+        getRecentHighImpactQuotes(5),
+        getOverallVotingActivity(),
+        getActiveLegislatorsWithStats(12),
+        getKeywordTrends(4),
+    ]);
 
     return (
         <div className="max-w-screen md:mx-24 mt-16">
+            {/* Banner + Stat Cards */}
             <section id="dashboard-banner" className="bg-rose-950 p-8 relative overflow-hidden shadow-solid">
                 <h1 className="text-4xl my-4 font-bold text-white">CAPYTRACK AI</h1>
                 <div className="grid grid-cols-2 w-fit lg:w-[70%] lg:flex">
@@ -25,10 +62,39 @@ export default async function Dashboard() {
                 </div>
                 <div className="absolute top-0 right-10 w-1/8 md:w-1/4 h-full bg-rose-900 transform -skew-x-12 translate-x-20 hidden xl:block opacity-50"></div>
             </section>
-            <section id="coming-soon" className="p-8">
-                <h2 className="text-2xl font-bold mb-4">Coming Soon</h2>
-                <p className="text-gray-600">Dashboard features below</p>
+
+            {/* Dashboard Search */}
+            <section className="mt-6 px-2 md:px-0">
+                <DashboardSearch />
             </section>
 
-        </div>)
+            {/* Recent Meetings + Upcoming Docket */}
+            <section className="mt-6 px-2 md:px-0 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <RecentMeetingsFeed meetings={recentMeetings} />
+                <UpcomingDocket meetings={upcomingMeetings} />
+            </section>
+
+            {/* Top Issues + Key Quotes */}
+            <section className="mt-6 px-2 md:px-0 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <DashboardTopIssues issues={topIssues} />
+                <DashboardQuotes quotes={quotes} />
+            </section>
+
+            {/* Topic Trend Lines */}
+            <section className="mt-6 px-2 md:px-0">
+                <TopicTrendLines trends={trends} />
+            </section>
+
+            {/* Legislator Quick Glance */}
+            <section className="mt-6 px-2 md:px-0">
+                <LegislatorQuickGlance legislators={legislators} />
+            </section>
+
+            {/* Voting Activity + Watchdog Alerts */}
+            <section className="mt-6 mb-12 px-2 md:px-0 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <VotingActivitySummary votingData={votingActivity} />
+                <WatchdogAlerts />
+            </section>
+        </div>
+    )
 }

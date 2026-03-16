@@ -23,7 +23,7 @@ async function check() {
             title: meeting.title,
             type: meeting.meeting_type,
             start: meeting.scheduled_start
-        },
+        },  
         documents: docs
     };
 
