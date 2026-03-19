@@ -4,7 +4,9 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Calendar, User, Clock, ChevronRight, Filter, X } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch, faCalendar, faUser, faClock, faChevronRight, faFilter, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { formatDate, formatTime } from '@/lib/utils/format';
 
 interface SearchResult {
     id: number;
@@ -99,40 +101,24 @@ function SearchContent() {
         router.push(`/search?${params.toString()}`);
     };
 
-    const formatTime = (seconds: number) => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
-        return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
 
-    const formatDate = (dateString: string | null) => {
-        if (!dateString) return 'Unknown Date';
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'Invalid Date';
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
-    };
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-12">
+        <div className="min-h-screen pb-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex flex-col md:flex-row gap-8">
                     {/* Sidebar Filters */}
                     <div className="w-full md:w-64 flex-shrink-0">
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
+                        <div className="card p-6 sticky top-24">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                    <Filter size={18} />
+                                    <FontAwesomeIcon icon={faFilter} className="text-lg" />
                                     Filters
                                 </h2>
                                 {(speakerId || startDate || endDate) && (
                                     <button
                                         onClick={clearFilters}
-                                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                        className="text-xs text-capyred hover:text-rose-800 font-medium"
                                     >
                                         Clear All
                                     </button>
@@ -145,7 +131,7 @@ function SearchContent() {
                                     <select
                                         value={speakerId}
                                         onChange={(e) => setSpeakerId(e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 text-black"
+                                        className="w-full border border-foreground text-sm focus:ring-capyred focus:border-capyred text-black"
                                     >
                                         <option value="">All Speakers</option>
                                         {legislators.map((leg) => (
@@ -162,7 +148,7 @@ function SearchContent() {
                                         type="date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full border border-foreground text-sm focus:ring-capyred focus:border-capyred"
                                     />
                                 </div>
 
@@ -172,13 +158,13 @@ function SearchContent() {
                                         type="date"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
-                                        className="w-full rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full border border-foreground text-sm focus:ring-capyred focus:border-capyred"
                                     />
                                 </div>
 
                                 <button
                                     type="submit"
-                                    className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                                    className="w-full bg-capyred text-white py-2 text-sm font-bold hover:bg-rose-900 transition-colors shadow-sm"
                                 >
                                     Apply Filters
                                 </button>
@@ -202,11 +188,11 @@ function SearchContent() {
                         {loading ? (
                             <div className="space-y-4">
                                 {[...Array(3)].map((_, i) => (
-                                    <div key={i} className="bg-white rounded-xl h-32 animate-pulse" />
+                                    <div key={i} className="card h-32 animate-pulse" />
                                 ))}
                             </div>
                         ) : error ? (
-                            <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-red-700">
+                            <div className="bg-red-50 border border-red-200 p-6 text-red-700">
                                 <p className="font-bold">Error</p>
                                 <p className="text-sm">{error}</p>
                             </div>
@@ -216,11 +202,11 @@ function SearchContent() {
                                     <Link
                                         key={result.id}
                                         href={`/meetings/${result.meetingId}?t=${Math.floor(result.startTime)}`}
-                                        className="block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:border-blue-300 hover:shadow-md transition-all group"
+                                        className="block card overflow-hidden hover:border-capyred hover:shadow-md transition-all group"
                                     >
                                         <div className="flex items-start p-5 gap-4">
                                             {result.thumbnailUrl && (
-                                                <div className="hidden sm:block flex-shrink-0 w-32 aspect-video relative rounded-lg overflow-hidden border border-gray-100">
+                                                <div className="hidden sm:block flex-shrink-0 w-32 aspect-video relative overflow-hidden border border-foreground">
                                                     <Image
                                                         src={result.thumbnailUrl}
                                                         alt={result.meetingTitle}
@@ -229,7 +215,7 @@ function SearchContent() {
                                                     />
                                                     <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                                                     <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1">
-                                                        <Clock size={10} />
+                                                        <FontAwesomeIcon icon={faClock} className="text-[10px]" />
                                                         {formatTime(result.startTime)}
                                                     </div>
                                                 </div>
@@ -237,12 +223,12 @@ function SearchContent() {
 
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-xs font-bold text-blue-600 uppercase tracking-wider truncate max-w-[200px]">
+                                                    <span className="text-xs font-bold text-capyred uppercase tracking-wider truncate max-w-[200px]">
                                                         {result.meetingTitle}
                                                     </span>
                                                     <span className="text-gray-300 text-xs">•</span>
                                                     <span className="text-xs text-gray-500 flex items-center gap-1">
-                                                        <Calendar size={12} />
+                                                        <FontAwesomeIcon icon={faCalendar} className="text-xs" />
                                                         {formatDate(result.publishedAt)}
                                                     </span>
                                                 </div>
@@ -254,16 +240,16 @@ function SearchContent() {
 
                                                 <div className="flex items-center justify-between mt-2">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                                            <User size={12} />
+                                                        <div className="w-6 h-6 rounded-full bg-rose-100 flex items-center justify-center text-capyred">
+                                                            <FontAwesomeIcon icon={faUser} className="text-xs" />
                                                         </div>
                                                         <span className="text-sm font-medium text-gray-700">
                                                             {result.speakerName || 'Unknown Speaker'}
                                                         </span>
                                                     </div>
-                                                    <div className="flex items-center text-xs font-bold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex items-center text-xs font-bold text-capyred opacity-0 group-hover:opacity-100 transition-opacity">
                                                         PLAY FROM HERE
-                                                        <ChevronRight size={14} />
+                                                        <FontAwesomeIcon icon={faChevronRight} className="text-sm" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -272,9 +258,9 @@ function SearchContent() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+                            <div className="card p-12 text-center">
                                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-                                    <Search size={32} />
+                                    <FontAwesomeIcon icon={faSearch} className="text-3xl" />
                                 </div>
                                 <h3 className="text-lg font-bold text-gray-900">No results found</h3>
                                 <p className="text-gray-500 mt-2 max-w-sm mx-auto">
@@ -282,7 +268,7 @@ function SearchContent() {
                                 </p>
                                 <button
                                     onClick={clearFilters}
-                                    className="mt-6 text-blue-600 font-bold hover:underline"
+                                    className="mt-6 text-capyred font-bold hover:underline"
                                 >
                                     Clear all filters
                                 </button>
@@ -299,7 +285,7 @@ export default function SearchPage() {
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-capyred"></div>
             </div>
         }>
             <SearchContent />

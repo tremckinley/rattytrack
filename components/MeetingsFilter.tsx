@@ -51,7 +51,7 @@ export default function MeetingsFilter({
     const hasFilters = type || from || to || attendee;
 
     return (
-        <div className="block bg-capyred text-white rounded-lg shadow-md p-6 mb-6">
+        <div className="block bg-capyred text-white shadow-md p-6 mb-6">
             <div className="flex flex-wrap gap-4">
                 {/* Meeting Type */}
                 <div className="flex-1 min-w-[200px]">
@@ -61,7 +61,7 @@ export default function MeetingsFilter({
                     <select
                         value={type}
                         onChange={(e) => setType(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-foreground focus:ring-2 focus:ring-rose-300 focus:border-transparent text-black"
                     >
                         <option value="">All Types</option>
                         {meetingTypes.map((t) => (
@@ -79,7 +79,7 @@ export default function MeetingsFilter({
                         type="date"
                         value={from}
                         onChange={(e) => setFrom(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-foreground focus:ring-2 focus:ring-rose-300 focus:border-transparent text-black"
                     />
                 </div>
 
@@ -92,7 +92,7 @@ export default function MeetingsFilter({
                         type="date"
                         value={to}
                         onChange={(e) => setTo(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-foreground focus:ring-2 focus:ring-rose-300 focus:border-transparent text-black"
                     />
                 </div>
 
@@ -104,7 +104,7 @@ export default function MeetingsFilter({
                     <select
                         value={attendee}
                         onChange={(e) => setAttendee(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-foreground focus:ring-2 focus:ring-rose-300 focus:border-transparent text-black"
                     >
                         <option value="">All Members</option>
                         {legislators.map((l) => (
@@ -118,14 +118,14 @@ export default function MeetingsFilter({
             <div className="flex gap-3 mt-4">
                 <button
                     onClick={applyFilters}
-                    className="px-4 py-2 border border-gray-300 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    className="px-4 py-2 border border-white bg-white text-capyred hover:bg-gray-100 transition-colors font-medium"
                 >
                     Apply Filters
                 </button>
                 {hasFilters && (
                     <button
                         onClick={clearFilters}
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                        className="px-4 py-2 border border-white text-white hover:bg-rose-900 transition-colors font-medium"
                     >
                         Clear Filters
                     </button>

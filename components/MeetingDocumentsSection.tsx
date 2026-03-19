@@ -32,7 +32,7 @@ export default function MeetingDocumentsSection({
 
     if (!hasContent) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="p-6">
                 <h3 className="font-semibold text-gray-900 mb-4">Meeting Documents</h3>
                 <p className="text-gray-500 text-sm">No documents available for this meeting.</p>
             </div>
@@ -50,7 +50,7 @@ export default function MeetingDocumentsSection({
     }, {} as Record<string, MeetingDocument[]>);
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="p-6">
             <h3 className="font-semibold text-gray-900 mb-4">Meeting Documents</h3>
 
             <div className="space-y-4">
@@ -113,7 +113,7 @@ function DocumentLink({ url, label, icon, size, pageCount }: DocumentLinkProps) 
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline text-sm group"
+            className="flex items-center gap-2 text-capyred hover:text-rose-800 hover:underline text-sm group"
         >
             {icon && <span>{icon}</span>}
             <span className="group-hover:underline">{label}</span>

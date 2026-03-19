@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Mic, Search, ChevronRight, Play, Loader2, CheckCircle, Clock } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMicrophone, faSearch, faChevronRight, faPlay, faSpinner, faCheckCircle, faClock } from '@fortawesome/free-solid-svg-icons';
 import Link from "next/link";
 
 interface PendingMeeting {
@@ -57,7 +58,7 @@ export default function TranscriptionHub() {
         <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
             <div className="p-4 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-base" />
                     <input
                         type="text"
                         placeholder="Search pending meetings..."
@@ -75,7 +76,7 @@ export default function TranscriptionHub() {
             <div className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
                 {loading ? (
                     <div className="p-12 text-center">
-                        <Loader2 className="animate-spin mx-auto text-rose-950 mb-2" size={24} />
+                        <FontAwesomeIcon icon={faSpinner} className="animate-spin text-rose-950 text-2xl mx-auto mb-2" />
                         <p className="text-sm text-gray-500">Loading pending meetings...</p>
                     </div>
                 ) : meetings.length > 0 ? (
@@ -85,14 +86,14 @@ export default function TranscriptionHub() {
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${meeting.status === 'transcribing' ? 'bg-blue-50 text-blue-600' :
                                         meeting.status === 'error' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-400'
                                     }`}>
-                                    {meeting.status === 'transcribing' ? <Loader2 className="animate-spin" size={18} /> :
-                                        meeting.status === 'error' ? <Mic size={18} /> : <Mic size={18} />}
+                                    {meeting.status === 'transcribing' ? <FontAwesomeIcon icon={faSpinner} className="animate-spin text-lg" /> :
+                                        meeting.status === 'error' ? <FontAwesomeIcon icon={faMicrophone} className="text-lg" /> : <FontAwesomeIcon icon={faMicrophone} className="text-lg" />}
                                 </div>
                                 <div className="min-w-0">
                                     <h4 className="text-sm font-bold text-gray-900 truncate border-none">{meeting.title}</h4>
                                     <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
                                         <span className="flex items-center gap-1 uppercase tracking-tight">
-                                            <Clock size={12} />
+                                            <FontAwesomeIcon icon={faClock} className="text-xs" />
                                             {new Date(meeting.date).toLocaleDateString()}
                                         </span>
                                         {meeting.status === 'transcribing' && (
@@ -112,13 +113,13 @@ export default function TranscriptionHub() {
                                         disabled={transcribing === meeting.id}
                                         className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-950 text-white rounded-lg text-xs font-bold hover:bg-rose-900 shadow-sm transition-all"
                                     >
-                                        <Play size={12} className="fill-current" />
+                                        <FontAwesomeIcon icon={faPlay} className="text-xs" />
                                         Transcribe
                                     </button>
                                 )}
                                 {meeting.status === 'completed' && (
                                     <span className="text-green-600 flex items-center gap-1 text-xs font-bold">
-                                        <CheckCircle size={14} />
+                                        <FontAwesomeIcon icon={faCheckCircle} className="text-sm" />
                                         READY
                                     </span>
                                 )}
@@ -126,14 +127,14 @@ export default function TranscriptionHub() {
                                     href={`/meetings/${meeting.id}`}
                                     className="p-1.5 text-gray-400 hover:text-rose-700 transition-colors"
                                 >
-                                    <ChevronRight size={18} />
+                                    <FontAwesomeIcon icon={faChevronRight} className="text-lg" />
                                 </Link>
                             </div>
                         </div>
                     ))
                 ) : (
                     <div className="p-12 text-center">
-                        <CheckCircle className="mx-auto text-green-500 mb-2" size={32} />
+                        <FontAwesomeIcon icon={faCheckCircle} className="mx-auto text-green-500 text-3xl mb-2" />
                         <p className="text-sm text-gray-800 font-bold">All meetings transcribed!</p>
                         <p className="text-xs text-gray-500 mt-1">Check back later or run "Populate Meetings" to find new ones.</p>
                     </div>

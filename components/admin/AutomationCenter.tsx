@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Play, RefreshCw, Database, Cpu, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay, faArrowsRotate, faDatabase, faMicrochip, faCheckCircle, faExclamationCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 interface AutomationTask {
     id: string;
@@ -16,21 +17,21 @@ const TASKS: AutomationTask[] = [
         id: "populate-meetings",
         name: "Populate Meetings",
         description: "Scrape council documents and populate the meetings table.",
-        icon: <Database size={18} />,
+        icon: <FontAwesomeIcon icon={faDatabase} className="text-lg" />,
         endpoint: "/api/admin/automate/populate-meetings",
     },
     {
         id: "update-stats",
         name: "Update Statistics",
         description: "Recompute legislator statistics and issue frequencies.",
-        icon: <RefreshCw size={18} />,
+        icon: <FontAwesomeIcon icon={faArrowsRotate} className="text-lg" />,
         endpoint: "/api/admin/automate/update-stats",
     },
     {
         id: "analyze-transcripts",
         name: "Analyze Transcripts",
         description: "Run the intelligence pipeline on all pending transcripts.",
-        icon: <Cpu size={18} />,
+        icon: <FontAwesomeIcon icon={faMicrochip} className="text-lg" />,
         endpoint: "/api/admin/automate/analyze-transcripts",
     },
 ];
@@ -73,7 +74,7 @@ export default function AutomationCenter() {
                     <div className="space-y-3">
                         {results[task.id] && (
                             <div className={`p-2 rounded text-xs flex items-center gap-2 ${results[task.id].success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-                                {results[task.id].success ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
+                                {results[task.id].success ? <FontAwesomeIcon icon={faCheckCircle} className="text-sm" /> : <FontAwesomeIcon icon={faExclamationCircle} className="text-sm" />}
                                 <span className="truncate">{results[task.id].message}</span>
                             </div>
                         )}
@@ -84,9 +85,9 @@ export default function AutomationCenter() {
                             className="w-full py-2 bg-rose-950 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-rose-900 transition-colors disabled:opacity-50"
                         >
                             {running === task.id ? (
-                                <Loader2 className="animate-spin" size={16} />
+                                <FontAwesomeIcon icon={faSpinner} className="animate-spin text-base" />
                             ) : (
-                                <Play size={14} className="fill-current" />
+                                <FontAwesomeIcon icon={faPlay} className="text-sm" />
                             )}
                             {running === task.id ? "Running..." : "Run Script"}
                         </button>

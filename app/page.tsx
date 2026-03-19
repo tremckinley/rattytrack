@@ -1,9 +1,9 @@
 import TotalCard from "@/components/TotalCard"
-import DashboardSearch from "@/components/dashboard/DashboardSearch"
+import SearchBar from "@/components/SearchBar"
 import RecentMeetingsFeed from "@/components/dashboard/RecentMeetingsFeed"
 import UpcomingDocket from "@/components/dashboard/UpcomingDocket"
-import DashboardTopIssues from "@/components/dashboard/DashboardTopIssues"
-import DashboardQuotes from "@/components/dashboard/DashboardQuotes"
+import IssueBarChart from "@/components/IssueBarChart"
+import QuotesList from "@/components/QuotesList"
 import LegislatorQuickGlance from "@/components/dashboard/LegislatorQuickGlance"
 import VotingActivitySummary from "@/components/dashboard/VotingActivitySummary"
 import TopicTrendLines from "@/components/dashboard/TopicTrendLines"
@@ -65,7 +65,7 @@ export default async function Dashboard() {
 
             {/* Dashboard Search */}
             <section className="mt-6 px-2 md:px-0">
-                <DashboardSearch />
+                <SearchBar variant="hero" />
             </section>
 
             {/* Recent Meetings + Upcoming Docket */}
@@ -76,8 +76,8 @@ export default async function Dashboard() {
 
             {/* Top Issues + Key Quotes */}
             <section className="mt-6 px-2 md:px-0 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <DashboardTopIssues issues={topIssues} />
-                <DashboardQuotes quotes={quotes} />
+                <IssueBarChart variant="compact" issues={topIssues} />
+                <QuotesList variant="dashboard" quotes={quotes} />
             </section>
 
             {/* Topic Trend Lines */}

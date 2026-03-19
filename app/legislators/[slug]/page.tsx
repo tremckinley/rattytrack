@@ -8,9 +8,8 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserPen, faArrowLeft, faCheckCircle, faXmarkCircle, faGavel } from "@fortawesome/free-solid-svg-icons";
 import UserIcon from "@/components/userIcon";
-import TopIssuesCard from "@/components/TopIssuesCard";
 import IssueSpeakingDashboard, { IssueCategory } from "@/components/IssueSpeakingDashboard";
-import KeyQuotesCard from "@/components/KeyQuotesCard";
+import QuotesList from "@/components/QuotesList";
 import VotingRecordsCard from "@/components/VotingRecordsCard";
 import AttendanceHeatmap from "@/components/AttendanceHeatmap";
 import { notFound } from "next/navigation";
@@ -162,7 +161,7 @@ export default async function LegislatorPage({ params }: Props) {
                         statements: [],
                     }))}
                 />
-                <KeyQuotesCard quotes={keyQuotes} maxQuotes={10} />
+                <QuotesList variant="profile" quotes={keyQuotes} maxQuotes={10} />
             </section>
 
         </main>

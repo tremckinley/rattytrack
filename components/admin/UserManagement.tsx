@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    Search, User as UserIcon, Mail, Shield,
-    CheckCircle, XCircle, Edit2,
-    MoreVertical, Loader2, Save, X,
-    Calendar, LogIn, UserPlus, Ban
-} from "lucide-react";
+    faSearch, faUser as faUserIcon, faEnvelope, faShieldHalved,
+    faCheckCircle, faTimesCircle, faPenToSquare,
+    faEllipsisVertical, faSpinner, faFloppyDisk, faXmark,
+    faCalendar, faRightToBracket, faUserPlus, faBan
+} from '@fortawesome/free-solid-svg-icons';
 import { User } from "@/types/User";
 
 export default function UserManagement() {
@@ -182,13 +183,13 @@ export default function UserManagement() {
                         }}
                         className="flex items-center gap-2 px-3 py-1.5 bg-rose-950 text-white rounded-lg text-xs font-bold hover:bg-rose-900 transition-colors"
                     >
-                        <UserPlus size={14} />
+                        <FontAwesomeIcon icon={faUserPlus} className="text-sm" />
                         Add User
                     </button>
                 </div>
 
                 <form onSubmit={handleSearch} className="relative w-full lg:w-96">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
                     <input
                         type="text"
                         placeholder="Search users..."
@@ -206,13 +207,13 @@ export default function UserManagement() {
                         <div className="bg-rose-950 p-6 text-white flex justify-between items-center">
                             <h3 className="text-xl font-bold border-none">Add New User</h3>
                             <button onClick={closeAddModal} className="hover:bg-white/10 p-1 rounded-full transition-colors">
-                                <X size={24} />
+                                <FontAwesomeIcon icon={faXmark} className="text-2xl" />
                             </button>
                         </div>
                         <form onSubmit={handleAddUser} className="p-6 space-y-4">
                             {modalError && (
                                 <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm flex items-center gap-2">
-                                    <XCircle size={16} />
+                                    <FontAwesomeIcon icon={faTimesCircle} className="text-base" />
                                     {modalError}
                                 </div>
                             )}
@@ -289,7 +290,7 @@ export default function UserManagement() {
                                     type="submit"
                                     className="w-full py-3 bg-rose-950 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-rose-900 transition-colors shadow-lg disabled:opacity-50"
                                 >
-                                    {saving ? <Loader2 size={20} className="animate-spin" /> : <UserPlus size={20} />}
+                                    {saving ? <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xl" /> : <FontAwesomeIcon icon={faUserPlus} className="text-xl" />}
                                     {saving ? "Creating User..." : "Create User"}
                                 </button>
                             </div>
@@ -313,7 +314,7 @@ export default function UserManagement() {
                         {loading ? (
                             <tr>
                                 <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                    <Loader2 className="animate-spin mx-auto mb-2" size={24} />
+                                     <FontAwesomeIcon icon={faSpinner} className="animate-spin text-2xl mx-auto mb-2" />
                                     Loading users...
                                 </td>
                             </tr>
@@ -337,7 +338,7 @@ export default function UserManagement() {
                                                     {user.username && <span className="ml-2 text-xs font-normal text-gray-500">@{user.username}</span>}
                                                 </div>
                                                 <div className="text-xs text-gray-500 flex items-center gap-1">
-                                                    <Mail size={12} />
+                                                     <FontAwesomeIcon icon={faEnvelope} className="text-xs" />
                                                     {user.email}
                                                 </div>
                                             </div>
@@ -368,11 +369,11 @@ export default function UserManagement() {
                                             <div className="flex items-center gap-2">
                                                 {user.is_active ? (
                                                     <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
-                                                        <CheckCircle size={12} /> Active
+                                                         <FontAwesomeIcon icon={faCheckCircle} className="text-xs" /> Active
                                                     </span>
                                                 ) : (
                                                     <span className="flex items-center gap-1 text-xs text-red-600 font-medium">
-                                                        <XCircle size={12} /> Inactive
+                                                         <FontAwesomeIcon icon={faTimesCircle} className="text-xs" /> Inactive
                                                     </span>
                                                 )}
                                             </div>
@@ -394,11 +395,11 @@ export default function UserManagement() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="text-xs text-gray-600 flex items-center gap-1">
-                                            <LogIn size={12} />
+                                             <FontAwesomeIcon icon={faRightToBracket} className="text-xs" />
                                             {formatDate(user.last_login_at)}
                                         </div>
                                         <div className="text-[10px] text-gray-400 flex items-center gap-1 mt-1">
-                                            <Calendar size={10} />
+                                             <FontAwesomeIcon icon={faCalendar} className="text-[10px]" />
                                             Joined {formatDate(user.created_at)}
                                         </div>
                                     </td>
@@ -411,14 +412,14 @@ export default function UserManagement() {
                                                     className="p-1.5 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
                                                     title="Save"
                                                 >
-                                                    {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                                     {saving ? <FontAwesomeIcon icon={faSpinner} className="animate-spin text-base" /> : <FontAwesomeIcon icon={faFloppyDisk} className="text-base" />}
                                                 </button>
                                                 <button
                                                     onClick={cancelEditing}
                                                     className="p-1.5 bg-gray-200 text-gray-600 rounded hover:bg-gray-300"
                                                     title="Cancel"
                                                 >
-                                                    <X size={16} />
+                                                     <FontAwesomeIcon icon={faXmark} className="text-base" />
                                                 </button>
                                             </div>
                                         ) : (
@@ -430,14 +431,14 @@ export default function UserManagement() {
                                                         : 'text-green-400 hover:text-green-600 hover:bg-green-50'}`}
                                                     title={user.is_active ? "Suspend User" : "Activate User"}
                                                 >
-                                                    <Ban size={18} />
+                                                     <FontAwesomeIcon icon={faBan} className="text-lg" />
                                                 </button>
                                                 <button
                                                     onClick={() => startEditing(user)}
                                                     className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
                                                     title="Edit User"
                                                 >
-                                                    <Edit2 size={18} />
+                                                     <FontAwesomeIcon icon={faPenToSquare} className="text-lg" />
                                                 </button>
                                             </div>
                                         )}

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { resetPasswordForEmail } from "@/app/auth/actions";
 import Link from "next/link";
-import { Mail, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEnvelope, faExclamationCircle, faSpinner, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 export default function ForgotPasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
@@ -13,7 +14,7 @@ export default function ForgotPasswordPage() {
             <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-xl border border-gray-100">
                 <div className="flex items-center gap-2 mb-2">
                     <Link href="/login" className="text-gray-400 hover:text-rose-950 transition-colors">
-                        <ArrowLeft size={20} />
+                        <FontAwesomeIcon icon={faArrowLeft} className="text-xl" />
                     </Link>
                 </div>
 
@@ -32,7 +33,7 @@ export default function ForgotPasswordPage() {
                     <div>
                         <label className="font-semibold text-gray-700 mb-1">Email Address</label>
                         <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                            <FontAwesomeIcon icon={faEnvelope} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
                             <input
                                 id="email"
                                 name="email"
@@ -49,7 +50,7 @@ export default function ForgotPasswordPage() {
                         disabled={isLoading}
                         className="w-full py-3 px-4 bg-rose-950 hover:bg-rose-900 text-white font-bold rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
                     >
-                        {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Send Reset Link"}
+                        {isLoading ? <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xl" /> : "Send Reset Link"}
                     </button>
                 </form>
 

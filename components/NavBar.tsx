@@ -6,7 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/utils/supabase/client";
 import { signOut, getIsAdminAction } from "@/app/auth/actions";
-import { LogOut, Shield, User } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser } from '@fortawesome/free-solid-svg-icons';
 
 const navLinks: { name: string; href: string }[] = [
   { name: "Dashboard", href: "/" },
@@ -15,7 +16,7 @@ const navLinks: { name: string; href: string }[] = [
   // { name: "YouTube", href: "/youtube" }
 ];
 
-import GlobalSearch from "./GlobalSearch";
+import SearchBar from "./SearchBar";
 import UserMenu from "./UserMenu";
 
 export default function NavBar() {
@@ -110,7 +111,7 @@ export default function NavBar() {
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-4">
-        {user && <GlobalSearch />}
+        {user && <SearchBar variant="compact" />}
 
         {user ? (
           <UserMenu user={user} isAdmin={isAdmin} />
@@ -119,7 +120,7 @@ export default function NavBar() {
             href="/login"
             className="px-4 py-1.5 min-w-fit bg-rose-950 text-white rounded-full text-xs hover:bg-rose-900 transition-colors flex items-center gap-2"
           >
-            <User size={16} />
+            <FontAwesomeIcon icon={faUser} className="text-base" />
             Sign In
           </Link>
         )}

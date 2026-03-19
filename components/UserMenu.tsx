@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { User, LogOut, Shield, Key, ChevronDown, Settings } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser, faRightFromBracket, faShieldHalved, faKey, faChevronDown, faGear } from '@fortawesome/free-solid-svg-icons';
 import { signOut } from "@/app/auth/actions";
 
 interface UserMenuProps {
@@ -34,11 +35,11 @@ export default function UserMenu({ user, isAdmin }: UserMenuProps) {
                 className="flex items-center gap-2 pl-3 pr-2 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full transition-all group"
             >
                 <div className="w-7 h-7 bg-rose-950 text-white rounded-full flex items-center justify-center">
-                    <User size={16} />
+                    <FontAwesomeIcon icon={faUser} className="text-sm" />
                 </div>
-                <ChevronDown
-                    size={14}
-                    className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                <FontAwesomeIcon
+                    icon={faChevronDown}
+                    className={`text-xs text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
                 />
             </button>
 
@@ -57,7 +58,7 @@ export default function UserMenu({ user, isAdmin }: UserMenuProps) {
                                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-rose-50 hover:text-rose-700 transition-colors"
                             >
                                 <div className="p-1.5 bg-rose-50 text-rose-700 rounded-lg">
-                                    <Shield size={16} />
+                                    <FontAwesomeIcon icon={faShieldHalved} className="text-base" />
                                 </div>
                                 <span className="font-semibold">Admin Dashboard</span>
                             </Link>
@@ -69,14 +70,14 @@ export default function UserMenu({ user, isAdmin }: UserMenuProps) {
                             className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                             <div className="p-1.5 bg-gray-100 text-gray-600 rounded-lg">
-                                <Key size={16} />
+                                <FontAwesomeIcon icon={faKey} className="text-base" />
                             </div>
                             <span className="font-semibold">Change Password</span>
                         </Link>
 
                         <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 cursor-not-allowed opacity-50">
                             <div className="p-1.5 bg-gray-100 rounded-lg">
-                                <Settings size={16} />
+                                <FontAwesomeIcon icon={faGear} className="text-base" />
                             </div>
                             <span className="font-semibold">Settings (Soon)</span>
                         </div>
@@ -91,7 +92,7 @@ export default function UserMenu({ user, isAdmin }: UserMenuProps) {
                             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                         >
                             <div className="p-1.5 bg-red-50 text-red-600 rounded-lg">
-                                <LogOut size={16} />
+                                <FontAwesomeIcon icon={faRightFromBracket} className="text-base" />
                             </div>
                             <span className="font-bold">Sign Out</span>
                         </button>

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { login } from "@/app/auth/actions";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLock, faEnvelope, faExclamationCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 export default function LoginPage() {
     const searchParams = useSearchParams();
@@ -14,22 +15,22 @@ export default function LoginPage() {
 
     return (
         <div className="flex items-center justify-center min-h-[70vh]">
-            <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-xl border border-gray-100">
+            <div className="w-full max-w-md p-8 space-y-6 bg-white shadow-xl border border-foreground">
                 <div className="text-center">
                     <h1 className="text-3xl font-extrabold text-rose-950">Welcome</h1>
                     <p className="mt-2 text-gray-500">Sign in to your CapyTrack account</p>
                 </div>
 
                 {error && (
-                    <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-                        <AlertCircle size={16} />
+                    <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 flex items-center gap-2">
+                        <FontAwesomeIcon icon={faExclamationCircle} className="text-base" />
                         {error}
                     </div>
                 )}
 
                 {message && (
-                    <div className="p-3 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
-                        <AlertCircle size={16} />
+                    <div className="p-3 text-sm text-blue-700 bg-blue-50 border border-blue-200 flex items-center gap-2">
+                        <FontAwesomeIcon icon={faExclamationCircle} className="text-base" />
                         {message}
                     </div>
                 )}
@@ -45,13 +46,13 @@ export default function LoginPage() {
                     <div>
                         <label className="font-semibold text-gray-700">Email Address</label>
                         <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                            <FontAwesomeIcon icon={faEnvelope} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
                             <input
                                 id="email"
                                 name="email"
                                 type="email"
                                 required
-                                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all text-black"
+                                className="w-full pl-10 pr-4 py-2 border border-foreground focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all text-black"
                                 placeholder="you@example.com"
                             />
                         </div>
@@ -65,7 +66,7 @@ export default function LoginPage() {
                             </Link>
                         </div>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                            <FontAwesomeIcon icon={faLock} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
                             <input
                                 id="password"
                                 name="password"
@@ -80,9 +81,9 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full py-3 px-4 bg-rose-950 hover:bg-rose-900 text-white font-bold rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                        className="w-full py-3 px-4 bg-rose-950 hover:bg-rose-900 text-white font-bold transition-colors shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
                     >
-                        {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Sign In"}
+                        {isLoading ? <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xl" /> : "Sign In"}
                     </button>
                 </form>
 

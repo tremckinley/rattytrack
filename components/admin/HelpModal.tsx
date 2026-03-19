@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, HelpCircle, Database, RefreshCw, Cpu, Mic, Shield } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark, faQuestionCircle, faDatabase, faArrowsRotate, faMicrochip, faMicrophone, faShieldHalved } from '@fortawesome/free-solid-svg-icons';
 
 export default function HelpModal() {
     const [isOpen, setIsOpen] = useState(false);
@@ -13,7 +14,7 @@ export default function HelpModal() {
                 className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-bold transition-colors"
                 title="Help & Documentation"
             >
-                <HelpCircle size={18} />
+                <FontAwesomeIcon icon={faQuestionCircle} className="text-lg" />
                 Documentation
             </button>
         );
@@ -25,14 +26,14 @@ export default function HelpModal() {
                 {/* Header */}
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-rose-950 text-white">
                     <div className="flex items-center gap-3">
-                        <Shield size={24} />
+                        <FontAwesomeIcon icon={faShieldHalved} className="text-2xl" />
                         <h2 className="text-xl font-bold border-none">Admin Guide</h2>
                     </div>
                     <button
                         onClick={() => setIsOpen(false)}
                         className="p-1 hover:bg-rose-900 rounded-lg transition-colors"
                     >
-                        <X size={24} />
+                        <FontAwesomeIcon icon={faXmark} className="text-2xl" />
                     </button>
                 </div>
 
@@ -40,7 +41,7 @@ export default function HelpModal() {
                 <div className="p-8 overflow-y-auto space-y-8 text-black">
                     <section>
                         <h3 className="text-lg font-bold text-rose-950 mb-3 flex items-center gap-2 border-none">
-                            <Database size={20} />
+                            <FontAwesomeIcon icon={faDatabase} className="text-xl" />
                             Automation Center
                         </h3>
                         <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
@@ -58,7 +59,7 @@ export default function HelpModal() {
 
                     <section>
                         <h3 className="text-lg font-bold text-rose-950 mb-3 flex items-center gap-2 border-none">
-                            <Mic size={20} />
+                            <FontAwesomeIcon icon={faMicrophone} className="text-xl" />
                             Transcription Hub
                         </h3>
                         <div className="space-y-4 text-sm text-gray-600 leading-relaxed">

@@ -85,13 +85,13 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
+        <div className="min-h-screen pb-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Breadcrumbs */}
                 <div className="mb-6">
                     <Link
                         href="/meetings"
-                        className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
+                        className="text-capyred hover:text-rose-800 font-medium flex items-center gap-2"
                     >
                         <span>←</span> Back to Meetings
                     </Link>
@@ -119,8 +119,8 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
                     <div className="lg:col-span-3 space-y-8">
                         {/* Transcript Player - Primary Focus */}
                         {transcription?.status === 'completed' && meeting.video_id ? (
-                            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                                <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white">
+                            <div className="card overflow-hidden">
+                                <div className="p-4 border-b border-foreground flex items-center justify-between bg-white">
                                     <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                                         📺 Interactive Meeting Player
                                     </h2>
@@ -139,14 +139,14 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
                         ) : (
                             /* Fallback Video Player if no transcript */
                             meeting.video_id && (
-                                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                                <div className="card overflow-hidden">
                                     <MeetingVideoSection
                                         videoId={meeting.video_id}
                                         videoUrl={meeting.video_url}
                                         title={meeting.title}
                                     />
                                     {!hasTranscript && (
-                                        <div className="p-6 bg-gray-50 border-t border-gray-100 italic text-gray-500 text-sm">
+                                        <div className="p-6 bg-gray-50 border-t border-foreground italic text-gray-500 text-sm">
                                             Transcript is not yet available for this meeting.
                                         </div>
                                     )}
@@ -156,7 +156,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
 
                         {/* Speaker Identification / Mapper */}
                         {transcription?.status === 'completed' && speakerLabels.length > 0 && meeting.video_id && (
-                            <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                            <div className="card overflow-hidden">
                                 <SpeakerMapperWrapper
                                     videoId={meeting.video_id}
                                     speakerLabels={speakerLabels}
@@ -167,7 +167,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
 
                         {/* Voting Section */}
                         {transcription?.status === 'completed' && agendaItems.some(item => item.vote_result) && (
-                            <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                            <div className="card overflow-hidden">
                                 <VotingSummary
                                     agendaItems={agendaItems}
                                     legislators={legislators.map(l => ({ id: l.id, display_name: l.display_name }))}
@@ -179,7 +179,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
                     {/* Sidebar Area (25%) */}
                     <div className="lg:col-span-1 space-y-6">
                         {/* Documents Section */}
-                        <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                        <div className="card overflow-hidden">
                             <MeetingDocumentsSection
                                 documents={documents}
                                 agendaUrl={meeting.agenda_url}
@@ -189,29 +189,29 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
 
                         {/* Attendees Section */}
                         {attendees.length > 0 && (
-                            <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                            <div className="card overflow-hidden">
                                 <MeetingAttendeesSection attendees={attendees} />
                             </div>
                         )}
 
                         {/* Quick Insight (Placeholder/Stats) */}
                         {transcription?.status === 'completed' && (
-                            <div className="bg-indigo-600 rounded-xl shadow-lg p-5 text-white">
+                            <div className="bg-capyred shadow-lg p-5 text-white">
                                 <h3 className="font-bold flex items-center gap-2 mb-3">
                                     <span>🧠</span> Meeting Stats
                                 </h3>
                                 <div className="space-y-3 text-sm">
-                                    <div className="flex justify-between border-b border-indigo-500 pb-2">
+                                    <div className="flex justify-between border-b border-rose-800 pb-2">
                                         <span className="opacity-80">Duration</span>
-                                        <span className="font-mono text-indigo-100">{Math.round((meeting.video_duration_seconds || 0) / 60)} mins</span>
+                                        <span className="font-mono text-rose-200">{Math.round((meeting.video_duration_seconds || 0) / 60)} mins</span>
                                     </div>
                                     <div className="flex justify-between border-b border-indigo-500 pb-2">
                                         <span className="opacity-80">Topics</span>
-                                        <span className="font-mono text-indigo-100">{issueMetrics.length} detected</span>
+                                        <span className="font-mono text-rose-200">{issueMetrics.length} detected</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="opacity-80">Speakers</span>
-                                        <span className="font-mono text-indigo-100">{speakerLabels.length} identified</span>
+                                        <span className="font-mono text-rose-200">{speakerLabels.length} identified</span>
                                     </div>
                                 </div>
                             </div>
@@ -234,7 +234,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
 
                 {/* No Video Message */}
                 {!meeting.video_id && (
-                    <div className="bg-white border border-gray-200 rounded-xl p-8 text-center shadow-md">
+                    <div className="card p-8 text-center">
                         <div className="text-4xl mb-4 text-gray-300">📹</div>
                         <h3 className="font-bold text-xl text-gray-900 mb-2">No Video Available</h3>
                         <p className="text-gray-600 max-w-md mx-auto">

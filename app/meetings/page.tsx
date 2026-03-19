@@ -4,6 +4,7 @@
 import { getMeetings, getMeetingTypes, getLegislatorsForFilter } from '@/lib/data/meetings';
 import Link from 'next/link';
 import MeetingsFilter from '@/components/MeetingsFilter';
+import { formatDate } from '@/lib/utils/format';
 
 interface PageProps {
     searchParams: Promise<{
@@ -15,19 +16,7 @@ interface PageProps {
     }>;
 }
 
-/**
- * Format date for display
- */
-function formatDate(dateString: string | null): string {
-    if (!dateString) return 'Date TBD';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    });
-}
+
 
 export default async function MeetingsPage({ searchParams }: PageProps) {
     const params = await searchParams;
@@ -53,13 +42,13 @@ export default async function MeetingsPage({ searchParams }: PageProps) {
     const totalPages = Math.ceil(total / 20);
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {/* Header */}
                 <div className="mb-8">
                     <Link
                         href="/"
-                        className="text-blue-600 hover:text-blue-700 font-medium mb-4 inline-block"
+                        className="text-capyred hover:text-rose-800 font-medium mb-4 inline-block"
                     >
                         ← Back to Dashboard
                     </Link>
@@ -95,7 +84,7 @@ export default async function MeetingsPage({ searchParams }: PageProps) {
                             <Link
                                 key={meeting.id}
                                 href={`/meetings/${meeting.id}`}
-                                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow block"
+                                className="card p-6 hover:shadow-lg transition-shadow block"
                             >
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                     {/* Meeting Info */}
@@ -138,11 +127,11 @@ export default async function MeetingsPage({ searchParams }: PageProps) {
                         ))}
                     </div>
                 ) : (
-                    <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                    <div className="card p-8 text-center">
                         <p className="text-gray-600">No meetings found matching your filters.</p>
                         <Link
                             href="/meetings"
-                            className="text-blue-600 hover:underline mt-2 inline-block"
+                            className="text-capyred hover:underline mt-2 inline-block"
                         >
                             Clear filters
                         </Link>
@@ -155,7 +144,7 @@ export default async function MeetingsPage({ searchParams }: PageProps) {
                         {currentPage > 1 && (
                             <Link
                                 href={buildFilterUrl(params, currentPage - 1)}
-                                className="px-4 py-2 bg-white rounded-lg shadow hover:bg-gray-50"
+                                className="px-4 py-2 card hover:bg-gray-50"
                             >
                                 Previous
                             </Link>

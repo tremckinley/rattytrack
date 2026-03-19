@@ -3,7 +3,8 @@ import AutomationCenter from "@/components/admin/AutomationCenter";
 import TranscriptionHub from "@/components/admin/TranscriptionHub";
 import UserManagement from "@/components/admin/UserManagement";
 import HelpModal from "@/components/admin/HelpModal";
-import { Shield, Zap, FileText, Settings, Users } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faShieldHalved, faBolt, faFileAlt, faGear, faUsers } from '@fortawesome/free-solid-svg-icons';
 
 export default async function AdminPage() {
     const supabase = await createClient();
@@ -15,7 +16,7 @@ export default async function AdminPage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-rose-950 text-white rounded-xl shadow-lg">
-                            <Shield size={32} />
+                            <FontAwesomeIcon icon={faShieldHalved} className="text-3xl" />
                         </div>
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 border-none">Admin Dashboard</h1>
@@ -32,7 +33,7 @@ export default async function AdminPage() {
                     <div className="lg:col-span-2 space-y-8">
                         <section>
                             <div className="flex items-center gap-2 mb-4 text-rose-950">
-                                <Zap size={20} className="fill-current" />
+                                <FontAwesomeIcon icon={faBolt} className="text-xl" />
                                 <h2 className="text-xl font-bold border-none">Automation Center</h2>
                             </div>
                             <AutomationCenter />
@@ -40,7 +41,7 @@ export default async function AdminPage() {
 
                         <section>
                             <div className="flex items-center gap-2 mb-4 text-rose-950">
-                                <Users size={20} className="fill-current" />
+                                <FontAwesomeIcon icon={faUsers} className="text-xl" />
                                 <h2 className="text-xl font-bold border-none">User Management</h2>
                             </div>
                             <UserManagement />
@@ -48,7 +49,7 @@ export default async function AdminPage() {
 
                         <section>
                             <div className="flex items-center gap-2 mb-4 text-rose-950">
-                                <FileText size={20} className="fill-current" />
+                                <FontAwesomeIcon icon={faFileAlt} className="text-xl" />
                                 <h2 className="text-xl font-bold border-none">Transcription Hub</h2>
                             </div>
                             <TranscriptionHub />
@@ -59,7 +60,7 @@ export default async function AdminPage() {
                     <div className="space-y-6">
                         <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 border-none">
-                                <Settings size={18} />
+                                <FontAwesomeIcon icon={faGear} className="text-lg" />
                                 System Status
                             </h3>
                             <div className="space-y-4">

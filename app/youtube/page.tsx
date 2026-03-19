@@ -3,33 +3,11 @@
 
 import { fetchLatestVideos } from '@/lib/data/youtube';
 import { getTranscription } from '@/lib/data/transcriptions';
-import YouTubeTranscribeButton from '@/components/YouTubeTranscribeButton';
+import TranscribeButton from '@/components/TranscribeButton';
 import Link from 'next/link';
+import { formatDuration, formatDate } from '@/lib/utils/format';
 
-/**
- * Format duration from seconds to readable format (e.g., "1h 23m")
- */
-function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
 
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-  return `${minutes}m`;
-}
-
-/**
- * Format date to readable format
- */
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
 
 export default async function YouTubePage() {
   let videos;
@@ -61,13 +39,13 @@ export default async function YouTubePage() {
           <div className="flex justify-between items-center">
           <Link
             href="/"
-            className="text-blue-600 hover:text-blue-700 font-medium mb-4 inline-block"
+            className="text-capyred hover:text-rose-800 font-medium mb-4 inline-block"
           >
             ← Back to Dashboard
           </Link>
           <Link 
             href="/uploads" 
-            className="text-blue-600 hover:text-blue-700 font-medium mb-4 inline-block"
+            className="text-capyred hover:text-rose-800 font-medium mb-4 inline-block"
           >
             Upload Video ↑
           </Link>
@@ -82,7 +60,7 @@ export default async function YouTubePage() {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="card p-4 mb-6">
             <p className="text-red-800">
               <strong>Error:</strong> {error}
             </p>
@@ -98,7 +76,7 @@ export default async function YouTubePage() {
             {videosWithStatus.map((video) => (
               <div
                 key={video.videoId}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                className="card overflow-hidden hover:shadow-lg transition-shadow"
               >
                 <div className="flex flex-col md:flex-row">
                   {/* Thumbnail */}
@@ -145,11 +123,11 @@ export default async function YouTubePage() {
                         href={`https://www.youtube.com/watch?v=${video.videoId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="h-fit px-4 py-2 border border-gray-300 text-white rounded-lg bg-[#FF0000] hover:bg-[#FF5555] hover:text-gray-50 transition-colors font-medium"
+                        className="h-fit px-4 py-2 border border-foreground text-white bg-[#FF0000] hover:bg-[#FF5555] hover:text-gray-50 transition-colors font-medium"
                       >
                         Watch on YouTube
                       </a>
-                      <YouTubeTranscribeButton
+                      <TranscribeButton
                         videoId={video.videoId}
                         initialStatus={video.transcriptionStatus}
                       />
@@ -161,18 +139,18 @@ export default async function YouTubePage() {
           </div>
         ) : (
           !error && (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <div className="card p-8 text-center">
               <p className="text-gray-600">Loading videos...</p>
             </div>
           )
         )}
 
         {/* Info Box */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-semibold text-blue-900 mb-2">
+        <div className="mt-8 card p-6">
+          <h3 className="font-semibold text-capyred mb-2">
             About Transcriptions
           </h3>
-          <ul className="text-sm text-blue-800 space-y-1">
+          <ul className="text-sm text-foreground space-y-1">
             <li>• Transcripts are shared across all users - no duplicate work!</li>
             <li>• Processing can take several minutes for long videos</li>
             <li>• Transcripts include timestamps for easy navigation</li>

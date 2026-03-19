@@ -38,26 +38,26 @@ function formatTime(dateString: string | null): string {
 
 export default function MeetingHeader({ meeting, hasTranscript, hasDocuments }: MeetingHeaderProps) {
     return (
-        <div className="bg-rose-950 text-white shadow-lg rounded-lg p-6 mb-6">
+        <div className="bg-rose-950 text-white shadow-lg p-6 mb-6">
             {/* Meeting Type Badge */}
             <div className="flex flex-wrap gap-2 mb-3">
-                <span className="px-3 py-1 bg-rose-800 text-white text-sm font-medium rounded-full">
+                <span className="px-3 py-1 bg-rose-800 text-white text-sm font-medium">
                     {meeting.meeting_type}
                 </span>
 
                 {/* Status Badges */}
                 {meeting.video_id && (
-                    <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
+                    <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium">
                         📹 Video
                     </span>
                 )}
                 {hasTranscript && (
-                    <span className="px-3 py-1 bg-green-600 text-white text-sm font-medium rounded-full">
+                    <span className="px-3 py-1 bg-green-600 text-white text-sm font-medium">
                         📝 Transcribed
                     </span>
                 )}
                 {hasDocuments && (
-                    <span className="px-3 py-1 bg-purple-600 text-white text-sm font-medium rounded-full">
+                    <span className="px-3 py-1 bg-purple-600 text-white text-sm font-medium">
                         📄 Documents
                     </span>
                 )}

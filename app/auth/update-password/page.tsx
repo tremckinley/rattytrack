@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { updatePassword } from "@/app/auth/actions";
 import { useSearchParams } from "next/navigation";
-import { Lock, AlertCircle, Loader2 } from "lucide-react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLock, faExclamationCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 export default function UpdatePasswordPage() {
     const searchParams = useSearchParams();
@@ -20,7 +21,7 @@ export default function UpdatePasswordPage() {
 
                 {error && (
                     <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-                        <AlertCircle size={16} />
+                        <FontAwesomeIcon icon={faExclamationCircle} className="text-base" />
                         {error}
                     </div>
                 )}
@@ -35,7 +36,7 @@ export default function UpdatePasswordPage() {
                     <div>
                         <label className="font-semibold text-gray-700 mb-1">New Password</label>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                            <FontAwesomeIcon icon={faLock} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
                             <input
                                 id="password"
                                 name="password"
@@ -54,7 +55,7 @@ export default function UpdatePasswordPage() {
                         disabled={isLoading}
                         className="w-full py-3 px-4 bg-rose-950 hover:bg-rose-900 text-white font-bold rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
                     >
-                        {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Update Password"}
+                        {isLoading ? <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xl" /> : "Update Password"}
                     </button>
                 </form>
             </div>

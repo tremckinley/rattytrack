@@ -38,7 +38,7 @@ export default function MeetingAttendeesSection({ attendees }: MeetingAttendeesS
     const presentCount = attendees.filter(a => a.attendance_status === 'present' || a.attendance_status === 'late').length;
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="p-6">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">Attendance</h3>
                 <span className="text-sm text-gray-600">
@@ -72,7 +72,7 @@ export default function MeetingAttendeesSection({ attendees }: MeetingAttendeesS
                                     {attendee.legislator ? (
                                         <Link
                                             href={`/legislators/${attendee.legislator_id}`}
-                                            className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                                            className="text-sm font-medium text-gray-900 hover:text-capyred"
                                         >
                                             {attendee.legislator.display_name}
                                         </Link>
