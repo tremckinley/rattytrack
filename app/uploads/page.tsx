@@ -1,5 +1,5 @@
-import VideoTranscriber from '@/components/VideoTranscriber';
-import SavedTranscripts from '@/components/SavedTranscripts';
+import VideoTranscriber from '@/components/transcripts/VideoTranscriber';
+import SavedTranscripts from '@/components/transcripts/SavedTranscripts';
 import { getCompletedUploadedMeetings } from '@/lib/data/uploaded_meetings';
 
 export default async function MeetingsPage() {

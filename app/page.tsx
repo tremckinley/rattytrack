@@ -1,9 +1,9 @@
-import TotalCard from "@/components/TotalCard"
-import SearchBar from "@/components/SearchBar"
+import TotalCard from "@/components/dashboard/TotalCard"
+import SearchBar from "@/components/layout/SearchBar"
 import RecentMeetingsFeed from "@/components/dashboard/RecentMeetingsFeed"
 import UpcomingDocket from "@/components/dashboard/UpcomingDocket"
-import IssueBarChart from "@/components/IssueBarChart"
-import QuotesList from "@/components/QuotesList"
+import IssueBarChart from "@/components/charts/IssueBarChart"
+import QuotesList from "@/components/dashboard/QuotesList"
 import LegislatorQuickGlance from "@/components/dashboard/LegislatorQuickGlance"
 import VotingActivitySummary from "@/components/dashboard/VotingActivitySummary"
 import TopicTrendLines from "@/components/dashboard/TopicTrendLines"
@@ -19,7 +19,7 @@ import { getRecentHighImpactQuotes } from "@/lib/data/key-quotes";
 import { getOverallVotingActivity } from "@/lib/data/voting-records";
 import { getActiveLegislatorsWithStats } from "@/lib/data/legislators/legislator_card";
 import { getKeywordTrends } from "@/lib/data/dashboard";
-
+import Image from "next/image";
 
 export default async function Dashboard() {
     // Fetch all dashboard data in parallel
@@ -51,7 +51,7 @@ export default async function Dashboard() {
 
     return (
         <div className="max-w-screen md:mx-24 mt-16">
-            {/* Banner + Stat Cards */}
+            {/* Banner + Stat Cards
             <section id="dashboard-banner" className="bg-rose-950 p-8 relative overflow-hidden shadow-solid">
                 <h1 className="text-4xl my-4 font-bold text-white">CAPYTRACK AI</h1>
                 <div className="grid grid-cols-2 w-fit lg:w-[70%] lg:flex">
@@ -61,7 +61,20 @@ export default async function Dashboard() {
                     <TotalCard title="Hours Processed" total={totalHoursProcessed} icon={solidIcons.faClock} />
                 </div>
                 <div className="absolute top-0 right-10 w-1/8 md:w-1/4 h-full bg-rose-900 transform -skew-x-12 translate-x-20 hidden xl:block opacity-50"></div>
-            </section>
+            </section> */}
+
+            {/* CapyTrack Logo */}
+            <div className="flex items-center gap-2 justify-center">
+            <Image
+                        src="/burgundy_logo.png"
+                        alt="capytrack logo"
+                        width={100}
+                        height={50}
+                        className="w-12 md:w-16 h-auto"
+                        priority
+                      />
+                      <span className="font-extrabold text-xl">CapyTrackAI</span>
+                      </div>
 
             {/* Dashboard Search */}
             <section className="mt-6 px-2 md:px-0">

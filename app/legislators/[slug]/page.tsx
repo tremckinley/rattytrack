@@ -7,11 +7,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserPen, faArrowLeft, faCheckCircle, faXmarkCircle, faGavel } from "@fortawesome/free-solid-svg-icons";
-import UserIcon from "@/components/userIcon";
-import IssueSpeakingDashboard, { IssueCategory } from "@/components/IssueSpeakingDashboard";
-import QuotesList from "@/components/QuotesList";
-import VotingRecordsCard from "@/components/VotingRecordsCard";
-import AttendanceHeatmap from "@/components/AttendanceHeatmap";
+import UserIcon from "@/components/layout/UserIcon";
+import IssueSpeakingDashboard, { IssueCategory } from "@/components/charts/IssueSpeakingDashboard";
+import QuotesList from "@/components/dashboard/QuotesList";
+import VotingRecordsCard from "@/components/dashboard/VotingRecordsCard";
+import AttendanceHeatmap from "@/components/charts/AttendanceHeatmap";
 import { notFound } from "next/navigation";
 import { Legislator } from "@/types/Legislator";
 

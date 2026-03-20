@@ -3,7 +3,7 @@
 
 import { fetchLatestVideos } from '@/lib/data/youtube';
 import { getTranscription } from '@/lib/data/transcriptions';
-import TranscribeButton from '@/components/TranscribeButton';
+import TranscribeButton from '@/components/transcripts/TranscribeButton';
 import Link from 'next/link';
 import { formatDuration, formatDate } from '@/lib/utils/format';
 

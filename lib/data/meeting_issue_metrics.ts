@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { IssueCategory, IssueStatement } from '@/components/IssueSpeakingDashboard';
+import { IssueCategory, IssueStatement } from '@/components/charts/IssueSpeakingDashboard';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;

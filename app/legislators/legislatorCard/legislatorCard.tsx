@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Legislator } from "@/types/Legislator";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClockFour, faFileAlt } from "@fortawesome/free-regular-svg-icons"
-import UserIcon from "@/components/userIcon";
+import UserIcon from "@/components/layout/UserIcon";
 import Link from "next/link";
 
 export default function LegislatorCard(params: Legislator) {

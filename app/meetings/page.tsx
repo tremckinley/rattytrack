@@ -3,7 +3,7 @@
 
 import { getMeetings, getMeetingTypes, getLegislatorsForFilter } from '@/lib/data/meetings';
 import Link from 'next/link';
-import MeetingsFilter from '@/components/MeetingsFilter';
+import MeetingsFilter from '@/components/meetings/MeetingsFilter';
 import { formatDate } from '@/lib/utils/format';
 
 interface PageProps {
