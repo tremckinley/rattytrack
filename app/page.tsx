@@ -73,7 +73,7 @@ export default async function Dashboard() {
                         className="w-12 md:w-16 h-auto"
                         priority
                       />
-                      <span className="font-extrabold text-xl">CapyTrackAI</span>
+                      <span className="font-extrabold text-xl">CapyTrack</span>
                       </div>
 
             {/* Dashboard Search */}
