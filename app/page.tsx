@@ -50,7 +50,7 @@ export default async function Dashboard() {
     ]);
 
     return (
-        <div className="max-w-screen md:mx-24 mt-16">
+        <div className="max-w-screen md:mx-24">
             {/* Banner + Stat Cards
             <section id="dashboard-banner" className="bg-rose-950 p-8 relative overflow-hidden shadow-solid">
                 <h1 className="text-4xl my-4 font-bold text-white">CAPYTRACK AI</h1>
