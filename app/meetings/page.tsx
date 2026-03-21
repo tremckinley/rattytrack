@@ -4,6 +4,7 @@
 import { getMeetings, getMeetingTypes, getLegislatorsForFilter } from '@/lib/data/meetings';
 import Link from 'next/link';
 import MeetingsFilter from '@/components/meetings/MeetingsFilter';
+import PageContainer from '@/components/layout/PageContainer';
 import { formatDate } from '@/lib/utils/format';
 
 interface PageProps {
@@ -42,23 +43,18 @@ export default async function MeetingsPage({ searchParams }: PageProps) {
     const totalPages = Math.ceil(total / 20);
 
     return (
-        <div className="min-h-screen">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                {/* Header */}
-                <div className="mb-8">
-                    <Link
-                        href="/"
-                        className="text-capyred hover:text-rose-800 font-medium mb-4 inline-block"
-                    >
-                        ← Back to Dashboard
-                    </Link>
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                        City Council Meetings
-                    </h1>
-                    <p className="text-gray-600">
-                        Browse all council meetings with video, documents, and transcripts
-                    </p>
-                </div>
+        <PageContainer
+            title="City Council Meetings"
+            description="Browse all council meetings with video, documents, and transcripts"
+            actionButton={
+                <Link
+                    href="/"
+                    className="text-capyred hover:text-rose-800 font-medium inline-block"
+                >
+                    ← Back to Dashboard
+                </Link>
+            }
+        >
 
                 {/* Filters */}
                 <MeetingsFilter
@@ -162,8 +158,7 @@ export default async function MeetingsPage({ searchParams }: PageProps) {
                         )}
                     </div>
                 )}
-            </div>
-        </div>
+            </PageContainer>
     );
 }
 

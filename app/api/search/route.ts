@@ -1,28 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false
-    }
-});
+import { requireAuth } from '@/lib/utils/api-auth';
 
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const q = searchParams.get('q');
-    const speakerId = searchParams.get('speakerId');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
-
-    if (!q) {
-        return NextResponse.json({ results: [] });
-    }
-
     try {
+        const { supabase } = await requireAuth();
+
+        const { searchParams } = new URL(request.url);
+        const q = searchParams.get('q');
+        const speakerId = searchParams.get('speakerId');
+        const startDate = searchParams.get('startDate');
+        const endDate = searchParams.get('endDate');
+
+        if (!q) {
+            return NextResponse.json({ results: [] });
+        }
+
         // 1. Fetch segments matching the query
         let segmentsQuery = supabase
             .from('transcription_segments')
@@ -98,6 +90,8 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ results: formattedResults });
     } catch (err: any) {
+        // If it's a NextResponse (from requireAuth), return it directly
+        if (err instanceof NextResponse) return err;
         console.error('Unexpected search error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });
     }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { supabaseAdmin } from '@/lib/utils/supabase-admin';
+import { requireAdminApi } from '@/lib/utils/api-auth';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -10,16 +11,13 @@ export async function POST(req: NextRequest) {
   let meetingId: string | null = null;
 
   try {
+    // Verify admin session
+    await requireAdminApi();
+
     const formData = await req.formData();
     const audioFile = formData.get('audio') as File;
     const title = formData.get('title') as string | null;
     const description = formData.get('description') as string | null;
-    const password = formData.get('password') as string | null;
-
-    // Check password
-    if (password !== process.env.TRANSCRIPTION_PASSWORD) {
-      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
-    }
 
     if (!audioFile) {
       return NextResponse.json({ error: 'No audio file provided' }, { status: 400 });
