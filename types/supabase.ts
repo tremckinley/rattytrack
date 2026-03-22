@@ -1,3 +1,6 @@
+Need to install the following packages:
+supabase@2.83.0
+Ok to proceed? (y) 
 export type Json =
   | string
   | number
@@ -2028,6 +2031,10 @@ export type Database = {
           last_name: string | null
           notification_preferences: Json | null
           role: string | null
+          stripe_customer_id: string | null
+          subscription_expires_at: string | null
+          subscription_status: string | null
+          subscription_tier: string
           supabase_user_id: string
           updated_at: string | null
           username: string | null
@@ -2046,6 +2053,10 @@ export type Database = {
           last_name?: string | null
           notification_preferences?: Json | null
           role?: string | null
+          stripe_customer_id?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string
           supabase_user_id: string
           updated_at?: string | null
           username?: string | null
@@ -2064,6 +2075,10 @@ export type Database = {
           last_name?: string | null
           notification_preferences?: Json | null
           role?: string | null
+          stripe_customer_id?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string
           supabase_user_id?: string
           updated_at?: string | null
           username?: string | null

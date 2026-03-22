@@ -21,6 +21,7 @@
     "@fortawesome/react-fontawesome": "^3.1.0",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-progress": "^1.1.7",
+    "@stripe/stripe-js": "^8.11.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.75.0",
     "@types/fluent-ffmpeg": "^2.1.28",
@@ -39,6 +40,7 @@
     "puppeteer-stream": "^3.0.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "stripe": "^20.4.1",
     "tailwind-merge": "^3.3.1",
     "tsx": "^4.21.0",
     "xvfb": "^0.4.0"
