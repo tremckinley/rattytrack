@@ -5,7 +5,10 @@ import UserManagement from "@/components/admin/UserManagement";
 import BannerManager from "@/components/admin/BannerManager";
 import HelpModal from "@/components/admin/HelpModal";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faShieldHalved, faBolt, faBullhorn, faFileAlt, faGear, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faShieldHalved, faBolt, faBullhorn, faFileAlt, faUsers, faClipboardCheck, faHistory } from '@fortawesome/free-solid-svg-icons';
+import SystemHealth from '@/components/admin/SystemHealth';
+import AuditLogViewer from '@/components/admin/AuditLogViewer';
+import Link from 'next/link';
 
 export default async function AdminPage() {
     const supabase = await createClient();
@@ -55,6 +58,32 @@ export default async function AdminPage() {
                             </div>
                             <TranscriptionHub />
                         </section>
+
+                        <section>
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2 text-rose-950">
+                                    <FontAwesomeIcon icon={faClipboardCheck} className="text-xl" />
+                                    <h2 className="text-xl font-bold border-none">Data QA</h2>
+                                </div>
+                                <Link
+                                    href="/admin/qa"
+                                    className="text-sm text-capyred hover:underline font-bold"
+                                >
+                                    Open QA Queue →
+                                </Link>
+                            </div>
+                            <p className="text-sm text-gray-500 bg-white rounded-xl shadow-md border border-gray-100 p-6">
+                                Review and correct transcribed data, reassign speakers, and approve AI-generated summaries.
+                            </p>
+                        </section>
+
+                        <section>
+                            <div className="flex items-center gap-2 mb-4 text-rose-950">
+                                <FontAwesomeIcon icon={faHistory} className="text-xl" />
+                                <h2 className="text-xl font-bold border-none">Audit Log</h2>
+                            </div>
+                            <AuditLogViewer />
+                        </section>
                     </div>
 
                     {/* Sidebar - 1/3 width */}
@@ -66,34 +95,7 @@ export default async function AdminPage() {
                             </div>
                             <BannerManager />
                         </div>
-                        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 border-none">
-                                <FontAwesomeIcon icon={faGear} className="text-lg" />
-                                System Status
-                            </h3>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span className="text-sm text-gray-600">Database</span>
-                                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">Connected</span>
-                                </div>
-                                <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                                    <span className="text-sm text-gray-600">AI Services</span>
-                                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">Operational</span>
-                                </div>
-                                <div className="flex justify-between items-center py-2">
-                                    <span className="text-sm text-gray-600">Storage</span>
-                                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">Available</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-rose-950 rounded-xl shadow-lg p-6 text-white">
-                            <h3 className="font-bold mb-2 border-none">Admin Notice</h3>
-                            <p className="text-sm text-rose-100 leading-relaxed">
-                                Scripts executed here interact directly with production data and external APIs.
-                                Please ensure you have verified any changes before running batch updates.
-                            </p>
-                        </div>
+                        <SystemHealth />
                     </div>
                 </div>
             </div>
