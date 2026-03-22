@@ -51,11 +51,11 @@ CREATE INDEX IF NOT EXISTS idx_legislator_issue_metrics_sentiment
 ALTER TABLE public.transcription_segments 
   ADD COLUMN IF NOT EXISTS occurred_at timestamp with time zone;
 
--- Backfill occurred_at from meeting scheduled_start + start_time_seconds
+-- Backfill occurred_at from video published_at + start_time
 UPDATE public.transcription_segments ts
-SET occurred_at = m.scheduled_start + (ts.start_time_seconds || ' seconds')::interval
-FROM public.meetings m
-WHERE ts.meeting_id = m.id AND ts.occurred_at IS NULL;
+SET occurred_at = vt.published_at + (ts.start_time || ' seconds')::interval
+FROM public.video_transcriptions vt
+WHERE ts.video_id = vt.video_id AND ts.occurred_at IS NULL;
 
 -- Create index for time-based queries
 CREATE INDEX IF NOT EXISTS idx_transcription_segments_occurred_at 
@@ -92,8 +92,8 @@ CREATE INDEX IF NOT EXISTS idx_segment_issues_segment_speaker
   ON public.segment_issues(segment_id, issue_id);
 
 -- Add index to help with legislator-issue joins
-CREATE INDEX IF NOT EXISTS idx_transcription_segments_speaker_meeting 
-  ON public.transcription_segments(speaker_id, meeting_id);
+CREATE INDEX IF NOT EXISTS idx_transcription_segments_speaker_video 
+  ON public.transcription_segments(speaker_id, video_id);
 
 -- 5. Create materialized view for top issues per legislator
 -- This replaces the JSONB top_issues field with a queryable view
@@ -102,7 +102,7 @@ SELECT
   ts.speaker_id as legislator_id,
   si.issue_id,
   COUNT(DISTINCT si.segment_id) as mention_count,
-  SUM(ts.end_time_seconds - ts.start_time_seconds) as total_speaking_time_seconds,
+  SUM(ts.end_time - ts.start_time) as total_speaking_time_seconds,
   AVG(si.relevance_score) as avg_relevance,
   AVG(si.sentiment_score) as avg_sentiment,
   COUNT(CASE WHEN si.sentiment_label = 'positive' THEN 1 END) as positive_count,

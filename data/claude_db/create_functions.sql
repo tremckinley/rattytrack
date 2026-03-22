@@ -26,7 +26,7 @@ BEGIN
     COUNT(CASE WHEN si.sentiment_label = 'negative' THEN 1 END)::bigint as negative_mentions,
     COUNT(CASE WHEN si.sentiment_label = 'neutral' THEN 1 END)::bigint as neutral_mentions,
     AVG(si.sentiment_score) as average_sentiment_score,
-    SUM(ts.end_time_seconds - ts.start_time_seconds) as total_speaking_time_seconds
+    SUM(ts.end_time - ts.start_time) as total_speaking_time_seconds
   FROM public.issues i
   JOIN public.segment_issues si ON i.id = si.issue_id
   JOIN public.transcription_segments ts ON si.segment_id = ts.id

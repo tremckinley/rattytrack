@@ -1,18 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false
-    }
-});
+import { requireAuth } from '@/lib/utils/api-auth';
 
 export async function GET() {
     try {
+        const { supabase } = await requireAuth();
+
         const { data, error } = await supabase
             .from('legislators')
             .select('id, display_name')
@@ -26,6 +18,7 @@ export async function GET() {
 
         return NextResponse.json({ legislators: data });
     } catch (err: any) {
+        if (err instanceof NextResponse) return err;
         console.error('Unexpected error fetching legislators:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });
     }

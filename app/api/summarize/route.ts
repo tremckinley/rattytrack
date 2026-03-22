@@ -6,6 +6,7 @@ import OpenAI from 'openai';
 import { getTranscriptionWithSegments } from '@/lib/data/transcriptions';
 import { getAgendaItemsForVideo } from '@/lib/data/client/agenda-items-client';
 import { upsertMeetingSummary } from '@/lib/data/meeting-summaries';
+import { requireAdminApi } from '@/lib/utils/api-auth';
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -26,6 +27,8 @@ Be factual and objective. Focus on the most important information for citizens t
 
 export async function POST(request: Request) {
     try {
+        await requireAdminApi();
+
         const { videoId } = await request.json();
 
         if (!videoId) {

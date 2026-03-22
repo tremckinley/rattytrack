@@ -85,7 +85,7 @@ export default function NavBar() {
             className="w-12 md:w-16 h-auto"
             priority
           />
-          <span className="font-extrabold hidden lg:block text-xl">CapyTrackAI</span>
+          <span className="font-extrabold hidden lg:block text-xl">CapyTrack</span>
         </Link>
       </div>
 

@@ -2,12 +2,9 @@
 // GET /api/transcripts/suggest-speakers?videoId=xxx
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { requireAdminApi } from '@/lib/utils/api-auth';
+import { supabaseAdmin } from '@/lib/utils/supabase-admin';
 import { suggestSpeakerMatches, TranscriptSegment, SpeakerSuggestion } from '@/lib/utils/speaker-matcher';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 interface SuggestionResponse {
     videoId: string;
@@ -27,19 +24,20 @@ interface SuggestionResponse {
  * Returns speaker suggestions based on learned patterns and transcript analysis
  */
 export async function GET(request: NextRequest) {
-    const { searchParams } = new URL(request.url);
-    const videoId = searchParams.get('videoId');
-
-    if (!videoId) {
-        return NextResponse.json(
-            { error: 'Video ID is required' },
-            { status: 400 }
-        );
-    }
-
     try {
+        await requireAdminApi();
+
+        const { searchParams } = new URL(request.url);
+        const videoId = searchParams.get('videoId');
+
+        if (!videoId) {
+            return NextResponse.json(
+                { error: 'Video ID is required' },
+                { status: 400 }
+            );
+        }
         // Fetch transcript segments for this video
-        const { data: segments, error: segmentsError } = await supabase
+        const { data: segments, error: segmentsError } = await supabaseAdmin
             .from('transcription_segments')
             .select('id, speaker_name, speaker_id, text, start_time, end_time')
             .eq('video_id', videoId)

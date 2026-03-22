@@ -5,9 +5,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateSpeakerMapping } from '@/lib/data/transcriptions';
 import { learnSpeakerMapping } from '@/lib/utils/speaker-matcher';
+import { requireAdminApi } from '@/lib/utils/api-auth';
 
 export async function POST(request: NextRequest) {
   try {
+    await requireAdminApi();
+
     const body = await request.json();
     const { videoId, speakerLabel, legislatorId } = body;
 

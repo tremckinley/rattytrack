@@ -3,11 +3,8 @@
 // PATCH /api/transcribe/youtube/speakers - Map speakers to legislators
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { requireAdminApi } from '@/lib/utils/api-auth';
+import { supabaseAdmin } from '@/lib/utils/supabase-admin';
 
 interface SpeakerMapping {
   [speakerLabel: string]: string; // speaker label -> legislator UUID
@@ -25,19 +22,21 @@ interface SpeakerInfo {
  * Get list of speaker labels and their current mappings
  */
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const videoId = searchParams.get('videoId');
-
-  if (!videoId) {
-    return NextResponse.json(
-      { error: 'Video ID is required' },
-      { status: 400 }
-    );
-  }
-
   try {
+    await requireAdminApi();
+
+    const { searchParams } = new URL(request.url);
+    const videoId = searchParams.get('videoId');
+
+    if (!videoId) {
+      return NextResponse.json(
+        { error: 'Video ID is required' },
+        { status: 400 }
+      );
+    }
+
     // Get all segments with speaker labels for this video
-    const { data: segments, error: segmentsError } = await supabase
+    const { data: segments, error: segmentsError } = await supabaseAdmin
       .from('youtube_transcript_segments')
       .select('speaker_name, speaker_id')
       .eq('video_id', videoId)
@@ -84,7 +83,7 @@ export async function GET(request: NextRequest) {
     const legislatorNames = new Map<string, string>();
     
     if (mappedSpeakerIds.length > 0) {
-      const { data: legislators } = await supabase
+      const { data: legislators } = await supabaseAdmin
         .from('legislators')
         .select('id, display_name')
         .in('id', mappedSpeakerIds);
@@ -115,6 +114,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching speaker labels:', error);
+    if (error instanceof NextResponse) return error;
     return NextResponse.json(
       { error: 'Failed to fetch speaker labels' },
       { status: 500 }
@@ -128,6 +128,8 @@ export async function GET(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    await requireAdminApi();
+
     const body = await request.json();
     const { videoId, mappings } = body as {
       videoId: string;
@@ -153,7 +155,7 @@ export async function PATCH(request: NextRequest) {
     const uniqueLegislatorIds = [...new Set(legislatorIds)];
     
     if (uniqueLegislatorIds.length > 0) {
-      const { data: legislators, error: validationError } = await supabase
+      const { data: legislators, error: validationError } = await supabaseAdmin
         .from('legislators')
         .select('id')
         .in('id', uniqueLegislatorIds);
@@ -175,7 +177,7 @@ export async function PATCH(request: NextRequest) {
 
     for (const [speakerLabel, legislatorId] of Object.entries(mappings)) {
       try {
-        const { data, error, count } = await supabase
+        const { data, error, count } = await supabaseAdmin
           .from('youtube_transcript_segments')
           .update({ speaker_id: legislatorId || null }, { count: 'exact' })
           .eq('video_id', videoId)

@@ -12,6 +12,7 @@ import IssueSpeakingDashboard, { IssueCategory } from "@/components/charts/Issue
 import QuotesList from "@/components/dashboard/QuotesList";
 import VotingRecordsCard from "@/components/dashboard/VotingRecordsCard";
 import AttendanceHeatmap from "@/components/charts/AttendanceHeatmap";
+import PaywallGate from "@/components/subscription/PaywallGate";
 import { notFound } from "next/navigation";
 import { Legislator } from "@/types/Legislator";
 
@@ -147,21 +148,26 @@ export default async function LegislatorPage({ params }: Props) {
                 </section>
             </div>
             <section id="statements-section" className="overflow-y-auto p-2 space-y-4">
-                <AttendanceHeatmap attendanceData={attendanceData} weeks={26} />
-                <VotingRecordsCard votes={votingRecords} maxVotes={10} />
-                <IssueSpeakingDashboard
-                    issues={issueMetrics.map(m => ({
-                        issueId: m.issue_id,
-                        issueName: m.issue_name,
-                        totalMentions: m.total_mentions,
-                        positiveMentions: m.positive_mentions,
-                        negativeMentions: m.negative_mentions,
-                        neutralMentions: m.neutral_mentions,
-                        speakingTimeSeconds: m.total_speaking_time_seconds,
-                        statements: [],
-                    }))}
-                />
-                <QuotesList variant="profile" quotes={keyQuotes} maxQuotes={10} />
+                <PaywallGate 
+                    feature="legislator_deep_dive" 
+                    fallbackMessage="Upgrade to Premium to view detailed voting records, topic analysis, and key quotes."
+                >
+                    <AttendanceHeatmap attendanceData={attendanceData} weeks={26} />
+                    <VotingRecordsCard votes={votingRecords} maxVotes={10} />
+                    <IssueSpeakingDashboard
+                        issues={issueMetrics.map(m => ({
+                            issueId: m.issue_id,
+                            issueName: m.issue_name,
+                            totalMentions: m.total_mentions,
+                            positiveMentions: m.positive_mentions,
+                            negativeMentions: m.negative_mentions,
+                            neutralMentions: m.neutral_mentions,
+                            speakingTimeSeconds: m.total_speaking_time_seconds,
+                            statements: [],
+                        }))}
+                    />
+                    <QuotesList variant="profile" quotes={keyQuotes} maxQuotes={10} />
+                </PaywallGate>
             </section>
 
         </main>

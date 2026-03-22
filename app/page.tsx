@@ -19,7 +19,7 @@ import { getRecentHighImpactQuotes } from "@/lib/data/key-quotes";
 import { getOverallVotingActivity } from "@/lib/data/voting-records";
 import { getActiveLegislatorsWithStats } from "@/lib/data/legislators/legislator_card";
 import { getKeywordTrends } from "@/lib/data/dashboard";
-import Image from "next/image";
+import PageContainer from "@/components/layout/PageContainer";
 
 export default async function Dashboard() {
     // Fetch all dashboard data in parallel
@@ -50,32 +50,7 @@ export default async function Dashboard() {
     ]);
 
     return (
-        <div className="max-w-screen md:mx-24">
-            {/* Banner + Stat Cards
-            <section id="dashboard-banner" className="bg-rose-950 p-8 relative overflow-hidden shadow-solid">
-                <h1 className="text-4xl my-4 font-bold text-white">CAPYTRACK AI</h1>
-                <div className="grid grid-cols-2 w-fit lg:w-[70%] lg:flex">
-                    <TotalCard title="Videos Analyzed" total={totalVideos} icon={solidIcons.faPlay} />
-                    <TotalCard title="Legislators Tracked" total={totalLegislators} icon={solidIcons.faUsers} />
-                    <TotalCard title="Issues Categorized" total={totalIssues} icon={solidIcons.faTag} />
-                    <TotalCard title="Hours Processed" total={totalHoursProcessed} icon={solidIcons.faClock} />
-                </div>
-                <div className="absolute top-0 right-10 w-1/8 md:w-1/4 h-full bg-rose-900 transform -skew-x-12 translate-x-20 hidden xl:block opacity-50"></div>
-            </section> */}
-
-            {/* CapyTrack Logo */}
-            <div className="flex items-center gap-2 justify-center">
-            <Image
-                        src="/burgundy_logo.png"
-                        alt="capytrack logo"
-                        width={100}
-                        height={50}
-                        className="w-12 md:w-16 h-auto"
-                        priority
-                      />
-                      <span className="font-extrabold text-xl">CapyTrackAI</span>
-                      </div>
-
+        <PageContainer title="Dashboard" description="System overview and recent updates">
             {/* Dashboard Search */}
             <section className="mt-6 px-2 md:px-0">
                 <SearchBar variant="hero" />
@@ -108,6 +83,6 @@ export default async function Dashboard() {
                 <VotingActivitySummary votingData={votingActivity} />
                 <WatchdogAlerts />
             </section>
-        </div>
+        </PageContainer>
     )
 }
