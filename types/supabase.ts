@@ -1,6 +1,3 @@
-Need to install the following packages:
-supabase@2.83.0
-Ok to proceed? (y) 
 export type Json =
   | string
   | number
@@ -98,6 +95,30 @@ export type Database = {
             referencedColumns: ["video_id"]
           },
         ]
+      }
+      announcement_banner: {
+        Row: {
+          id: number
+          enabled: boolean
+          message: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          enabled?: boolean
+          message?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          enabled?: boolean
+          message?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       alert_notifications: {
         Row: {

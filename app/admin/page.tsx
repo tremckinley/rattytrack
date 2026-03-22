@@ -2,9 +2,10 @@ import { createClient } from "@/lib/utils/supabase/server";
 import AutomationCenter from "@/components/admin/AutomationCenter";
 import TranscriptionHub from "@/components/admin/TranscriptionHub";
 import UserManagement from "@/components/admin/UserManagement";
+import BannerManager from "@/components/admin/BannerManager";
 import HelpModal from "@/components/admin/HelpModal";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faShieldHalved, faBolt, faFileAlt, faGear, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faShieldHalved, faBolt, faBullhorn, faFileAlt, faGear, faUsers } from '@fortawesome/free-solid-svg-icons';
 
 export default async function AdminPage() {
     const supabase = await createClient();
@@ -58,6 +59,13 @@ export default async function AdminPage() {
 
                     {/* Sidebar - 1/3 width */}
                     <div className="space-y-6">
+                        <div>
+                            <div className="flex items-center gap-2 mb-4 text-rose-950">
+                                <FontAwesomeIcon icon={faBullhorn} className="text-xl" />
+                                <h2 className="text-xl font-bold border-none">Announcement Banner</h2>
+                            </div>
+                            <BannerManager />
+                        </div>
                         <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 border-none">
                                 <FontAwesomeIcon icon={faGear} className="text-lg" />
