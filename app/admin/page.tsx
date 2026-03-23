@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/utils/supabase/server";
 import AutomationCenter from "@/components/admin/AutomationCenter";
+import ScraperTool from "@/components/admin/ScraperTool";
 import TranscriptionHub from "@/components/admin/TranscriptionHub";
 import UserManagement from "@/components/admin/UserManagement";
 import BannerManager from "@/components/admin/BannerManager";
@@ -41,6 +42,7 @@ export default async function AdminPage() {
                                 <h2 className="text-xl font-bold border-none">Automation Center</h2>
                             </div>
                             <AutomationCenter />
+                            <ScraperTool />
                         </section>
 
                         <section>

@@ -62,7 +62,7 @@ export async function createTranscription(data: {
       published_at: data.publishedAt,
       duration: data.duration,
       thumbnail_url: data.thumbnailUrl,
-      status: 'processing',
+      status: 'queued',
       source: 'youtube'
     })
     .select()

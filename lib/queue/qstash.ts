@@ -1,0 +1,42 @@
+import { Client } from '@upstash/qstash';
+
+let qstashClient: Client | null = null;
+
+export function getQStash(): Client | null {
+    if (!process.env.QSTASH_TOKEN) {
+        return null;
+    }
+    if (!qstashClient) {
+        qstashClient = new Client({ token: process.env.QSTASH_TOKEN });
+    }
+    return qstashClient;
+}
+
+export type QueueEventParams = {
+    url: string; // The fully qualified URL of the webhook receiver
+    payload: any;
+    delay?: number; // Delay in seconds
+};
+
+export async function publishQueueEvent({ url, payload, delay }: QueueEventParams) {
+    const qstash = getQStash();
+    if (!qstash) {
+        console.warn('QSTASH_TOKEN not set, simulating queue execution synchronously.');
+        // Fallback for local dev without QStash: just fetch the URL directly
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-simulated-qstash': 'true' },
+            body: JSON.stringify(payload)
+        }).catch(err => console.error('Simulated queue error:', err));
+        return { messageId: 'simulated-' + Date.now() };
+    }
+
+    const res = await qstash.publishJSON({
+        url,
+        body: payload,
+        delay,
+    });
+
+    console.log(`QStash published event to ${url}: ${res.messageId}`);
+    return res;
+}

@@ -28,7 +28,7 @@ export interface VideoTranscript {
   language?: string;
 }
 
-export type TranscriptionStatus = 'idle' | 'processing' | 'downloading' | 'transcribing' | 'completed' | 'error';
+export type TranscriptionStatus = 'idle' | 'queued' | 'processing' | 'downloading' | 'transcribing' | 'completed' | 'error' | 'failed';
 
 export type TranscriptionProvider = 'whisper' | 'elevenlabs';
 

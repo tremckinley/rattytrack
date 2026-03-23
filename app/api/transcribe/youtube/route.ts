@@ -6,25 +6,16 @@ import { getVideoDetails } from '@/lib/data/youtube';
 import {
   getTranscription,
   createTranscription,
-  updateTranscriptionStatus,
-  saveTranscriptSegments,
   deleteTranscription,
-  getTranscriptSegments,
 } from '@/lib/data/transcriptions';
-import { cleanupAudioFiles } from '@/lib/utils/audio-processor';
-import { transcribeWithAutoChunking } from '@/lib/utils/whisper-client';
-import { runIntelligencePipeline } from '@/lib/ai/intelligence-pipeline';
-import path from 'path';
-import fs from 'fs';
-import os from 'os';
-import { SpeakerMatch } from '@/lib/utils/speaker-matcher';
+import { publishQueueEvent } from '@/lib/queue/qstash';
 import { requireAdmin } from '@/lib/utils/auth-utils';
+
+export const dynamic = 'force-dynamic';
 
 interface TranscribeRequest {
   videoId: string;
   forceRetry?: boolean;
-  provider?: 'whisper' | 'elevenlabs';
-  numSpeakers?: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -33,7 +24,7 @@ export async function POST(request: NextRequest) {
     await requireAdmin();
 
     const body: TranscribeRequest = await request.json();
-    const { videoId, forceRetry, provider, numSpeakers } = body;
+    const { videoId, forceRetry } = body;
 
     if (!videoId) {
       return NextResponse.json(
@@ -52,7 +43,7 @@ export async function POST(request: NextRequest) {
           transcription: existingTranscription,
           alreadyExists: true,
         });
-      } else if (existingTranscription.status === 'processing') {
+      } else if (existingTranscription.status === 'processing' || existingTranscription.status === 'queued') {
         return NextResponse.json({
           message: 'Transcription already in progress',
           transcription: existingTranscription,
@@ -62,12 +53,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Handle retry
-    if (forceRetry) {
-
-      if (existingTranscription) {
-        await deleteTranscription(videoId);
-        console.log(`Deleted existing transcription for retry: ${videoId}`);
-      }
+    if (forceRetry && existingTranscription) {
+      await deleteTranscription(videoId);
+      console.log(`Deleted existing transcription for retry: ${videoId}`);
     }
 
     // Fetch video details from YouTube
@@ -80,7 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create transcription record
+    // Create transcription record in `queued` state
     const transcription = await createTranscription({
       videoId: videoDetails.videoId,
       title: videoDetails.title,
@@ -97,14 +85,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Start transcription process asynchronously
-    // We return immediately and let the process run in background
-    processTranscription(videoId, provider, numSpeakers).catch(error => {
-      console.error('Background transcription failed:', error);
+    // Enqueue the background task via QStash
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VELOCITY_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000';
+    const queueUrl = `${baseUrl}/api/webhooks/queue`;
+
+    await publishQueueEvent({
+      url: queueUrl,
+      payload: {
+        eventType: 'transcribe-video',
+        videoId: videoDetails.videoId,
+      }
     });
 
     return NextResponse.json({
-      message: 'Transcription started',
+      message: 'Transcription task queued successfully',
       transcription,
       processing: true,
     });
@@ -114,222 +108,6 @@ export async function POST(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
-  }
-}
-
-/**
- * Background process for transcription
- * This runs asynchronously after API response is sent
- */
-async function processTranscription(
-  videoId: string,
-  provider: 'whisper' | 'elevenlabs' = 'elevenlabs',
-  numSpeakers?: number
-): Promise<void> {
-  const workDir = path.join(os.tmpdir(), `youtube-transcribe-${videoId}-${Date.now()}`);
-  let audioChunks: string[] = [];
-
-  try {
-    console.log(`Starting background transcription for ${videoId}`);
-
-    // Create work directory
-    fs.mkdirSync(workDir, { recursive: true });
-
-    // Step 1: Download MP3 from YouTube using ytmp3.as
-    // Dynamic import to prevent bundling in prerendered pages
-    const { recordYouTubeAudio } = await import('@/lib/utils/youtube-downloader');
-
-    const mp3Path = path.join(workDir, 'audio.mp3');
-    const downloadResult = await recordYouTubeAudio({
-      videoId,
-      outputPath: mp3Path,
-    });
-
-    if (!downloadResult.success) {
-      throw new Error(downloadResult.error || 'Download failed');
-    }
-
-    // Step 2 (disabled): Check if file needs chunking (if over 25MB)
-    // console.log('Checking if audio needs chunking...');
-    // const { exceedsFileSizeLimit, splitAudioIntoChunks } = await import('@/lib/utils/audio-processor');
-
-    // if (exceedsFileSizeLimit(mp3Path, 25)) {
-    //   console.log('File exceeds 25MB, splitting into chunks...');
-    //   const chunksDir = path.join(workDir, 'chunks');
-    //   audioChunks = await splitAudioIntoChunks({
-    //     inputPath: mp3Path,
-    //     outputDir: chunksDir,
-    //     chunkDuration: 600, // 10 minutes per chunk
-    //   });
-    //   // Delete the large MP3 file
-    //   fs.unlinkSync(mp3Path);
-    // } else {
-    //   audioChunks = [mp3Path];
-    // }
-    console.log('Audio chunking disabled');
-    audioChunks = [mp3Path];
-    console.log(`Audio ready: ${audioChunks.length} chunk(s)`);
-
-    // Step 3: Transcribe using selected provider
-    const useDiarization = provider === 'elevenlabs';
-    console.log(`Transcribing with ${provider} API...${useDiarization ? ' (with diarization)' : ''}`);
-
-    let transcribeResult;
-
-    if (provider === 'elevenlabs') {
-      const { transcribeWithAutoChunking: transcribeElevenLabs } = await import('@/lib/utils/elevenlabs-client');
-      transcribeResult = await transcribeElevenLabs(audioChunks, {
-        language: 'en',
-        numSpeakers: numSpeakers || null,
-        diarizationThreshold: 0.22,
-      });
-    } else {
-      transcribeResult = await transcribeWithAutoChunking(audioChunks, {
-        language: 'en',
-        prompt: 'Memphis City Council meeting transcription',
-      });
-    }
-
-    console.log(`Transcription completed: ${transcribeResult.segments.length} segments`);
-
-    // Step 4: Match speakers to legislators if diarization was used
-    let speakerMatches: Map<string, SpeakerMatch> | null = null;
-    if (useDiarization && transcribeResult.segments.some(s => 'speaker' in s && s.speaker)) {
-      console.log('Matching speakers to legislators...');
-      const { matchAllSpeakers } = await import('@/lib/utils/speaker-matcher');
-      const speakerLabels = transcribeResult.segments
-        .map(s => ('speaker' in s ? s.speaker : undefined))
-        .filter((s): s is string => !!s);
-      speakerMatches = await matchAllSpeakers(speakerLabels);
-      console.log(`Matched ${speakerMatches.size} unique speakers`);
-    }
-
-    // Prepare segments with speakers
-    const segmentsWithSpeakers = transcribeResult.segments.map(seg => {
-      const speaker = 'speaker' in seg ? (seg.speaker as string | undefined) : undefined;
-      const speakerName: string | null = speaker || null;
-      const speakerId: string | null = speakerName && speakerMatches
-        ? speakerMatches.get(speakerName)?.legislatorId || null
-        : null;
-
-      return {
-        start: seg.start,
-        end: seg.end,
-        text: seg.text,
-        speakerName,
-        speakerId,
-      };
-    });
-
-    // Step 5: Save to database with speaker information
-    // Wrap in try-catch to ensure status is updated even if partial save occurs
-    try {
-      await saveTranscriptSegments(
-        videoId,
-        segmentsWithSpeakers,
-        transcribeResult.cost,
-        provider,
-        useDiarization
-      );
-
-      // Mark as completed only after successful save
-      await updateTranscriptionStatus(videoId, 'completed');
-      console.log(`Successfully transcribed video ${videoId} using ${provider}`);
-
-      // Step 6: Trigger Intelligence Pipeline (Issue Categorization, Robert's Rules, etc.)
-      console.log(`Triggering intelligence pipeline for video ${videoId}...`);
-
-      // Fetch segments from DB to get their actual IDs for foreign key relationships
-      const dbSegments = await getTranscriptSegments(videoId);
-
-      if (dbSegments.length > 0) {
-        // Run pipeline in background
-        runIntelligencePipeline({
-          videoId,
-          segments: dbSegments.map(s => ({
-            id: s.id as unknown as number, // Cast UUID/Int to number for pipeline compatibility
-            text: s.text,
-            start_time: s.start_time,
-            end_time: s.end_time,
-            speaker_id: s.speaker_id
-          }))
-        }).then(result => {
-          console.log(`Intelligence pipeline completed for ${videoId}:`, {
-            categorizedCount: result.savedCategorizations,
-            quotesCount: result.savedQuotes,
-            agendaItemsCount: result.savedAgendaItems,
-            positionsCount: result.savedPositions
-          });
-        }).catch(err => {
-          console.error(`Intelligence pipeline failed for ${videoId}:`, err);
-        });
-      }
-    } catch (dbError) {
-      console.error('Database save failed:', dbError);
-
-      // Fallback: Save to local file to prevent token wastage
-      try {
-        const backupDir = path.join(process.cwd(), 'transcripts_backup');
-        if (!fs.existsSync(backupDir)) {
-          fs.mkdirSync(backupDir, { recursive: true });
-        }
-
-        const backupFile = path.join(backupDir, `${videoId}_${Date.now()}_backup.json`);
-        const backupData = {
-          videoId,
-          provider,
-          timestamp: new Date().toISOString(),
-          segments: segmentsWithSpeakers,
-          cost: transcribeResult.cost,
-          originalError: dbError instanceof Error ? dbError.message : String(dbError)
-        };
-
-        fs.writeFileSync(backupFile, JSON.stringify(backupData, null, 2));
-        console.log(`Transcript backed up locally to: ${backupFile}`);
-
-        // Update status with backup info
-        await updateTranscriptionStatus(
-          videoId,
-          'error',
-          `Database error: ${dbError instanceof Error ? dbError.message : 'Unknown error'}. Backup saved to ${path.basename(backupFile)}`
-        );
-      } catch (backupError) {
-        console.error('Backup save also failed:', backupError);
-        // Even if save fails, mark as error so it's not stuck in processing
-        await updateTranscriptionStatus(
-          videoId,
-          'error',
-          `Database error: ${dbError instanceof Error ? dbError.message : 'Unknown error'}. Backup failed.`
-        );
-      }
-
-      throw dbError; // Re-throw to trigger outer error handler
-    }
-  } catch (error) {
-    console.error(`Transcription failed for ${videoId}:`, error);
-
-    // Update status to error
-    await updateTranscriptionStatus(
-      videoId,
-      'error',
-      error instanceof Error ? error.message : 'Unknown error'
-    );
-  } finally {
-    // Clean up temporary files
-    console.log('Cleaning up temporary files...');
-
-    try {
-      // Delete audio chunks
-      cleanupAudioFiles(audioChunks);
-
-      // Delete work directory
-      if (fs.existsSync(workDir)) {
-        fs.rmSync(workDir, { recursive: true, force: true });
-        console.log(`Deleted work directory: ${workDir}`);
-      }
-    } catch (cleanupError) {
-      console.error('Error during cleanup:', cleanupError);
-    }
   }
 }
 
