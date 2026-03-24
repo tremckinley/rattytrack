@@ -7,6 +7,7 @@ import {
 import { AssemblyAI } from 'assemblyai';
 import { formatSegments } from '@/lib/utils/assemblyai-client';
 import { runIntelligencePipeline } from '@/lib/ai/intelligence-pipeline';
+import { supabaseAdmin } from '@/lib/utils/supabase-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +25,7 @@ export async function POST(request: NextRequest) {
 
         const { searchParams } = new URL(request.url);
         const videoId = searchParams.get('videoId');
+        const type = searchParams.get('type') || 'youtube';
 
         if (!videoId) {
             return NextResponse.json({ error: 'Missing videoId query param' }, { status: 400 });
@@ -32,36 +34,60 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { transcript_id, status } = body;
 
-        console.log(`[AssemblyAI Webhook] Received status '${status}' for transcript ${transcript_id} (videoId: ${videoId})`);
+        console.log(`[AssemblyAI Webhook] Received status '${status}' for transcript ${transcript_id} (videoId: ${videoId}, type: ${type})`);
 
         if (status === 'completed') {
             // Fetch the completed transcript data from AssemblyAI
             const transcriptData = await aai.transcripts.get(transcript_id);
             
-            // Format AssemblyAI utterances into our DB segment schema
+            // Format AssemblyAI utterances into our internal format
             const segments = formatSegments(transcriptData.utterances || []);
 
-            // Save to DB
-            await saveTranscriptSegments(videoId, segments, 0, 'assemblyai', true);
-            await updateTranscriptionStatus(videoId, 'completed');
+            if (type === 'upload') {
+                // Save to uploaded_meetings structure
+                const dbSegments = segments.map((segment, index) => ({
+                    uploaded_meeting_id: videoId,
+                    segment_index: index,
+                    start_time_seconds: segment.start,
+                    end_time_seconds: segment.end,
+                    text: segment.text,
+                    speaker_id: null,
+                    speaker_name: segment.speakerName
+                }));
 
-            // Fetch segments back to get their actual DB IDs
-            const dbSegments = await getTranscriptSegments(videoId);
+                await supabaseAdmin.from('uploaded_meeting_segments').insert(dbSegments);
+                await supabaseAdmin.from('uploaded_meetings').update({
+                    full_transcript: transcriptData.text,
+                    video_duration_seconds: transcriptData.audio_duration,
+                    transcription_status: 'completed',
+                    processed_at: new Date().toISOString()
+                }).eq('id', videoId);
+                
+                console.log(`[AssemblyAI Webhook] Fully processed direct upload ${videoId}`);
+            } else {
+                // Save to YouTube video_meetings structure
+                await saveTranscriptSegments(videoId, segments, 0, 'assemblyai', true);
+                await updateTranscriptionStatus(videoId, 'completed');
 
-            // Trigger the intelligence pipeline (summaries, agenda items, etc)
-            await runIntelligencePipeline({
-                videoId,
-                segments: dbSegments.map(s => ({
-                    id: s.id,
-                    text: s.text,
-                    start_time: s.start_time,
-                    end_time: s.end_time,
-                    speaker_id: s.speaker_id,
-                    speaker_name: s.speaker_name
-                }))
-            });
-            
-            console.log(`[AssemblyAI Webhook] Fully processed video ${videoId}`);
+                // Fetch segments back to get their actual DB IDs for intelligence pipeline
+                const dbSegments = await getTranscriptSegments(videoId);
+
+                // Trigger the intelligence pipeline (summaries, agenda items, etc)
+                // We only run this on youtube/live meetings right now.
+                await runIntelligencePipeline({
+                    videoId,
+                    segments: dbSegments.map(s => ({
+                        id: s.id,
+                        text: s.text,
+                        start_time: s.start_time,
+                        end_time: s.end_time,
+                        speaker_id: s.speaker_id,
+                        speaker_name: s.speaker_name
+                    }))
+                });
+                
+                console.log(`[AssemblyAI Webhook] Fully processed youtube video ${videoId}`);
+            }
         } else if (status === 'error') {
             await updateTranscriptionStatus(videoId, 'failed');
             console.error(`[AssemblyAI Webhook] Transcription failed for ${videoId}`);

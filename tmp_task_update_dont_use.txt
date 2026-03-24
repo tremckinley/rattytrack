@@ -1,0 +1,8 @@
+- [x] **Task 7.1: Dependencies & Cleanup**
+  - [x] `npm install @anthropic-ai/sdk`
+  - [x] `npm uninstall openai`
+  - [x] Delete `lib/utils/whisper-client.ts`
+
+- [/] **Task 7.2: Text Generation & Extraction**
+  - [ ] Refactor `lib/ai/scraper-agent.ts` to use Claude Tool Use for JSON extraction
+  - [ ] Refactor `app/api/summarize/route.ts` to use Claude for generating meeting summaries

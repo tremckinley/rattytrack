@@ -20,8 +20,10 @@ export type QueueEventParams = {
 
 export async function publishQueueEvent({ url, payload, delay }: QueueEventParams) {
     const qstash = getQStash();
-    if (!qstash) {
-        console.warn('QSTASH_TOKEN not set, simulating queue execution synchronously.');
+    const isLocalhost = url.includes('localhost') || url.includes('127.0.0.1') || url.includes('::1');
+
+    if (!qstash || isLocalhost) {
+        console.warn(`QStash bypass: ${isLocalhost ? 'Localhost detected' : 'Token missing'}. Simulating queue execution synchronously.`);
         // Fallback for local dev without QStash: just fetch the URL directly
         fetch(url, {
             method: 'POST',

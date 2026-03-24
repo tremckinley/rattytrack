@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { supabaseAdmin } from '@/lib/utils/supabase-admin';
 import { requireAdminApi } from '@/lib/utils/api-auth';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { submitBufferToAssemblyAI } from '@/lib/utils/assemblyai-client';
 
 export async function POST(req: NextRequest) {
   let meetingId: string | null = null;
@@ -47,64 +43,32 @@ export async function POST(req: NextRequest) {
 
     if (insertError || !uploadedMeeting) {
       console.error('Error saving upload to database:', insertError);
-      // Continue anyway - transcription is still valuable
-    } else {
-      meetingId = uploadedMeeting.id;
+      return NextResponse.json({ error: 'Failed to save to database' }, { status: 500 });
+    }
+    
+    meetingId = uploadedMeeting.id;
+
+    if (!meetingId) {
+        throw new Error("Failed to secure a database insertion ID");
     }
 
-    // Transcribe with Whisper
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioFile,
-      model: 'whisper-1',
-      response_format: 'verbose_json',
-      timestamp_granularities: ['segment'],
+    // Convert File to Buffer
+    const arrayBuffer = await audioFile.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Transcribe with AssemblyAI in the background queue
+    await submitBufferToAssemblyAI({
+        buffer,
+        videoId: meetingId,
+        type: 'upload'
     });
-
-    // Update meeting with transcript
-    if (meetingId) {
-      const { error: updateError } = await supabaseAdmin
-        .from('uploaded_meetings')
-        .update({
-          full_transcript: transcription.text,
-          video_duration_seconds: transcription.duration,
-          video_language: transcription.language,
-          transcription_status: 'completed',
-          processed_at: new Date().toISOString()
-        })
-        .eq('id', meetingId);
-
-      if (updateError) {
-        console.error('Error updating meeting record:', updateError);
-      }
-
-      // Save segments
-      if (transcription.segments && transcription.segments.length > 0) {
-        const segments = transcription.segments.map((segment, index) => ({
-          uploaded_meeting_id: meetingId,
-          segment_index: index,
-          start_time_seconds: segment.start,
-          end_time_seconds: segment.end,
-          text: segment.text
-        }));
-
-        const { error: segmentsError } = await supabaseAdmin
-          .from('uploaded_meeting_segments')
-          .insert(segments);
-
-        if (segmentsError) {
-          console.error('Error saving segments:', segmentsError);
-        }
-      }
-    }
 
     return NextResponse.json({
-      meetingId: meetingId,
-      text: transcription.text,
-      segments: transcription.segments,
-      duration: transcription.duration,
-      language: transcription.language,
+        success: true,
+        message: 'File uploaded and transcription queued successfully in the background queue.',
+        meetingId
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Transcription error:', error);
 
     // Update meeting status to failed if we created a record

@@ -2,28 +2,20 @@
 // Uses OpenAI GPT-4 to analyze transcript and produce structured summary
 
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { getTranscriptionWithSegments } from '@/lib/data/transcriptions';
 import { getAgendaItemsForVideo } from '@/lib/data/client/agenda-items-client';
 import { upsertMeetingSummary } from '@/lib/data/meeting-summaries';
 import { requireAdminApi } from '@/lib/utils/api-auth';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
 const SYSTEM_PROMPT = `You are an expert at analyzing city council meeting transcripts. 
 Your task is to create a concise, informative summary of the meeting.
 
-You will receive the transcript text and a list of agenda items with their status.
-
-Respond with a JSON object containing:
-1. "summary_text": A 2-3 sentence overview of the meeting (what type of meeting, main topics discussed, overall outcomes)
-2. "key_points": An array of 3-7 key discussion points (important topics, debates, concerns raised)
-3. "decisions": An array of decisions made during the meeting (what was approved, denied, or deferred)
-4. "votes_overview": An array of objects with "item" (description) and "result" ("passed" or "failed")
-
-Be factual and objective. Focus on the most important information for citizens to understand what happened.`;
+You will receive the transcript text and a list of agenda items with their status. Be factual and objective. Focus on the most important information for citizens to understand what happened.`;
 
 export async function POST(request: Request) {
     try {
@@ -64,23 +56,49 @@ export async function POST(request: Request) {
             ).join('\n')}`
             : '';
 
-        // Call OpenAI API
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-4-turbo-preview',
+        // Call Anthropic API using Tool Use for guaranteed structured output
+        const completion = await anthropic.messages.create({
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 4096,
+            system: SYSTEM_PROMPT,
             messages: [
-                { role: 'system', content: SYSTEM_PROMPT },
                 {
                     role: 'user',
                     content: `Please analyze this city council meeting transcript and provide a structured summary.\n\nMeeting: ${transcription.title || 'City Council Meeting'}\n\nTranscript:\n${transcriptText}${agendaContext}`
                 }
             ],
-            response_format: { type: 'json_object' },
-            temperature: 0.3,
-            max_tokens: 1500,
+            tools: [
+                {
+                    name: 'save_meeting_summary',
+                    description: 'Save the generated summary data for the transcript',
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            summary_text: { type: 'string', description: 'A 2-3 sentence overview of the meeting' },
+                            key_points: { type: 'array', items: { type: 'string' }, description: 'An array of 3-7 key discussion points' },
+                            decisions: { type: 'array', items: { type: 'string' }, description: 'An array of decisions made during the meeting' },
+                            votes_overview: { 
+                                type: 'array', 
+                                items: { 
+                                    type: 'object', 
+                                    properties: { 
+                                        item: { type: 'string' }, 
+                                        result: { type: 'string', enum: ['passed', 'failed', 'deferred'] } 
+                                    },
+                                    required: ['item', 'result']
+                                }, 
+                                description: 'An array of objects with description and result' 
+                            }
+                        },
+                        required: ['summary_text', 'key_points', 'decisions', 'votes_overview']
+                    }
+                }
+            ],
+            tool_choice: { type: 'tool', name: 'save_meeting_summary' }
         });
 
-        const responseContent = completion.choices[0]?.message?.content;
-        if (!responseContent) {
+        const toolCall = completion.content.find(c => c.type === 'tool_use');
+        if (!toolCall || toolCall.type !== 'tool_use') {
             return NextResponse.json(
                 { error: 'No response from AI' },
                 { status: 500 }
@@ -88,7 +106,7 @@ export async function POST(request: Request) {
         }
 
         // Parse the AI response
-        const parsedResponse = JSON.parse(responseContent);
+        const parsedResponse = toolCall.input as any;
 
         // Store the summary
         const summary = await upsertMeetingSummary(videoId, {
@@ -96,7 +114,7 @@ export async function POST(request: Request) {
             keyPoints: parsedResponse.key_points || [],
             decisions: parsedResponse.decisions || [],
             votesOverview: parsedResponse.votes_overview || [],
-            aiModelVersion: 'gpt-4-turbo-preview',
+            aiModelVersion: 'claude-3-5-sonnet-20241022',
         });
 
         if (!summary) {

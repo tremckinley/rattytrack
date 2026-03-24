@@ -1,9 +1,8 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
-import { zodResponseFormat } from 'openai/helpers/zod';
 import FirecrawlApp from '@mendable/firecrawl-js';
 
-let openai: OpenAI | null = null;
+let anthropic: Anthropic | null = null;
 let firecrawl: FirecrawlApp | null = null;
 
 export const ScrapedMeetingSchema = z.object({
@@ -34,8 +33,8 @@ export async function runScraperAgent({
     prompt = "Find the most recent City Council or County Commission meeting. Extract its video, agenda, and minutes URLs." 
 }: ScrapeOptions): Promise<ScrapedMeetingResult> {
     
-    if (!openai) {
-        openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    if (!anthropic) {
+        anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
     }
     if (!firecrawl) {
         firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || 'dummy' });
@@ -54,32 +53,50 @@ export async function runScraperAgent({
         const markdownContent = scrapeResult.markdown || '';
         
         console.log(`[Scraper Agent] Firecrawl succeeded. Extracted ${markdownContent.length} characters of Markdown.`);
-        console.log(`[Scraper Agent] Analyzing with OpenAI...`);
+        console.log(`[Scraper Agent] Analyzing with Claude 3.5 Sonnet...`);
 
-        // 2. Extract structured data using OpenAI Strict Structured Outputs
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-4o-2024-08-06',
+        // 2. Extract structured data using Anthropic Tool Use
+        const completion = await anthropic.messages.create({
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 1024,
+            temperature: 0.1,
+            system: `You are an expert AI data extraction agent. You are looking at the exact Markdown representation of a local government website. Your goal is to identify the most recent city/county meeting and extract its media URLs (video, agenda, minutes). Use absolute URLs if relative ones are found. Note: A lot of local government websites are messy. Look for keywords like "Agenda", "Video", "Watch", "Minutes".`,
             messages: [
-                {
-                    role: 'system',
-                    content: `You are an expert AI data extraction agent. You are looking at the exact Markdown representation of a local government website. Your goal is to identify the most recent city/county meeting and extract its media URLs (video, agenda, minutes). Use absolute URLs if relative ones are found. Note: A lot of local government websites are messy. Look for keywords like "Agenda", "Video", "Watch", "Minutes".`
-                },
                 {
                     role: 'user',
                     content: `Here is the user's specific extraction request:\n"${prompt}"\n\n--- SITE MARKDOWN ---\n${markdownContent}`
                 }
             ],
-            response_format: zodResponseFormat(ScrapedMeetingSchema, 'meeting_extraction'),
-            temperature: 0.1, // Keep it highly deterministic
+            tools: [
+                {
+                    name: 'extract_meeting_data',
+                    description: 'Extract the meeting details from the provided markdown',
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            hasMeeting: { type: 'boolean', description: "Whether a relevant city/county meeting is found on the page" },
+                            meetingTitle: { type: ['string', 'null'], description: "The name of the meeting, e.g., 'City Council Meeting'" },
+                            meetingDate: { type: ['string', 'null'], description: "The date of the meeting in YYYY-MM-DD format if available" },
+                            videoUrl: { type: ['string', 'null'], description: "The direct URL to the YouTube or local video player for the meeting" },
+                            agendaUrl: { type: ['string', 'null'], description: "The direct URL to the PDF or HTML agenda" },
+                            minutesUrl: { type: ['string', 'null'], description: "The direct URL to the PDF or HTML minutes, if available" },
+                            confidence: { type: 'number', description: "Confidence score (0-100) that this is the correct most recent meeting" },
+                            explanation: { type: 'string', description: "A brief explanation of how the agent decided on this extraction" }
+                        },
+                        required: ['hasMeeting', 'meetingTitle', 'meetingDate', 'videoUrl', 'agendaUrl', 'minutesUrl', 'confidence', 'explanation']
+                    }
+                }
+            ],
+            tool_choice: { type: 'tool', name: 'extract_meeting_data' }
         });
 
-        const rawJson = completion.choices[0].message.content;
+        const toolCall = completion.content.find(block => block.type === 'tool_use');
         
-        if (!rawJson) {
-            throw new Error("OpenAI failed to return valid structured data.");
+        if (!toolCall || toolCall.type !== 'tool_use') {
+            throw new Error("Anthropic failed to use the extraction tool.");
         }
 
-        const extractedData = JSON.parse(rawJson) as ScrapedMeetingResult;
+        const extractedData = toolCall.input as unknown as ScrapedMeetingResult;
 
         console.log(`[Scraper Agent] Extraction complete! Confidence: ${extractedData.confidence}%`);
         
