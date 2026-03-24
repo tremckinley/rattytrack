@@ -49,11 +49,7 @@ export async function runScraperAgent({
             formats: ['markdown'],
             // Optional: wait for dynamic React/Angular tables to load
             waitFor: 2000, 
-        }) as any;
-
-        if (!scrapeResult.success) {
-            throw new Error(`Firecrawl failed: ${scrapeResult.error}`);
-        }
+        });
 
         const markdownContent = scrapeResult.markdown || '';
         
@@ -61,8 +57,7 @@ export async function runScraperAgent({
         console.log(`[Scraper Agent] Analyzing with OpenAI...`);
 
         // 2. Extract structured data using OpenAI Strict Structured Outputs
-        // @ts-ignore - Bypass OpenAI beta typing caching issues during Next.js build
-        const completion = await openai.beta.chat.completions.parse({
+        const completion = await openai.chat.completions.create({
             model: 'gpt-4o-2024-08-06',
             messages: [
                 {
@@ -78,11 +73,13 @@ export async function runScraperAgent({
             temperature: 0.1, // Keep it highly deterministic
         });
 
-        const extractedData = completion.choices[0].message.parsed;
+        const rawJson = completion.choices[0].message.content;
         
-        if (!extractedData) {
+        if (!rawJson) {
             throw new Error("OpenAI failed to return valid structured data.");
         }
+
+        const extractedData = JSON.parse(rawJson) as ScrapedMeetingResult;
 
         console.log(`[Scraper Agent] Extraction complete! Confidence: ${extractedData.confidence}%`);
         
