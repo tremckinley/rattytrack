@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Enqueue the background task via QStash
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VELOCITY_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VELOCITY_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:5000';
     const queueUrl = `${baseUrl}/api/webhooks/queue`;
 
     await publishQueueEvent({

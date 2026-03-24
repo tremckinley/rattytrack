@@ -33,7 +33,7 @@ export async function submitToAssemblyAI({ filePath, videoId, type = 'youtube' }
     // Determine the absolute webhook URL (assuming the app is hosted)
     // In local dev, webhooks won't work natively unless ngrok is used,
     // so we handle local dev cleanly.
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VELOCITY_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VELOCITY_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:5000';
     const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
 
     console.log(`[AssemblyAI] Submitting transcript. Webhook: ${webhookUrl}`);
@@ -63,7 +63,7 @@ export async function submitBufferToAssemblyAI({ buffer, videoId, type = 'upload
     const uploadedFileUrl = await aai.files.upload(buffer as unknown as Buffer);
     console.log(`[AssemblyAI] Uploaded securely. URL: ${uploadedFileUrl}`);
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VELOCITY_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VELOCITY_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:5000';
     const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
 
     console.log(`[AssemblyAI] Submitting transcript. Webhook: ${webhookUrl}`);
