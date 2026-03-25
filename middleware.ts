@@ -5,10 +5,11 @@ export async function middleware(request: NextRequest) {
     const { response, user, supabase } = await updateSession(request);
 
     // Define public routes that don't require authentication
-    const publicRoutes = ["/login", "/signup"];
+    const publicRoutes = ["/login", "/signup", "/api/stripe/webhook"];
     const isPublicRoute = 
         publicRoutes.includes(request.nextUrl.pathname) || 
-        request.nextUrl.pathname.startsWith("/auth");
+        request.nextUrl.pathname.startsWith("/auth") ||
+        request.nextUrl.pathname.startsWith("/api/webhooks");
 
     // Redirect unauthenticated users to login page if they try to access a non-public route
     if (!user && !isPublicRoute) {
