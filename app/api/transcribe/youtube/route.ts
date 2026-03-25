@@ -85,16 +85,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Enqueue the background task via QStash
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VELOCITY_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:5000';
-    const queueUrl = `${baseUrl}/api/webhooks/queue`;
+    // Determine the absolute webhook URL ensuring local overrides live variables
+    const isDev = process.env.NODE_ENV === 'development';
+    const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+    const url = `${baseUrl}/api/webhooks/queue`;
 
     await publishQueueEvent({
-      url: queueUrl,
+      url: url,
       payload: {
         eventType: 'transcribe-video',
         videoId: videoDetails.videoId,
-      }
+      },
     });
 
     return NextResponse.json({

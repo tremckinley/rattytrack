@@ -23,13 +23,20 @@ export async function publishQueueEvent({ url, payload, delay }: QueueEventParam
     const isLocalhost = url.includes('localhost') || url.includes('127.0.0.1') || url.includes('::1');
 
     if (!qstash || isLocalhost) {
-        console.warn(`QStash bypass: ${isLocalhost ? 'Localhost detected' : 'Token missing'}. Simulating queue execution synchronously.`);
-        // Fallback for local dev without QStash: just fetch the URL directly
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-simulated-qstash': 'true' },
-            body: JSON.stringify(payload)
-        }).catch(err => console.error('Simulated queue error:', err));
+        console.warn(`[QStash] Bypass: ${isLocalhost ? 'Localhost detected' : 'Token missing'}. Firing queue execution synchronously.`);
+        // Fallback for local dev: fetch the URL interactively and strictly await it to prevent Next.js 15 context garbage collection
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-simulated-qstash': 'true' },
+                body: JSON.stringify(payload)
+            });
+            const text = await res.text();
+            console.log('[QStash Bypass Result]:', text);
+        } catch (err: any) {
+            console.error('[QStash Bypass Error]:', err.message);
+        }
+        
         return { messageId: 'simulated-' + Date.now() };
     }
 

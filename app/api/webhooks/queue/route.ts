@@ -8,17 +8,19 @@ export const dynamic = 'force-dynamic';
 async function handler(request: NextRequest) {
     try {
         const body = await request.json();
-        const { eventType, payload } = body;
+        const { eventType, videoId } = body;
 
-        console.log(`[QStash Webhook] Received event: ${eventType}`);
+        console.log(`[QStash Webhook] Received event: ${eventType}, videoId: ${videoId}`);
 
         if (eventType === 'transcribe-video') {
-            const { videoId } = payload;
-            
-            // Verify it hasn't already been processed
+            if (!videoId) {
+                return NextResponse.json({ error: 'Missing videoId' }, { status: 400 });
+            }
+
+            // Verify it hasn't already been completed
             const existing = await getTranscription(videoId);
-            if (existing?.status === 'completed' || existing?.status === 'processing') {
-                return NextResponse.json({ message: 'Already processed or processing' });
+            if (existing?.status === 'completed') {
+                return NextResponse.json({ message: 'Already completed' });
             }
 
             // Run the heavy ingestion pipeline
