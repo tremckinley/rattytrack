@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMicrophone, faSearch, faChevronRight, faPlay, faSpinner, faCheckCircle, faClock, faMicrochip } from '@fortawesome/free-solid-svg-icons';
+import { faMicrophone, faSearch, faChevronRight, faPlay, faSpinner, faCheckCircle, faClock, faMicrochip, faEdit } from '@fortawesome/free-solid-svg-icons';
 import Link from "next/link";
 
 interface PendingMeeting {
@@ -75,9 +75,10 @@ export default function TranscriptionHub() {
         }
     };
 
-    const handleProvideVideoId = async (meetingId: string) => {
-        const videoId = window.prompt("Enter Granicus Clip ID (e.g., 10666):");
-        if (!videoId?.trim()) return;
+    const handleProvideVideoId = async (meetingId: string, currentId: string | null = null) => {
+        const videoId = window.prompt(`Enter Granicus Clip ID (e.g., 10666):`, currentId || "");
+        if (videoId === null) return; // Cancelled
+        if (!videoId.trim() && !currentId) return;
 
         setProvidingId(meetingId);
         try {
@@ -91,7 +92,11 @@ export default function TranscriptionHub() {
                 const data = await res.json();
                 const actualVideoId = data.meeting?.video_id || videoId.trim();
                 setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, videoId: actualVideoId } : m));
-                await startTranscription(meetingId, actualVideoId);
+                
+                // If it's a new or updated ID, ask if they want to transcribe
+                if (window.confirm("Video linked! Do you want to start transcription now?")) {
+                    await startTranscription(meetingId, actualVideoId);
+                }
             } else {
                 alert("Failed to save video ID.");
             }
@@ -146,7 +151,14 @@ export default function TranscriptionHub() {
                                         <FontAwesomeIcon icon={faMicrophone} className="text-lg" />}
                                 </div>
                                 <div className="min-w-0">
-                                    <h4 className="text-sm font-bold text-gray-900 truncate border-none">{meeting.title}</h4>
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="text-sm font-bold text-gray-900 truncate border-none">{meeting.title}</h4>
+                                        {meeting.videoId && (
+                                            <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold">
+                                                ID: {meeting.videoId}
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
                                         <span className="flex items-center gap-1 uppercase tracking-tight">
                                             <FontAwesomeIcon icon={faClock} className="text-xs" />
@@ -165,16 +177,18 @@ export default function TranscriptionHub() {
                             </div>
 
                             <div className="flex items-center gap-3">
-                                {!meeting.videoId && (
-                                    <button
-                                        onClick={() => handleProvideVideoId(meeting.id)}
-                                        disabled={providingId === meeting.id}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 shadow-sm transition-all"
-                                    >
-                                        {providingId === meeting.id ? <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" /> : <FontAwesomeIcon icon={faPlay} className="text-xs" />}
-                                        Link Video
-                                    </button>
-                                )}
+                                <button
+                                    onClick={() => handleProvideVideoId(meeting.id, meeting.videoId)}
+                                    disabled={providingId === meeting.id}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all ${
+                                        meeting.videoId 
+                                        ? 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50' 
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    {providingId === meeting.id ? <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" /> : <FontAwesomeIcon icon={faEdit} className="text-xs" />}
+                                    {meeting.videoId ? "Edit ID" : "Set ID"}
+                                </button>
                                 
                                 {meeting.videoId && meeting.transcriptionStatus !== 'completed' && meeting.transcriptionStatus !== 'processing' && (
                                     <button
@@ -231,4 +245,6 @@ export default function TranscriptionHub() {
             </div>
         </div>
     );
+}
+
 }
