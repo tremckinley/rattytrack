@@ -1,6 +1,0 @@
-﻿.next/types/app/api/transcribe/youtube/route.ts(2,24): error TS2307: Cannot find module '../../../../../../app/api/transcribe/youtube/route.js' or its corresponding type declarations.
-.next/types/app/api/transcribe/youtube/route.ts(5,29): error TS2307: Cannot find module '../../../../../../app/api/transcribe/youtube/route.js' or its corresponding type declarations.
-.next/types/validator.ts(323,39): error TS2307: Cannot find module '../../app/api/transcribe/youtube/route.js' or its corresponding type declarations.
-.next/types/validator.ts(332,39): error TS2307: Cannot find module '../../app/api/transcribe/youtube/speakers/route.js' or its corresponding type declarations.
-app/api/transcribe/route.ts(63,9): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'SubmitBufferOptions'.
-lib/ai/ingestion-pipeline.ts(25,13): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'SubmitUrlOptions'.

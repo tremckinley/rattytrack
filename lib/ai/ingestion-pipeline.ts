@@ -22,7 +22,7 @@ export async function runVideoIngestionPipeline(clipId: string) {
         const transcriptId = await submitUrlToAssemblyAI({
             remoteUrl: mp4Url,
             videoId: clipId,
-            type: 'youtube',
+            source: 'granicus',
         });
 
         // 3. Update status (wait for the AssemblyAI webhook to fire 'completed')

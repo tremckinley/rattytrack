@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     await submitBufferToAssemblyAI({
         buffer,
         videoId: meetingId,
-        type: 'upload'
+        source: 'upload'
     });
 
     return NextResponse.json({

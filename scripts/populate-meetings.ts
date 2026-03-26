@@ -11,21 +11,17 @@
 
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
-import * as cheerio from 'cheerio';
-import { scrapeAgendaPage, ScrapedDocument } from '../lib/data/agenda-scraper';
+import { scrapeAgendaPage } from '../lib/data/agenda-scraper';
+import { fetchGranicusMeetings } from '../lib/utils/meeting-video-downloader';
 
 dotenv.config({ path: '.env.local' });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: { autoRefreshToken: false, persistSession: false }
 });
-
-const MEMPHIS_AGENDA_URL = 'https://memphistn.gov/city-council-meeting-agenda/';
-const CHANNEL_HANDLE = '@MemphisCityCouncil';
 
 interface ParsedMeeting {
     date: Date;
@@ -33,178 +29,11 @@ interface ParsedMeeting {
     agendaUrl: string | null;
     documentsUrl: string | null;
     minutesUrl: string | null;
+    clipId: string | null;
+    granicusTitle: string | null;
 }
 
-interface YouTubeVideo {
-    videoId: string;
-    title: string;
-    publishedAt: string;
-    parsedDate: Date | null;
-    meetingType: string | null;
-}
-
-// ================== DATE PARSING ==================
-
-/**
- * Parse date from URL filename
- */
-function parseDateFromUrl(url: string): Date | null {
-    // Try MM.DD.YYYY format
-    const dotMatch = url.match(/(\d{2})\.(\d{2})\.(\d{4})/);
-    if (dotMatch) {
-        const month = parseInt(dotMatch[1]) - 1;
-        const day = parseInt(dotMatch[2]);
-        const year = parseInt(dotMatch[3]);
-        return new Date(year, month, day);
-    }
-
-    // Try MM-DD-YYYY format
-    const dashMatch = url.match(/(\d{2})-(\d{2})-(\d{4})/);
-    if (dashMatch) {
-        const month = parseInt(dashMatch[1]) - 1;
-        const day = parseInt(dashMatch[2]);
-        const year = parseInt(dashMatch[3]);
-        return new Date(year, month, day);
-    }
-
-    // Try to find date like "January-7-2025"
-    const monthNameMatch = url.match(
-        /(January|February|March|April|May|June|July|August|September|October|November|December)[- ](\d{1,2})[- ](\d{4})/i
-    );
-    if (monthNameMatch) {
-        const monthNames = [
-            'january', 'february', 'march', 'april', 'may', 'june',
-            'july', 'august', 'september', 'october', 'november', 'december'
-        ];
-        const month = monthNames.indexOf(monthNameMatch[1].toLowerCase());
-        const day = parseInt(monthNameMatch[2]);
-        const year = parseInt(monthNameMatch[3]);
-        if (month >= 0) {
-            return new Date(year, month, day);
-        }
-    }
-
-    return null;
-}
-
-/**
- * Parse date from video title
- */
-function parseDateFromTitle(title: string): Date | null {
-    // Try "Month Day, Year" format
-    const monthDayYearMatch = title.match(
-        /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})\b/i
-    );
-
-    if (monthDayYearMatch) {
-        const monthNames = [
-            'january', 'february', 'march', 'april', 'may', 'june',
-            'july', 'august', 'september', 'october', 'november', 'december'
-        ];
-        const month = monthNames.indexOf(monthDayYearMatch[1].toLowerCase());
-        const day = parseInt(monthDayYearMatch[2]);
-        const year = parseInt(monthDayYearMatch[3]);
-
-        if (month >= 0) {
-            return new Date(year, month, day);
-        }
-    }
-
-    // Try MM/DD/YYYY or MM-DD-YYYY
-    const slashMatch = title.match(/\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\b/);
-    if (slashMatch) {
-        const month = parseInt(slashMatch[1]) - 1;
-        const day = parseInt(slashMatch[2]);
-        const year = parseInt(slashMatch[3]);
-        return new Date(year, month, day);
-    }
-
-    return null;
-}
-
-/**
- * Determine meeting type from link text or URL
- */
-function getMeetingTypeFromUrl(linkText: string, url: string): 'Regular Meeting' | 'Committee Meeting' | null {
-    const text = linkText.toLowerCase();
-    const urlLower = url.toLowerCase();
-
-    if (text.includes('committee') || urlLower.includes('committee')) {
-        return 'Committee Meeting';
-    }
-    if (text.includes('regular') || urlLower.includes('regular') || urlLower.includes('/ag-')) {
-        return 'Regular Meeting';
-    }
-
-    return null;
-}
-
-/**
- * Determine meeting type from video title
- */
-function getMeetingTypeFromTitle(title: string): string {
-    const lowerTitle = title.toLowerCase();
-
-    if (lowerTitle.includes('committee')) {
-        return 'Committee Meeting';
-    }
-    if (lowerTitle.includes('special')) {
-        return 'Special Meeting';
-    }
-    if (lowerTitle.includes('public hearing')) {
-        return 'Public Hearing';
-    }
-    return 'Regular Meeting';
-}
-
-/**
- * Check if a video title indicates an actual full meeting recording
- * Returns false for recaps, highlights, previews, announcements, etc.
- */
-function isActualMeetingVideo(title: string): boolean {
-    const lowerTitle = title.toLowerCase();
-
-    // Exclude non-meeting content
-    const excludeKeywords = [
-        'recap',
-        'highlight',
-        'preview',
-        'announcement',
-        'trailer',
-        'promo',
-        'interview',
-        'update',
-        'summary',
-        'clip',
-        'moment',
-        'best of',
-        'teaser',
-    ];
-
-    for (const keyword of excludeKeywords) {
-        if (lowerTitle.includes(keyword)) {
-            return false;
-        }
-    }
-
-    // Must contain meeting-related keywords
-    const requiredKeywords = [
-        'meeting',
-        'session',
-        'council',
-    ];
-
-    for (const keyword of requiredKeywords) {
-        if (lowerTitle.includes(keyword)) {
-            return true;
-        }
-    }
-
-    // If no required keyword found, it's probably not a meeting video
-    return false;
-}
-
-// ================== SCRAPE CITY WEBSITE ==================
+// ================== SCRAPE CITY WEBSITE =============
 
 async function fetchAndParseMeetings(): Promise<ParsedMeeting[]> {
     console.log('📥 Fetching meeting data from city website...');
@@ -218,7 +47,6 @@ async function fetchAndParseMeetings(): Promise<ParsedMeeting[]> {
 
             const dateStr = doc.meetingDate.toISOString().split('T')[0];
 
-            // Map granular document types to meeting types
             let meetingType: 'Regular Meeting' | 'Committee Meeting' | null = null;
             if (doc.documentType === 'regular_agenda' || doc.documentType === 'regular_docs' || doc.documentType === 'pz_regular_docs') {
                 meetingType = 'Regular Meeting';
@@ -237,6 +65,8 @@ async function fetchAndParseMeetings(): Promise<ParsedMeeting[]> {
                     agendaUrl: null,
                     documentsUrl: null,
                     minutesUrl: null,
+                    clipId: null,
+                    granicusTitle: null
                 });
             }
 
@@ -251,7 +81,30 @@ async function fetchAndParseMeetings(): Promise<ParsedMeeting[]> {
             }
         }
 
-        console.log(`   Found ${meetingsMap.size} meetings from website`);
+        // Now fetch Granicus meetings and match them by date
+        console.log('📺 Fetching videos from Granicus archive...');
+        const granicusMeetings = await fetchGranicusMeetings();
+        console.log(`   Found ${granicusMeetings.length} Granicus videos`);
+
+        for (const granMeeting of granicusMeetings) {
+            const dateStr = granMeeting.date.toISOString().split('T')[0];
+            
+            // Try to find a matching meeting in our map
+            // Note: Granicus often combines committee meetings or calls them "City Council Committee"
+            // We search for both Regular and Committee matches on the same day.
+            const regKey = `${dateStr}-Regular Meeting`;
+            const comKey = `${dateStr}-Committee Meeting`;
+
+            if (meetingsMap.has(regKey) && granMeeting.title.toLowerCase().includes('council')) {
+                meetingsMap.get(regKey)!.clipId = granMeeting.clipId;
+                meetingsMap.get(regKey)!.granicusTitle = granMeeting.title;
+            } else if (meetingsMap.has(comKey) && granMeeting.title.toLowerCase().includes('committee')) {
+                meetingsMap.get(comKey)!.clipId = granMeeting.clipId;
+                meetingsMap.get(comKey)!.granicusTitle = granMeeting.title;
+            }
+        }
+
+        console.log(`   Found ${meetingsMap.size} meetings from combined sources`);
         return Array.from(meetingsMap.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
     } catch (error) {
         console.error('Error fetching/parsing meetings:', error);
@@ -279,19 +132,25 @@ async function createMeetingRecords(meetings: ParsedMeeting[]) {
         // Check if meeting already exists
         const { data: existing } = await supabase
             .from('meetings')
-            .select('id, agenda_url')
+            .select('id, agenda_url, video_id')
             .gte('scheduled_start', `${dateStr}T00:00:00`)
             .lt('scheduled_start', `${dateStr}T23:59:59`)
             .eq('meeting_type', meeting.meetingType)
             .single();
 
         if (existing) {
-            // Update with document URLs if missing
+            // Update with document URLs or Granicus ID if missing
             const updates: Record<string, unknown> = {};
 
             if (!existing.agenda_url && meeting.agendaUrl) {
                 updates.agenda_url = meeting.agendaUrl;
                 updates.minutes_url = meeting.minutesUrl;
+            }
+
+            if (!existing.video_id && meeting.clipId) {
+                updates.video_id = meeting.clipId;
+                updates.video_url = `https://memphis.granicus.com/MediaPlayer.php?view_id=6&clip_id=${meeting.clipId}`;
+                updates.video_platform = 'granicus';
             }
 
             if (Object.keys(updates).length > 0) {
@@ -300,7 +159,7 @@ async function createMeetingRecords(meetings: ParsedMeeting[]) {
                     .update(updates)
                     .eq('id', existing.id);
 
-                console.log(`📄 Updated documents for: ${title}`);
+                console.log(`📄 Updated: ${title} ${updates.video_id ? '(linked video)' : ''}`);
                 updated++;
             } else {
                 skipped++;
@@ -313,6 +172,9 @@ async function createMeetingRecords(meetings: ParsedMeeting[]) {
                 scheduled_start: meeting.date.toISOString(),
                 agenda_url: meeting.agendaUrl,
                 minutes_url: meeting.minutesUrl,
+                video_id: meeting.clipId,
+                video_url: meeting.clipId ? `https://memphis.granicus.com/MediaPlayer.php?view_id=6&clip_id=${meeting.clipId}` : null,
+                video_platform: meeting.clipId ? 'granicus' : null,
                 processing_status: 'pending',
                 transcription_status: 'pending',
                 analysis_status: 'pending',
@@ -324,7 +186,7 @@ async function createMeetingRecords(meetings: ParsedMeeting[]) {
             if (error) {
                 console.error(`❌ Error creating meeting "${title}":`, JSON.stringify(error, null, 2));
             } else {
-                console.log(`✨ Created: ${title}`);
+                console.log(`✨ Created: ${title} ${meeting.clipId ? '(with video)' : ''}`);
                 created++;
             }
         }
@@ -332,7 +194,7 @@ async function createMeetingRecords(meetings: ParsedMeeting[]) {
 
     console.log('\n📊 Summary:');
     console.log(`   Created new meetings: ${created}`);
-    console.log(`   Updated with documents: ${updated}`);
+    console.log(`   Updated meetings: ${updated}`);
     console.log(`   Skipped (already exist): ${skipped}`);
     
     return { created, updated, skipped };
@@ -342,10 +204,7 @@ async function createMeetingRecords(meetings: ParsedMeeting[]) {
 
 export async function populateMeetings() {
     try {
-        // Fetch data from Memphis City Council agenda website natively
         const meetings = await fetchAndParseMeetings();
-
-        // Create/update meeting records
         const stats = await createMeetingRecords(meetings);
         return { success: true, stats };
     } catch (error: any) {
@@ -353,3 +212,4 @@ export async function populateMeetings() {
         return { success: false, error: error.message };
     }
 }
+
