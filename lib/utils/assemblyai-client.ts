@@ -34,7 +34,9 @@ export async function submitToAssemblyAI({ filePath, videoId, type = 'youtube' }
     // In local dev, webhooks won't work natively unless ngrok is used,
     // so we handle local dev cleanly through QStash simulation.
     const isDev = process.env.NODE_ENV === 'development';
-    const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+    const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+    const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
+    const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
     const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
 
     console.log(`[AssemblyAI] Submitting transcript. Webhook: ${webhookUrl}`);
@@ -65,7 +67,9 @@ export async function submitBufferToAssemblyAI({ buffer, videoId, type = 'upload
     console.log(`[AssemblyAI] Uploaded securely. URL: ${uploadedFileUrl}`);
 
     const isDev = process.env.NODE_ENV === 'development';
-    const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+    const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+    const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
+    const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
     const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
 
     console.log(`[AssemblyAI] Submitting transcript. Webhook: ${webhookUrl}`);

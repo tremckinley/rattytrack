@@ -85,9 +85,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine the absolute webhook URL ensuring local overrides live variables
+    // Determine the absolute webhook URL ensuring preview branch deployments receive their own webhooks
     const isDev = process.env.NODE_ENV === 'development';
-    const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+    // Fallback order: NEXT_PUBLIC_APP_URL -> VERCEL_URL (current deployment) -> VERCEL_PROJECT_PRODUCTION_URL
+    const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+    const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
+    const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
     const url = `${baseUrl}/api/webhooks/queue`;
 
     await publishQueueEvent({
