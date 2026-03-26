@@ -11,11 +11,30 @@ export async function downloadYouTubeAudioBuffer(videoId: string): Promise<Buffe
         const yt = await Innertube.create();
         
         console.log(`[YouTube] Fetching info and stream URL...`);
-        const stream = await yt.download(videoId, {
-            type: 'audio',
-            quality: 'best',
-            client: 'ANDROID', // Highly reliable client bypassing age/bot checks
-        });
+        
+        // Array of internal clients to attempt to bypass "login required" bot flags or age gates
+        const clientsToTry: any[] = ['ANDROID', 'IOS', 'WEB', 'TV_EMBEDDED'];
+        let stream: any;
+        let lastError: any;
+
+        for (const clientName of clientsToTry) {
+            try {
+                console.log(`[YouTube] Attempting extraction with client: ${clientName}`);
+                stream = await yt.download(videoId, {
+                    type: 'audio',
+                    quality: 'best',
+                    client: clientName,
+                });
+                break; // Extraction succeeded, exit loop
+            } catch (err: any) {
+                lastError = err;
+                console.warn(`[YouTube] Client ${clientName} failed:`, err.message);
+            }
+        }
+
+        if (!stream) {
+            throw lastError || new Error(`All fallback clients failed to extract stream for ${videoId}`);
+        }
         
         console.log(`[YouTube] Streaming audio directly to memory...`);
         const reader = stream.getReader();
