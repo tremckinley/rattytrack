@@ -13,8 +13,9 @@ const GRANICUS_VIEW_ID = 6; // Memphis City Council view
 
 /**
  * Given a Granicus clip ID, resolve the direct MP4 download URL.
+ * This is a lightweight HTTP request — no video data is downloaded.
  */
-async function resolveDownloadUrl(clipId: string): Promise<string> {
+export async function resolveMp4Url(clipId: string): Promise<string> {
     const playerUrl = `${GRANICUS_BASE}/MediaPlayer.php?view_id=${GRANICUS_VIEW_ID}&clip_id=${clipId}`;
     console.log(`[Granicus] Fetching player page: ${playerUrl}`);
 
@@ -41,7 +42,7 @@ async function resolveDownloadUrl(clipId: string): Promise<string> {
  */
 export async function downloadMeetingVideoBuffer(clipIdOrUrl: string): Promise<Buffer> {
     const isDirectUrl = clipIdOrUrl.startsWith('http');
-    const mp4Url = isDirectUrl ? clipIdOrUrl : await resolveDownloadUrl(clipIdOrUrl);
+    const mp4Url = isDirectUrl ? clipIdOrUrl : await resolveMp4Url(clipIdOrUrl);
 
     console.log(`[Granicus] Downloading MP4 to memory...`);
     const streamResponse = await fetch(mp4Url);

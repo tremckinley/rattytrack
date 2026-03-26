@@ -92,6 +92,44 @@ export async function submitBufferToAssemblyAI({ buffer, videoId, type = 'upload
     return transcript.id;
 }
 
+export interface SubmitUrlOptions {
+    remoteUrl: string; // Publicly accessible URL (e.g. Granicus CDN)
+    videoId: string;
+    type?: 'youtube' | 'upload';
+}
+
+/**
+ * Submits a publicly-accessible remote URL directly to AssemblyAI.
+ * AssemblyAI downloads the file from their side — zero memory usage on our server.
+ * This is essential for large meeting videos that would OOM Vercel Serverless.
+ */
+export async function submitUrlToAssemblyAI({ remoteUrl, videoId, type = 'youtube' }: SubmitUrlOptions) {
+    if (!process.env.ASSEMBLYAI_API_KEY) {
+        throw new Error('ASSEMBLYAI_API_KEY is not set');
+    }
+
+    const isDev = process.env.NODE_ENV === 'development';
+    const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+    const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
+    const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
+    const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
+
+    console.log(`[AssemblyAI] Submitting remote URL directly. Webhook: ${webhookUrl}`);
+    
+    const useBypass = !!process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
+    const transcript = await aai.transcripts.submit({
+        audio_url: remoteUrl, // AssemblyAI downloads directly from this URL
+        speaker_labels: true,
+        webhook_url: webhookUrl,
+        webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
+        webhook_auth_header_value: useBypass ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET! : process.env.ASSEMBLYAI_API_KEY!,
+    });
+
+    console.log(`[AssemblyAI] Submitted remote URL! Transcript ID: ${transcript.id}`);
+    return transcript.id;
+}
+
 /**
  * Wait for a transcript to finish synchronously (used only for local fallback when webhooks are disabled)
  */

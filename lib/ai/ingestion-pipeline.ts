@@ -1,31 +1,28 @@
 import { updateTranscriptionStatus } from '@/lib/data/transcriptions';
-import { submitBufferToAssemblyAI } from '@/lib/utils/assemblyai-client';
+import { submitUrlToAssemblyAI } from '@/lib/utils/assemblyai-client';
 
 /**
- * Downloads a meeting video from Granicus and submits it to AssemblyAI.
- * Triggered asynchronously by QStash. Works natively on Vercel Serverless.
+ * Resolves the Granicus MP4 URL and passes it directly to AssemblyAI.
+ * AssemblyAI downloads the file from their servers — zero memory on ours.
+ * This avoids OOM kills on Vercel Serverless for large meeting videos.
  */
 export async function runVideoIngestionPipeline(clipId: string) {
     try {
-        console.log(`[Ingestion Pipeline] Starting Granicus download for clip ${clipId}...`);
+        console.log(`[Ingestion Pipeline] Resolving Granicus MP4 URL for clip ${clipId}...`);
         
-        // Dynamically import the meeting video downloader
-        const { downloadMeetingVideoBuffer } = await import('@/lib/utils/meeting-video-downloader');
+        const { resolveMp4Url } = await import('@/lib/utils/meeting-video-downloader');
         
-        // 1. Download meeting video directly into memory from Granicus CDN
-        const videoBuffer = await downloadMeetingVideoBuffer(clipId);
+        // 1. Resolve the direct MP4 CDN URL (lightweight HTTP request, no download)
+        const mp4Url = await resolveMp4Url(clipId);
         
-        if (!videoBuffer || videoBuffer.length === 0) {
-            throw new Error('Failed to download meeting video from Granicus.');
-        }
-
-        console.log(`[Ingestion Pipeline] Buffer ready (${(videoBuffer.length / 1024 / 1024).toFixed(2)} MB). Submitting to AssemblyAI...`);
+        console.log(`[Ingestion Pipeline] Resolved URL: ${mp4Url}`);
+        console.log(`[Ingestion Pipeline] Submitting URL directly to AssemblyAI (zero-download mode)...`);
         
-        // 2. Submit buffer directly to AssemblyAI
-        const transcriptId = await submitBufferToAssemblyAI({
-            buffer: videoBuffer,
-            videoId: clipId, // clipId is now used as our internal video identifier
-            type: 'youtube', // Keep 'youtube' type so the webhook routes to the correct handler
+        // 2. Pass the URL directly to AssemblyAI — they handle the download
+        const transcriptId = await submitUrlToAssemblyAI({
+            remoteUrl: mp4Url,
+            videoId: clipId,
+            type: 'youtube',
         });
 
         // 3. Update status (wait for the AssemblyAI webhook to fire 'completed')
