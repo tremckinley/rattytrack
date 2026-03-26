@@ -45,7 +45,8 @@ export async function submitToAssemblyAI({ filePath, videoId, type = 'youtube' }
 
     const transcript = await aai.transcripts.submit({
         audio_url: uploadedFileUrl,
-        speaker_labels: true, // Enables Speaker Diarization
+        speech_model: 'universal-2' as any,
+        speaker_labels: true,
         webhook_url: webhookUrl,
         webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
         webhook_auth_header_value: useBypass ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET! : process.env.ASSEMBLYAI_API_KEY!,
@@ -82,6 +83,7 @@ export async function submitBufferToAssemblyAI({ buffer, videoId, type = 'upload
     // but diarization is always good, so we keep it enabled.
     const transcript = await aai.transcripts.submit({
         audio_url: uploadedFileUrl,
+        speech_model: 'universal-2' as any,
         speaker_labels: true,
         webhook_url: webhookUrl,
         webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
@@ -120,6 +122,7 @@ export async function submitUrlToAssemblyAI({ remoteUrl, videoId, type = 'youtub
 
     const transcript = await aai.transcripts.submit({
         audio_url: remoteUrl, // AssemblyAI downloads directly from this URL
+        speech_model: 'universal-2' as any,
         speaker_labels: true,
         webhook_url: webhookUrl,
         webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
