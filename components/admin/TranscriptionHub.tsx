@@ -17,6 +17,7 @@ export default function TranscriptionHub() {
     const [meetings, setMeetings] = useState<PendingMeeting[]>([]);
     const [loading, setLoading] = useState(true);
     const [transcribing, setTranscribing] = useState<string | null>(null);
+    const [providingId, setProvidingId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchPendingMeetings();
@@ -51,6 +52,38 @@ export default function TranscriptionHub() {
             console.error("Failed to start transcription", err);
         } finally {
             setTranscribing(null);
+        }
+    };
+
+    const handleProvideVideoId = async (meetingId: string) => {
+        const videoId = window.prompt("Enter Granicus Clip ID (e.g., 10666) or YouTube URL/ID:");
+        if (!videoId?.trim()) return;
+
+        setProvidingId(meetingId);
+        try {
+            const res = await fetch(`/api/admin/meetings/${meetingId}/video`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ videoId: videoId.trim() }),
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                const actualVideoId = data.meeting?.video_id || videoId.trim();
+                
+                // Update local state first to show it has an ID
+                setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, videoId: actualVideoId } : m));
+                
+                // Immediately start transcribing it
+                await startTranscription(meetingId, actualVideoId);
+            } else {
+                alert("Failed to save video ID. Ensure you are an admin and the meeting exists.");
+            }
+        } catch (err) {
+            console.error("Failed to provide video ID", err);
+            alert("An error occurred while linking the video ID.");
+        } finally {
+            setProvidingId(null);
         }
     };
 
@@ -107,6 +140,20 @@ export default function TranscriptionHub() {
                             </div>
 
                             <div className="flex items-center gap-3">
+                                {!meeting.videoId && meeting.status !== 'transcribing' && meeting.status !== 'completed' && (
+                                    <button
+                                        onClick={() => handleProvideVideoId(meeting.id)}
+                                        disabled={providingId === meeting.id}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 shadow-sm transition-all"
+                                    >
+                                        {providingId === meeting.id ? (
+                                            <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" />
+                                        ) : (
+                                            <FontAwesomeIcon icon={faPlay} className="text-xs" />
+                                        )}
+                                        Link Video & Transcribe
+                                    </button>
+                                )}
                                 {meeting.videoId && meeting.status !== 'transcribing' && meeting.status !== 'completed' && (
                                     <button
                                         onClick={() => startTranscription(meeting.id, meeting.videoId!)}

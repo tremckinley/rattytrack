@@ -40,29 +40,51 @@ export default function MeetingVideoSection({ videoId, videoUrl, title }: Meetin
         );
     }
 
+    const isGranicus = /^\d+$/.test(actualVideoId);
+
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            {/* YouTube Embed */}
-            <div className="aspect-video w-full">
-                <iframe
-                    src={`https://www.youtube.com/embed/${actualVideoId}`}
-                    title={title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full"
-                />
+            {/* Video Embed */}
+            <div className="aspect-video w-full bg-black">
+                {isGranicus ? (
+                    <iframe
+                        src={`https://memphis.granicus.com/MediaPlayer.php?view_id=6&clip_id=${actualVideoId}&embed=1&autostart=0`}
+                        title={title}
+                        allowFullScreen
+                        className="w-full h-full border-0"
+                    />
+                ) : (
+                    <iframe
+                        src={`https://www.youtube.com/embed/${actualVideoId}`}
+                        title={title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full border-0"
+                    />
+                )}
             </div>
 
             {/* Video Actions */}
-            <div className="p-4 bg-gray-50 flex gap-3">
-                <a
-                    href={`https://www.youtube.com/watch?v=${actualVideoId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-                >
-                    Watch on YouTube ↗
-                </a>
+            <div className="p-4 bg-gray-50 flex gap-3 border-t border-gray-100">
+                {isGranicus ? (
+                    <a
+                        href={`https://memphis.granicus.com/MediaPlayer.php?view_id=6&clip_id=${actualVideoId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
+                    >
+                        Watch on Granicus Archive ↗
+                    </a>
+                ) : (
+                    <a
+                        href={`https://www.youtube.com/watch?v=${actualVideoId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm shadow-sm"
+                    >
+                        Watch on YouTube ↗
+                    </a>
+                )}
             </div>
         </div>
     );
