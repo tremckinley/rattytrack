@@ -41,7 +41,7 @@ export default function TranscriptionHub() {
             const res = await fetch("/api/transcribe/youtube", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ videoId }),
+                body: JSON.stringify({ videoId, forceRetry: true }),
             });
             if (res.ok) {
                 // Update local state to show it's transcribing
