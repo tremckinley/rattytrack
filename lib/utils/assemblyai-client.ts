@@ -37,19 +37,18 @@ export async function submitToAssemblyAI({ filePath, videoId, type = 'youtube' }
     const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
     const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
     const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
-    let webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
-    if (process.env.VERCEL_AUTOMATION_BYPASS_SECRET) {
-        webhookUrl += `&x-vercel-protection-bypass=${process.env.VERCEL_AUTOMATION_BYPASS_SECRET}&x-vercel-set-bypass-cookie=true`;
-    }
+    const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
 
     console.log(`[AssemblyAI] Submitting transcript. Webhook: ${webhookUrl}`);
     
+    const useBypass = !!process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
     const transcript = await aai.transcripts.submit({
         audio_url: uploadedFileUrl,
         speaker_labels: true, // Enables Speaker Diarization
         webhook_url: webhookUrl,
-        webhook_auth_header_name: 'x-api-key',
-        webhook_auth_header_value: process.env.ASSEMBLYAI_API_KEY, // Simple auth check
+        webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
+        webhook_auth_header_value: useBypass ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET! : process.env.ASSEMBLYAI_API_KEY!,
     });
 
     console.log(`[AssemblyAI] Submitted! Transcript ID: ${transcript.id}`);
@@ -73,21 +72,20 @@ export async function submitBufferToAssemblyAI({ buffer, videoId, type = 'upload
     const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
     const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
     const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
-    let webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
-    if (process.env.VERCEL_AUTOMATION_BYPASS_SECRET) {
-        webhookUrl += `&x-vercel-protection-bypass=${process.env.VERCEL_AUTOMATION_BYPASS_SECRET}&x-vercel-set-bypass-cookie=true`;
-    }
+    const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
 
     console.log(`[AssemblyAI] Submitting transcript. Webhook: ${webhookUrl}`);
     
+    const useBypass = !!process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
     // We disable speaker labels for simple audio uploads if they don't explicitly require it, 
     // but diarization is always good, so we keep it enabled.
     const transcript = await aai.transcripts.submit({
         audio_url: uploadedFileUrl,
         speaker_labels: true,
         webhook_url: webhookUrl,
-        webhook_auth_header_name: 'x-api-key',
-        webhook_auth_header_value: process.env.ASSEMBLYAI_API_KEY,
+        webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
+        webhook_auth_header_value: useBypass ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET! : process.env.ASSEMBLYAI_API_KEY!,
     });
 
     console.log(`[AssemblyAI] Submitted buffer! Transcript ID: ${transcript.id}`);

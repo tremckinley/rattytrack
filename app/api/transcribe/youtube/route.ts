@@ -91,10 +91,7 @@ export async function POST(request: NextRequest) {
     const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
     const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
     const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
-    let url = `${baseUrl}/api/webhooks/queue`;
-    if (process.env.VERCEL_AUTOMATION_BYPASS_SECRET) {
-        url += `?x-vercel-protection-bypass=${process.env.VERCEL_AUTOMATION_BYPASS_SECRET}&x-vercel-set-bypass-cookie=true`;
-    }
+    const url = `${baseUrl}/api/webhooks/queue`;
 
     await publishQueueEvent({
       url: url,

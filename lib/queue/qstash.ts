@@ -40,9 +40,15 @@ export async function publishQueueEvent({ url, payload, delay }: QueueEventParam
         return { messageId: 'simulated-' + Date.now() };
     }
 
+    const headers: Record<string, string> = {};
+    if (process.env.VERCEL_AUTOMATION_BYPASS_SECRET) {
+        headers['x-vercel-protection-bypass'] = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+    }
+
     const res = await qstash.publishJSON({
         url,
         body: payload,
+        headers,
         delay,
     });
 

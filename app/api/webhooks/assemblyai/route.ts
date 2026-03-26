@@ -18,8 +18,13 @@ const aai = new AssemblyAI({
 export async function POST(request: NextRequest) {
     try {
         // Simple authentication check using the header we registered
-        const authHeader = request.headers.get('x-api-key');
-        if (authHeader !== process.env.ASSEMBLYAI_API_KEY) {
+        // If VERCEL_AUTOMATION_BYPASS_SECRET is used for deployment protection, AssemblyAI will send it as 'x-vercel-protection-bypass' instead of 'x-api-key'
+        const authHeader = request.headers.get('x-api-key') || request.headers.get('x-vercel-protection-bypass');
+        const expectedAuth = request.headers.has('x-vercel-protection-bypass') 
+            ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET 
+            : process.env.ASSEMBLYAI_API_KEY;
+
+        if (!authHeader || authHeader !== expectedAuth) {
             return NextResponse.json({ error: 'Unauthorized webhook' }, { status: 401 });
         }
 
