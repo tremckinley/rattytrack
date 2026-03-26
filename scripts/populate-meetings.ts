@@ -204,101 +204,6 @@ function isActualMeetingVideo(title: string): boolean {
     return false;
 }
 
-// ================== YOUTUBE API ==================
-
-/**
- * Get channel ID from channel handle
- */
-async function getChannelId(handle: string): Promise<string | null> {
-    try {
-        const response = await fetch(
-            `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(handle)}&type=channel&maxResults=1&key=${YOUTUBE_API_KEY}`
-        );
-        const data = await response.json();
-        return data.items?.[0]?.id?.channelId || null;
-    } catch (error) {
-        console.error('Error fetching channel ID:', error);
-        return null;
-    }
-}
-
-/**
- * Fetch all videos from the channel (up to 2 years back)
- */
-async function fetchAllChannelVideos(): Promise<YouTubeVideo[]> {
-    if (!YOUTUBE_API_KEY) {
-        console.log('⚠️  YOUTUBE_API_KEY not set, skipping video fetch');
-        return [];
-    }
-
-    console.log('📺 Fetching videos from YouTube channel...');
-
-    const channelId = await getChannelId(CHANNEL_HANDLE);
-    if (!channelId) {
-        console.log('⚠️  Could not find YouTube channel');
-        return [];
-    }
-
-    const videos: YouTubeVideo[] = [];
-    let nextPageToken: string | undefined;
-    const twoYearsAgo = new Date();
-    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-
-    do {
-        const url = new URL('https://www.googleapis.com/youtube/v3/search');
-        url.searchParams.set('part', 'snippet');
-        url.searchParams.set('channelId', channelId);
-        url.searchParams.set('order', 'date');
-        url.searchParams.set('type', 'video');
-        url.searchParams.set('maxResults', '50');
-        url.searchParams.set('publishedAfter', twoYearsAgo.toISOString());
-        url.searchParams.set('key', YOUTUBE_API_KEY);
-        if (nextPageToken) {
-            url.searchParams.set('pageToken', nextPageToken);
-        }
-
-        const response = await fetch(url.toString());
-
-        if (!response.ok) {
-            const error = await response.json();
-            console.error('YouTube API error:', error.error?.message);
-            break;
-        }
-
-        const data = await response.json();
-
-        for (const item of data.items || []) {
-            const title = item.snippet.title;
-
-            // Skip non-meeting videos (recaps, highlights, etc.)
-            if (!isActualMeetingVideo(title)) {
-                console.log(`   ⏭️  Skipping non-meeting video: "${title}"`);
-                continue;
-            }
-
-            const parsedDate = parseDateFromTitle(title);
-            const meetingType = getMeetingTypeFromTitle(title);
-
-            videos.push({
-                videoId: item.id.videoId,
-                title,
-                publishedAt: item.snippet.publishedAt,
-                parsedDate,
-                meetingType: parsedDate ? meetingType : null,
-            });
-
-            if (title.includes('January 27') || title.includes('February 3')) {
-                console.log(`[DEBUG] Found YouTube video: "${title}", parsedDate=${parsedDate?.toISOString().split('T')[0]}, meetingType=${meetingType}`);
-            }
-        }
-
-        nextPageToken = data.nextPageToken;
-    } while (nextPageToken);
-
-    console.log(`   Found ${videos.length} meeting videos (filtered)`);
-    return videos;
-}
-
 // ================== SCRAPE CITY WEBSITE ==================
 
 async function fetchAndParseMeetings(): Promise<ParsedMeeting[]> {
@@ -356,23 +261,11 @@ async function fetchAndParseMeetings(): Promise<ParsedMeeting[]> {
 
 // ================== DATABASE OPERATIONS ==================
 
-async function createMeetingRecords(meetings: ParsedMeeting[], videos: YouTubeVideo[]) {
+async function createMeetingRecords(meetings: ParsedMeeting[]) {
     console.log(`\n📝 Processing ${meetings.length} meetings...\n`);
-
-    // Build video lookup by date
-    const videosByDate = new Map<string, YouTubeVideo>();
-    for (const video of videos) {
-        if (video.parsedDate && video.meetingType) {
-            const key = `${video.parsedDate.toISOString().split('T')[0]}-${video.meetingType}`;
-            if (!videosByDate.has(key)) {
-                videosByDate.set(key, video);
-            }
-        }
-    }
 
     let created = 0;
     let updated = 0;
-    let linked = 0;
     let skipped = 0;
 
     for (const meeting of meetings) {
@@ -383,42 +276,22 @@ async function createMeetingRecords(meetings: ParsedMeeting[], videos: YouTubeVi
             year: 'numeric'
         })}`;
 
-        // Check for matching video
-        const videoKey = `${dateStr}-${meeting.meetingType}`;
-        const matchingVideo = videosByDate.get(videoKey);
-
         // Check if meeting already exists
         const { data: existing } = await supabase
             .from('meetings')
-            .select('id, agenda_url, video_id')
+            .select('id, agenda_url')
             .gte('scheduled_start', `${dateStr}T00:00:00`)
             .lt('scheduled_start', `${dateStr}T23:59:59`)
             .eq('meeting_type', meeting.meetingType)
             .single();
 
-        if (dateStr === '2026-01-27' || dateStr === '2026-02-03') {
-            const { count } = await supabase
-                .from('meetings')
-                .select('*', { count: 'exact', head: true })
-                .gte('scheduled_start', `${dateStr}T00:00:00`)
-                .lt('scheduled_start', `${dateStr}T23:59:59`);
-
-            console.log(`[DEBUG] ${dateStr} ${meeting.meetingType}: count=${count}, existing=${existing ? 'YES' : 'NO'}`);
-        }
-
         if (existing) {
-            // Update with document URLs or video if missing
+            // Update with document URLs if missing
             const updates: Record<string, unknown> = {};
 
             if (!existing.agenda_url && meeting.agendaUrl) {
                 updates.agenda_url = meeting.agendaUrl;
                 updates.minutes_url = meeting.minutesUrl;
-            }
-
-            if (!existing.video_id && matchingVideo) {
-                updates.video_id = matchingVideo.videoId;
-                updates.video_url = `https://www.youtube.com/watch?v=${matchingVideo.videoId}`;
-                updates.video_platform = 'youtube';
             }
 
             if (Object.keys(updates).length > 0) {
@@ -427,13 +300,8 @@ async function createMeetingRecords(meetings: ParsedMeeting[], videos: YouTubeVi
                     .update(updates)
                     .eq('id', existing.id);
 
-                if (updates.video_id) {
-                    console.log(`🔗 Linked video to: ${title}`);
-                    linked++;
-                } else {
-                    console.log(`📄 Updated documents for: ${title}`);
-                    updated++;
-                }
+                console.log(`📄 Updated documents for: ${title}`);
+                updated++;
             } else {
                 skipped++;
             }
@@ -451,24 +319,12 @@ async function createMeetingRecords(meetings: ParsedMeeting[], videos: YouTubeVi
                 location: 'Memphis City Hall, Council Chamber'
             };
 
-            if (matchingVideo) {
-                insertData.video_id = matchingVideo.videoId;
-                insertData.video_url = `https://www.youtube.com/watch?v=${matchingVideo.videoId}`;
-                insertData.video_platform = 'youtube';
-                insertData.processing_status = 'completed';
-            }
-
             const { error } = await supabase.from('meetings').insert(insertData);
 
             if (error) {
                 console.error(`❌ Error creating meeting "${title}":`, JSON.stringify(error, null, 2));
             } else {
-                console.log(`[DEBUG] Successfully created meeting: ${title}`);
-                if (matchingVideo) {
-                    console.log(`✨ Created with video: ${title}`);
-                } else {
-                    console.log(`✨ Created: ${title}`);
-                }
+                console.log(`✨ Created: ${title}`);
                 created++;
             }
         }
@@ -476,36 +332,24 @@ async function createMeetingRecords(meetings: ParsedMeeting[], videos: YouTubeVi
 
     console.log('\n📊 Summary:');
     console.log(`   Created new meetings: ${created}`);
-    console.log(`   Linked videos: ${linked}`);
     console.log(`   Updated with documents: ${updated}`);
     console.log(`   Skipped (already exist): ${skipped}`);
+    
+    return { created, updated, skipped };
 }
 
-// ================== MAIN ==================
+// ================== MAIN EXPORT ==================
 
-async function populateMeetings() {
+export async function populateMeetings() {
     try {
-        // Fetch data from both sources
-        const [meetings, videos] = await Promise.all([
-            fetchAndParseMeetings(),
-            fetchAllChannelVideos(),
-        ]);
+        // Fetch data from Memphis City Council agenda website natively
+        const meetings = await fetchAndParseMeetings();
 
         // Create/update meeting records
-        await createMeetingRecords(meetings, videos);
-
-    } catch (error) {
-        console.error('Fatal error:', error);
-        throw error;
+        const stats = await createMeetingRecords(meetings);
+        return { success: true, stats };
+    } catch (error: any) {
+        console.error('Fatal error in populateMeetings:', error);
+        return { success: false, error: error.message };
     }
 }
-
-populateMeetings()
-    .then(() => {
-        console.log('\n✅ Done!');
-        process.exit(0);
-    })
-    .catch((err) => {
-        console.error('Fatal error:', err);
-        process.exit(1);
-    });

@@ -11,16 +11,17 @@
  *   tsx scripts/update_stats.ts
  */
 
-// Load environment variables first
-require('dotenv').config({ path: '.env.local' });
-require('dotenv').config();
+import { createClient } from '@supabase/supabase-js';
 
-async function updateStatistics() {
+export async function updateStatistics() {
     console.log('Starting legislator statistics calculation...');
+    let output = '';
 
     try {
-        // Dynamic import after env is loaded
-        const { supabase } = await import('../lib/utils/supabase');
+        // Use service role for admin tasks
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
         // Call the database function to calculate statistics
         const { data, error } = await supabase.rpc('calculate_legislator_statistics', {
@@ -31,10 +32,10 @@ async function updateStatistics() {
 
         if (error) {
             console.error('Error calculating statistics:', error);
-            process.exit(1);
+            return { success: false, error: 'Error calculating statistics', stderr: JSON.stringify(error) };
         }
 
-        console.log('✓ Statistics calculated successfully!');
+        output += '✓ Statistics calculated successfully!\n';
 
         // Verify the results
         const { count, error: countError } = await supabase
@@ -42,16 +43,14 @@ async function updateStatistics() {
             .select('*', { count: 'exact', head: true });
 
         if (countError) {
-            console.error('Error verifying statistics:', countError);
+            output += `Error verifying statistics: ${JSON.stringify(countError)}\n`;
         } else {
-            console.log(`✓ Total statistics records: ${count}`);
+            output += `✓ Total statistics records: ${count}\n`;
         }
 
-        process.exit(0);
-    } catch (err) {
+        return { success: true, stdout: output };
+    } catch (err: any) {
         console.error('Unexpected error:', err);
-        process.exit(1);
+        return { success: false, error: 'Unexpected error', stderr: err.message };
     }
 }
-
-updateStatistics();
