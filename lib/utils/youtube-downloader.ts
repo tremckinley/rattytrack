@@ -1,55 +1,52 @@
-import { Innertube } from 'youtubei.js';
-
 /**
- * Downloads a YouTube video directly to memory as a Buffer using youtubei.js.
- * This completely bypasses Vercel Serverless limitations on headless browsers
- * and avoids saving files to ephemeral disk space.
+ * Extracts YouTube audio using the Cobalt API.
+ * This completely bypasses YouTube's strict datacenter IP blocks (which cause 
+ * "Video is login required" errors) by using Cobalt's residential extraction instances.
  */
 export async function downloadYouTubeAudioBuffer(videoId: string): Promise<Buffer> {
     try {
-        console.log(`[YouTube] Initializing Innertube for video ${videoId}...`);
-        const yt = await Innertube.create();
-        
-        console.log(`[YouTube] Fetching info and stream URL...`);
-        
-        // Array of internal clients to attempt to bypass "login required" bot flags or age gates
-        const clientsToTry: any[] = ['ANDROID', 'IOS', 'WEB', 'TV_EMBEDDED'];
-        let stream: any;
-        let lastError: any;
+        const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        console.log(`[YouTube/Cobalt] Requesting audio stream URL for ${youtubeUrl}...`);
 
-        for (const clientName of clientsToTry) {
-            try {
-                console.log(`[YouTube] Attempting extraction with client: ${clientName}`);
-                stream = await yt.download(videoId, {
-                    type: 'audio',
-                    quality: 'best',
-                    client: clientName,
-                });
-                break; // Extraction succeeded, exit loop
-            } catch (err: any) {
-                lastError = err;
-                console.warn(`[YouTube] Client ${clientName} failed:`, err.message);
-            }
+        // 1. Ask Cobalt to extract the direct MP3 link
+        const cobaltResponse = await fetch('https://api.cobalt.tools/api/json', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            body: JSON.stringify({
+                url: youtubeUrl,
+                isAudioOnly: true,
+                aFormat: 'mp3'
+            })
+        });
+
+        if (!cobaltResponse.ok) {
+            throw new Error(`[Cobalt] API Error ${cobaltResponse.status}: ${await cobaltResponse.text()}`);
         }
 
-        if (!stream) {
-            throw lastError || new Error(`All fallback clients failed to extract stream for ${videoId}`);
+        const data = await cobaltResponse.json();
+        
+        if (data.status === 'error' || !data.url) {
+            throw new Error(`[Cobalt] Extraction failed: ${data.text || 'No URL returned'}`);
         }
+
+        console.log(`[YouTube/Cobalt] Success! Downloading absolute audio stream to memory...`);
         
-        console.log(`[YouTube] Streaming audio directly to memory...`);
-        const reader = stream.getReader();
-        const chunks: Uint8Array[] = [];
-        
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            if (value) chunks.push(value);
+        // 2. Download the raw audio stream to a memory buffer
+        const streamResponse = await fetch(data.url);
+        if (!streamResponse.ok) {
+            throw new Error(`[Cobalt] Failed to fetch audio stream: ${streamResponse.status}`);
         }
+
+        const arrayBuffer = await streamResponse.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
         
-        const buffer = Buffer.concat(chunks);
-        console.log(`[YouTube] Download complete. Buffer size: ${(buffer.length / 1024 / 1024).toFixed(2)} MB`);
-        
+        console.log(`[YouTube/Cobalt] Download complete. Buffer size: ${(buffer.length / 1024 / 1024).toFixed(2)} MB`);
         return buffer;
+        
     } catch (error) {
         console.error(`[YouTube] Error extracting stream for ${videoId}:`, error);
         throw error;
