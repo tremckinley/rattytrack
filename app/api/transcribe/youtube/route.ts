@@ -1,8 +1,7 @@
-// API route for YouTube video transcription
-// POST /api/transcribe/youtube
+// API route for meeting video transcription via Granicus
+// POST /api/transcribe/youtube (kept at same path for backward compatibility)
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getVideoDetails } from '@/lib/data/youtube';
 import {
   getTranscription,
   createTranscription,
@@ -10,11 +9,13 @@ import {
 } from '@/lib/data/transcriptions';
 import { publishQueueEvent } from '@/lib/queue/qstash';
 import { requireAdmin } from '@/lib/utils/auth-utils';
+import { fetchGranicusClipTitle } from '@/lib/utils/meeting-video-downloader';
 
 export const dynamic = 'force-dynamic';
 
 interface TranscribeRequest {
-  videoId: string;
+  clipId: string;       // Granicus clip ID (e.g. "10666")
+  videoId?: string;     // Legacy YouTube video ID (backward compat)
   forceRetry?: boolean;
 }
 
@@ -24,22 +25,24 @@ export async function POST(request: NextRequest) {
     await requireAdmin();
 
     const body: TranscribeRequest = await request.json();
-    const { videoId, forceRetry } = body;
+    // Support both clipId (new) and videoId (legacy) for backward compatibility
+    const meetingId = body.clipId || body.videoId;
+    const { forceRetry } = body;
 
-    if (!videoId) {
+    if (!meetingId) {
       return NextResponse.json(
-        { error: 'Video ID is required' },
+        { error: 'Clip ID is required' },
         { status: 400 }
       );
     }
 
     // Check if already transcribed
-    const existingTranscription = await getTranscription(videoId);
+    const existingTranscription = await getTranscription(meetingId);
 
     if (existingTranscription && !forceRetry) {
       if (existingTranscription.status === 'completed') {
         return NextResponse.json({
-          message: 'Video already transcribed',
+          message: 'Meeting already transcribed',
           transcription: existingTranscription,
           alreadyExists: true,
         });
@@ -54,28 +57,21 @@ export async function POST(request: NextRequest) {
 
     // Handle retry
     if (forceRetry && existingTranscription) {
-      await deleteTranscription(videoId);
-      console.log(`Deleted existing transcription for retry: ${videoId}`);
+      await deleteTranscription(meetingId);
+      console.log(`Deleted existing transcription for retry: ${meetingId}`);
     }
 
-    // Fetch video details from YouTube
-    const videoDetails = await getVideoDetails(videoId);
-
-    if (!videoDetails) {
-      return NextResponse.json(
-        { error: 'Video not found or invalid video ID' },
-        { status: 404 }
-      );
-    }
+    // Fetch meeting title from Granicus
+    const title = await fetchGranicusClipTitle(meetingId);
 
     // Create transcription record in `queued` state
     const transcription = await createTranscription({
-      videoId: videoDetails.videoId,
-      title: videoDetails.title,
-      channelTitle: videoDetails.channelTitle,
-      publishedAt: videoDetails.publishedAt,
-      duration: parseInt(videoDetails.duration, 10),
-      thumbnailUrl: videoDetails.thumbnailUrl,
+      videoId: meetingId,
+      title: title,
+      channelTitle: 'Memphis City Council',
+      publishedAt: new Date().toISOString(),
+      duration: 0, // Will be updated by AssemblyAI after processing
+      thumbnailUrl: '',
     });
 
     if (!transcription) {
@@ -87,7 +83,6 @@ export async function POST(request: NextRequest) {
 
     // Determine the absolute webhook URL ensuring preview branch deployments receive their own webhooks
     const isDev = process.env.NODE_ENV === 'development';
-    // Fallback order: NEXT_PUBLIC_APP_URL -> VERCEL_URL (current deployment) -> VERCEL_PROJECT_PRODUCTION_URL
     const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
     const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
     const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
@@ -97,7 +92,7 @@ export async function POST(request: NextRequest) {
       url: url,
       payload: {
         eventType: 'transcribe-video',
-        videoId: videoDetails.videoId,
+        videoId: meetingId, // Keep using `videoId` in the payload for internal consistency
       },
     });
 
@@ -121,11 +116,11 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const videoId = searchParams.get('videoId');
+  const videoId = searchParams.get('videoId') || searchParams.get('clipId');
 
   if (!videoId) {
     return NextResponse.json(
-      { error: 'Video ID is required' },
+      { error: 'Video/Clip ID is required' },
       { status: 400 }
     );
   }
