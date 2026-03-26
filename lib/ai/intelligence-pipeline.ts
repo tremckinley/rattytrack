@@ -57,6 +57,7 @@ export interface PipelineInput {
         end_time: number;
         speaker_id?: string | null;
         speaker_name?: string | null;
+        sentiment?: any | null;
     }>;
     // Optional: pre-parsed agenda from PDF
     agendaFromPdf?: Array<{
@@ -217,8 +218,8 @@ export async function runIntelligencePipeline(
                 const segment = input.segments[i];
 
                 try {
-                    // Run AI analysis
-                    const analysis = await analyzeSegment(segment.text);
+                    // Run AI analysis with precomputed sentiment if available
+                    const analysis = await analyzeSegment(segment.text, segment.sentiment);
 
                     // Save to database
                     const result = await saveSegmentAnalysis(
@@ -260,7 +261,7 @@ export async function runIntelligencePipeline(
             output.quotesDetected = await detectQuotesFromSegments(
                 quoteSegments,
                 async (text) => {
-                    const result = await analyzeSegment(text);
+                    const result = await analyzeSegment(text); // No precomputed for specific slices
                     return result.sentiment;
                 },
                 async (segmentId) => {

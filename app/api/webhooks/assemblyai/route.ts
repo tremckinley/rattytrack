@@ -87,7 +87,8 @@ export async function POST(request: NextRequest) {
                         start_time: s.start_time,
                         end_time: s.end_time,
                         speaker_id: s.speaker_id,
-                        speaker_name: s.speaker_name
+                        speaker_name: s.speaker_name,
+                        sentiment: (s as any).sentiment
                     }))
                 });
                 

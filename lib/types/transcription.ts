@@ -6,6 +6,7 @@ export interface TranscriptSegment {
   text: string;
   speaker_name?: string | null;
   speaker_id?: string | null;
+  sentiment?: any | null;
   created_at: string;
 }
 

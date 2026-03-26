@@ -110,6 +110,7 @@ export async function saveTranscriptSegments(
     text: string;
     speakerName?: string | null;
     speakerId?: string | null;
+    sentiment?: any | null;
   }>,
   cost?: number,
   provider?: string,

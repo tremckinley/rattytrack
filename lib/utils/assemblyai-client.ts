@@ -46,6 +46,7 @@ export async function submitToAssemblyAI({ filePath, videoId, source = 'upload' 
         audio_url: uploadedFileUrl,
         speech_models: ['universal-3-pro', 'universal-2'] as any,
         speaker_labels: true,
+        sentiment_analysis: true,
         webhook_url: webhookUrl,
         webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
         webhook_auth_header_value: useBypass ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET! : process.env.ASSEMBLYAI_API_KEY!,
@@ -84,6 +85,7 @@ export async function submitBufferToAssemblyAI({ buffer, videoId, source = 'uplo
         audio_url: uploadedFileUrl,
         speech_models: ['universal-3-pro', 'universal-2'] as any,
         speaker_labels: true,
+        sentiment_analysis: true,
         webhook_url: webhookUrl,
         webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
         webhook_auth_header_value: useBypass ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET! : process.env.ASSEMBLYAI_API_KEY!,
@@ -123,6 +125,7 @@ export async function submitUrlToAssemblyAI({ remoteUrl, videoId, source = 'gran
         audio_url: remoteUrl, // AssemblyAI downloads directly from this URL
         speech_models: ['universal-3-pro', 'universal-2'] as any,
         speaker_labels: true,
+        sentiment_analysis: true,
         webhook_url: webhookUrl,
         webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
         webhook_auth_header_value: useBypass ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET! : process.env.ASSEMBLYAI_API_KEY!,
@@ -150,5 +153,6 @@ export function formatSegments(utterances: any[]) {
         text: u.text,
         speakerName: `Speaker ${u.speaker}`, // generic "Speaker A", "Speaker B"
         speakerId: null,
+        sentiment: u.sentiment, // AssemblyAI provides sentiment if enabled
     }));
 }

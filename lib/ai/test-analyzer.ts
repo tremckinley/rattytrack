@@ -83,7 +83,7 @@ async function testBatchAnalysis() {
 
     const startTime = Date.now();
 
-    const results = await analyzeSegments(TEST_SEGMENTS, (current, total) => {
+    const results = await analyzeSegments(TEST_SEGMENTS.map(text => ({ text })), (current, total) => {
         console.log(`Progress: ${current}/${total} segments analyzed`);
     });
 
