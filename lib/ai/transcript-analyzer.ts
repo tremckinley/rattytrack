@@ -1,13 +1,13 @@
-// AI-powered transcript analysis using OpenAI and AssemblyAI.
+// AI-powered transcript analysis using Anthropic (Claude) and AssemblyAI.
 // Provides issue categorization and sentiment analysis for civic meeting transcripts.
 // Optimized for Vercel Serverless (no local model loading).
 
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { ISSUE_CATEGORIES, type IssueCategory } from './issue-categories';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || '',
+// Initialize Anthropic client
+const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
 /**
@@ -20,8 +20,8 @@ const CONFIG = {
     // Maximum number of issues to return per segment
     MAX_ISSUES_PER_SEGMENT: 3,
 
-    // OpenAI Model
-    MODEL: 'gpt-4o-mini'
+    // Anthropic Model
+    MODEL: 'claude-3-5-sonnet-20241022'
 };
 
 /**
@@ -52,7 +52,7 @@ export interface SegmentAnalysis {
 }
 
 /**
- * Categorize a transcript segment into relevant issue categories using OpenAI
+ * Categorize a transcript segment into relevant issue categories using Claude
  * 
  * @param text - The transcript segment text
  * @returns Array of issue categories with confidence scores
@@ -63,34 +63,32 @@ export async function categorizeIssues(text: string): Promise<IssueCategorizatio
     }
 
     try {
-        const response = await openai.chat.completions.create({
+        const response = await anthropic.messages.create({
             model: CONFIG.MODEL,
-            messages: [
-                {
-                    role: 'system',
-                    content: `You are a civic data assistant. Categorize the following transcript segment from a city council meeting into the most relevant issue categories.
+            max_tokens: 1024,
+            system: `You are a civic data assistant. Categorize the following transcript segment from a city council meeting into the most relevant issue categories.
 Available categories: ${ISSUE_CATEGORIES.join(', ')}.
 Respond ONLY with a JSON array of objects, each containing "category" and "confidence" (0-1 scale).
-Example: [{"category": "Transportation", "confidence": 0.9}, {"category": "Infrastructure", "confidence": 0.4}]`
-                },
+Example: [{"category": "Transportation", "confidence": 0.9}, {"category": "Infrastructure", "confidence": 0.4}]`,
+            messages: [
                 {
                     role: 'user',
                     content: text
                 }
-            ],
-            response_format: { type: 'json_object' }
+            ]
         });
 
-        const content = response.choices[0].message.content;
+        const block = (response.content[0] as any);
+        const content = block && block.type === 'text' ? block.text : '';
         if (!content) return [];
 
-        const data = JSON.parse(content);
-        const results = Array.isArray(data.results) ? data.results : (Array.isArray(data) ? data : []);
+        // Simple JSON extraction in case Claude adds markdown or text
+        // Use [\s\S] instead of . with /s flag for ES2017 compatibility
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        const jsonStr = jsonMatch ? jsonMatch[0] : content;
         
-        // Handle case where LLM returns a single object instead of array
-        const rawCategorizations = Array.isArray(data.categories) ? data.categories : results;
-
-        const categorizations: IssueCategorization[] = rawCategorizations
+        const data = JSON.parse(jsonStr);
+        const categorizations: IssueCategorization[] = (Array.isArray(data) ? data : [])
             .filter((item: any) => ISSUE_CATEGORIES.includes(item.category as IssueCategory))
             .map((item: any) => ({
                 category: item.category as IssueCategory,
@@ -103,7 +101,7 @@ Example: [{"category": "Transportation", "confidence": 0.9}, {"category": "Infra
             .slice(0, CONFIG.MAX_ISSUES_PER_SEGMENT);
 
     } catch (error) {
-        console.error('OpenAI issue categorization failed:', error);
+        console.error('Claude issue categorization failed:', error);
         return [];
     }
 }
@@ -111,7 +109,7 @@ Example: [{"category": "Transportation", "confidence": 0.9}, {"category": "Infra
 /**
  * Analyze sentiment of a transcript segment
  * Note: Now primarily relies on AssemblyAI sentiment passed through, 
- * but keeps this as a fallback using OpenAI.
+ * but keeps this as a fallback using Claude.
  * 
  * @param text - The transcript segment text
  * @returns Sentiment analysis result
@@ -122,32 +120,33 @@ export async function analyzeSentiment(text: string): Promise<SentimentAnalysis>
     }
 
     try {
-        const response = await openai.chat.completions.create({
+        const response = await anthropic.messages.create({
             model: CONFIG.MODEL,
+            max_tokens: 512,
+            system: 'Analyze the sentiment of this city council meeting transcript segment. Respond with a JSON object: {"label": "positive"|"negative"|"neutral", "score": number (-1 to 1), "confidence": number (0-1)}',
             messages: [
-                {
-                    role: 'system',
-                    content: 'Analyze the sentiment of this city council meeting transcript segment. Respond with a JSON object: {"label": "positive"|"negative"|"neutral", "score": number (-1 to 1), "confidence": number (0-1)}'
-                },
                 {
                     role: 'user',
                     content: text
                 }
-            ],
-            response_format: { type: 'json_object' }
+            ]
         });
 
-        const content = response.choices[0].message.content;
+        const block = (response.content[0] as any);
+        const content = block && block.type === 'text' ? block.text : '';
         if (!content) throw new Error('Empty response');
 
-        const data = JSON.parse(content);
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        const jsonStr = jsonMatch ? jsonMatch[0] : content;
+
+        const data = JSON.parse(jsonStr);
         return {
             label: data.label || 'neutral',
             score: data.score || 0,
             confidence: data.confidence || 0.5
         };
     } catch (error) {
-        console.error('OpenAI sentiment analysis failed:', error);
+        console.error('Claude sentiment analysis failed:', error);
         return { label: 'neutral', score: 0, confidence: 0 };
     }
 }
@@ -200,7 +199,7 @@ export async function analyzeSegments(
 ): Promise<SegmentAnalysis[]> {
     const results: SegmentAnalysis[] = [];
 
-    // Process in smaller batches to stay within OpenAI rate limits and Vercel time limits
+    // Process in smaller batches
     for (let i = 0; i < segments.length; i++) {
         const result = await analyzeSegment(segments[i].text, segments[i].sentiment);
         results.push(result);
