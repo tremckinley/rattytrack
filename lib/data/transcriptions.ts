@@ -1,7 +1,7 @@
 // Database operations for video transcriptions (unified for YouTube, uploads, livestreams)
 
 import { createClient } from '@supabase/supabase-js';
-import { YouTubeTranscription, TranscriptSegment, TranscriptionStatus } from '@/lib/types/youtube';
+import { MeetingTranscription, TranscriptSegment, TranscriptionStatus } from '@/lib/types/transcription';
 
 // Use service role key for server-side operations with Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -17,7 +17,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 /**
  * Check if a video has already been transcribed
  */
-export async function getTranscription(videoId: string): Promise<YouTubeTranscription | null> {
+export async function getTranscription(videoId: string): Promise<MeetingTranscription | null> {
   const { data, error } = await supabase
     .from('video_transcriptions')
     .select('*')
@@ -32,7 +32,7 @@ export async function getTranscription(videoId: string): Promise<YouTubeTranscri
     return null;
   }
 
-  return data as YouTubeTranscription;
+  return data as MeetingTranscription;
 }
 
 /**
@@ -45,7 +45,7 @@ export async function createTranscription(data: {
   publishedAt: string;
   duration: number;
   thumbnailUrl: string;
-}): Promise<YouTubeTranscription | null> {
+}): Promise<MeetingTranscription | null> {
   // Check if already exists first
   const existing = await getTranscription(data.videoId);
   if (existing) {
@@ -74,7 +74,7 @@ export async function createTranscription(data: {
   }
 
   console.log(`Created transcription record for ${data.videoId}`);
-  return newTranscription as YouTubeTranscription;
+  return newTranscription as MeetingTranscription;
 }
 
 /**
@@ -199,7 +199,7 @@ export async function getTranscriptSegments(videoId: string): Promise<Transcript
  * Get transcription with segments
  */
 export async function getTranscriptionWithSegments(videoId: string): Promise<{
-  transcription: YouTubeTranscription | null;
+  transcription: MeetingTranscription | null;
   segments: TranscriptSegment[];
 }> {
   const transcription = await getTranscription(videoId);
@@ -228,7 +228,7 @@ export async function deleteTranscription(videoId: string): Promise<void> {
  * Get all transcriptions with pagination
  */
 export async function getAllTranscriptions(limit: number = 50, offset: number = 0): Promise<{
-  transcriptions: YouTubeTranscription[];
+  transcriptions: MeetingTranscription[];
   total: number;
 }> {
   const { data, error, count } = await supabase
@@ -243,7 +243,7 @@ export async function getAllTranscriptions(limit: number = 50, offset: number = 
   }
 
   return {
-    transcriptions: data as YouTubeTranscription[],
+    transcriptions: data as MeetingTranscription[],
     total: count || 0,
   };
 }

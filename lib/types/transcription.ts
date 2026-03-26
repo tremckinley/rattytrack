@@ -1,16 +1,3 @@
-export interface YouTubeVideo {
-  videoId: string;
-  title: string;
-  description: string;
-  thumbnailUrl: string;
-  publishedAt: string;
-  duration: string;
-  viewCount?: string;
-  channelId: string;
-  channelTitle: string;
-  url: string;
-}
-
 export interface TranscriptSegment {
   id: number;
   video_id: string;
@@ -30,15 +17,15 @@ export interface VideoTranscript {
 
 export type TranscriptionStatus = 'idle' | 'queued' | 'processing' | 'downloading' | 'transcribing' | 'completed' | 'error' | 'failed';
 
-export type TranscriptionProvider = 'whisper' | 'elevenlabs';
+export type TranscriptionProvider = 'whisper' | 'elevenlabs' | 'assemblyai';
 
-export interface YouTubeTranscription {
+export interface MeetingTranscription {
   video_id: string;
   title: string;
-  channel_title: string;
-  published_at: string;
-  duration: number;
-  thumbnail_url: string;
+  channel_title?: string;
+  published_at?: string;
+  duration?: number;
+  thumbnail_url?: string;
   status: TranscriptionStatus;
   error_message?: string;
   transcription_cost?: number;

@@ -5,7 +5,7 @@
 // Enhanced with chapter navigation for agenda items
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { TranscriptSegment } from '@/lib/types/youtube';
+import { TranscriptSegment } from '@/lib/types/transcription';
 import type { AgendaItem } from '@/types/LegislatorIntelligence';
 
 interface TranscriptPlayerProps {

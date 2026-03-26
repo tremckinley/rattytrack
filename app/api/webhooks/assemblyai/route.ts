@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
         const { searchParams } = new URL(request.url);
         const videoId = searchParams.get('videoId');
-        const type = searchParams.get('type') || 'youtube';
+        const source = searchParams.get('source') || 'granicus';
 
         if (!videoId) {
             return NextResponse.json({ error: 'Missing videoId query param' }, { status: 400 });
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { transcript_id, status } = body;
 
-        console.log(`[AssemblyAI Webhook] Received status '${status}' for transcript ${transcript_id} (videoId: ${videoId}, type: ${type})`);
+        console.log(`[AssemblyAI Webhook] Received status '${status}' for transcript ${transcript_id} (videoId: ${videoId}, source: ${source})`);
 
         if (status === 'completed') {
             // Fetch the completed transcript data from AssemblyAI
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
             // Format AssemblyAI utterances into our internal format
             const segments = formatSegments(transcriptData.utterances || []);
 
-            if (type === 'upload') {
+            if (source === 'upload') {
                 // Save to uploaded_meetings structure
                 const dbSegments = segments.map((segment, index) => ({
                     uploaded_meeting_id: videoId,
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
                 
                 console.log(`[AssemblyAI Webhook] Fully processed direct upload ${videoId}`);
             } else {
-                // Save to YouTube video_meetings structure
+                // Save to Granicus video_meetings structure
                 await saveTranscriptSegments(videoId, segments, 0, 'assemblyai', true);
                 await updateTranscriptionStatus(videoId, 'completed');
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
                 const dbSegments = await getTranscriptSegments(videoId);
 
                 // Trigger the intelligence pipeline (summaries, agenda items, etc)
-                // We only run this on youtube/live meetings right now.
+                // We only run this on granicus/live meetings right now.
                 await runIntelligencePipeline({
                     videoId,
                     segments: dbSegments.map(s => ({
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
                     }))
                 });
                 
-                console.log(`[AssemblyAI Webhook] Fully processed youtube video ${videoId}`);
+                console.log(`[AssemblyAI Webhook] Fully processed granicus video ${videoId}`);
             }
         } else if (status === 'error') {
             await updateTranscriptionStatus(videoId, 'failed');

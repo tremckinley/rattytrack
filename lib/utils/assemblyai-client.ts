@@ -8,19 +8,18 @@ const aai = new AssemblyAI({
 export interface SubmitOptions {
     filePath: string;
     videoId: string; // Used to identify the webhook return
-    type?: 'youtube' | 'upload';
 }
 
 export interface SubmitBufferOptions {
     buffer: Buffer | Uint8Array | ArrayBuffer;
     videoId: string;
-    type?: 'youtube' | 'upload';
+    source?: 'granicus' | 'upload';
 }
 
 /**
  * Uploads a local audio file and submits it to AssemblyAI for async transcription.
  */
-export async function submitToAssemblyAI({ filePath, videoId, type = 'youtube' }: SubmitOptions) {
+export async function submitToAssemblyAI({ filePath, videoId, source = 'upload' }: SubmitOptions & { source?: 'granicus' | 'upload' }) {
     if (!process.env.ASSEMBLYAI_API_KEY) {
         throw new Error('ASSEMBLYAI_API_KEY is not set');
     }
@@ -37,7 +36,7 @@ export async function submitToAssemblyAI({ filePath, videoId, type = 'youtube' }
     const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
     const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
     const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
-    const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
+    const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&source=${source}`;
 
     console.log(`[AssemblyAI] Submitting transcript. Webhook: ${webhookUrl}`);
     
@@ -59,7 +58,7 @@ export async function submitToAssemblyAI({ filePath, videoId, type = 'youtube' }
 /**
  * Uploads a raw buffer to AssemblyAI for async transcription.
  */
-export async function submitBufferToAssemblyAI({ buffer, videoId, type = 'upload' }: SubmitBufferOptions) {
+export async function submitBufferToAssemblyAI({ buffer, videoId, source = 'upload' }: SubmitBufferOptions) {
     if (!process.env.ASSEMBLYAI_API_KEY) {
         throw new Error('ASSEMBLYAI_API_KEY is not set');
     }
@@ -73,7 +72,7 @@ export async function submitBufferToAssemblyAI({ buffer, videoId, type = 'upload
     const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
     const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
     const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
-    const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
+    const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&source=${source}`;
 
     console.log(`[AssemblyAI] Submitting transcript. Webhook: ${webhookUrl}`);
     
@@ -97,7 +96,7 @@ export async function submitBufferToAssemblyAI({ buffer, videoId, type = 'upload
 export interface SubmitUrlOptions {
     remoteUrl: string; // Publicly accessible URL (e.g. Granicus CDN)
     videoId: string;
-    type?: 'youtube' | 'upload';
+    source?: 'granicus' | 'upload';
 }
 
 /**
@@ -105,7 +104,7 @@ export interface SubmitUrlOptions {
  * AssemblyAI downloads the file from their side — zero memory usage on our server.
  * This is essential for large meeting videos that would OOM Vercel Serverless.
  */
-export async function submitUrlToAssemblyAI({ remoteUrl, videoId, type = 'youtube' }: SubmitUrlOptions) {
+export async function submitUrlToAssemblyAI({ remoteUrl, videoId, source = 'granicus' }: SubmitUrlOptions) {
     if (!process.env.ASSEMBLYAI_API_KEY) {
         throw new Error('ASSEMBLYAI_API_KEY is not set');
     }
@@ -114,7 +113,7 @@ export async function submitUrlToAssemblyAI({ remoteUrl, videoId, type = 'youtub
     const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
     const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
     const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
-    const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
+    const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&source=${source}`;
 
     console.log(`[AssemblyAI] Submitting remote URL directly. Webhook: ${webhookUrl}`);
     

@@ -17,22 +17,14 @@ export async function POST(
 
         const supabase = await createClient();
 
-        // Check if getting youtube URL vs ID
-        let normalizedId = videoId;
-        if (videoId.includes('youtube.com') || videoId.includes('youtu.be')) {
-            const match = videoId.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?]+)/);
-            if (match) normalizedId = match[1];
-        }
-
-        // Update the meeting with the new video ID
+        // Update the meeting with the new Granicus video ID
+        const normalizedId = videoId.trim();
         const { data, error } = await supabase
             .from("meetings")
             .update({ 
                 video_id: normalizedId,
-                video_url: /^\d+$/.test(normalizedId) 
-                    ? `https://memphis.granicus.com/MediaPlayer.php?view_id=6&clip_id=${normalizedId}`
-                    : `https://www.youtube.com/watch?v=${normalizedId}`,
-                video_platform: /^\d+$/.test(normalizedId) ? 'granicus' : 'youtube'
+                video_url: `https://memphis.granicus.com/MediaPlayer.php?view_id=6&clip_id=${normalizedId}`,
+                video_platform: 'granicus'
             })
             .eq("id", id)
             .select()

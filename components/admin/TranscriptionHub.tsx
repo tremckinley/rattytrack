@@ -39,7 +39,7 @@ export default function TranscriptionHub() {
     const startTranscription = async (meetingId: string, videoId: string) => {
         setTranscribing(meetingId);
         try {
-            const res = await fetch("/api/transcribe/youtube", {
+            const res = await fetch("/api/transcribe/granicus", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ clipId: videoId, forceRetry: true }),
@@ -56,7 +56,7 @@ export default function TranscriptionHub() {
     };
 
     const handleProvideVideoId = async (meetingId: string) => {
-        const videoId = window.prompt("Enter Granicus Clip ID (e.g., 10666) or YouTube URL/ID:");
+        const videoId = window.prompt("Enter Granicus Clip ID (e.g., 10666):");
         if (!videoId?.trim()) return;
 
         setProvidingId(meetingId);
