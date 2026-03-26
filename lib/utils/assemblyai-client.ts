@@ -37,7 +37,10 @@ export async function submitToAssemblyAI({ filePath, videoId, type = 'youtube' }
     const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
     const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
     const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
-    const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
+    let webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
+    if (process.env.VERCEL_AUTOMATION_BYPASS_SECRET) {
+        webhookUrl += `&x-vercel-protection-bypass=${process.env.VERCEL_AUTOMATION_BYPASS_SECRET}&x-vercel-set-bypass-cookie=true`;
+    }
 
     console.log(`[AssemblyAI] Submitting transcript. Webhook: ${webhookUrl}`);
     
@@ -70,7 +73,10 @@ export async function submitBufferToAssemblyAI({ buffer, videoId, type = 'upload
     const getVercelUrl = () => process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
     const getProdUrl = () => process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null;
     const baseUrl = isDev ? 'http://127.0.0.1:5000' : (process.env.NEXT_PUBLIC_APP_URL || getVercelUrl() || getProdUrl() || '');
-    const webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
+    let webhookUrl = `${baseUrl}/api/webhooks/assemblyai?videoId=${videoId}&type=${type}`;
+    if (process.env.VERCEL_AUTOMATION_BYPASS_SECRET) {
+        webhookUrl += `&x-vercel-protection-bypass=${process.env.VERCEL_AUTOMATION_BYPASS_SECRET}&x-vercel-set-bypass-cookie=true`;
+    }
 
     console.log(`[AssemblyAI] Submitting transcript. Webhook: ${webhookUrl}`);
     
