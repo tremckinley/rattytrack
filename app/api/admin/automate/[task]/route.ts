@@ -24,6 +24,14 @@ const TASK_RUNNERS: Record<string, TaskRunner> = {
         const { analyzeUntaggedSegments } = await import("@/scripts/analyze_transcripts");
         return await analyzeUntaggedSegments();
     },
+    "sync-transcriptions": async () => {
+        const { transcribePendingMeetings } = await import("@/scripts/transcribe-pending-meetings");
+        return await transcribePendingMeetings();
+    },
+    "stop-transcriptions": async () => {
+        const { stopTranscriptions } = await import("@/scripts/stop-transcriptions");
+        return await stopTranscriptions();
+    },
 };
 
 export async function POST(
