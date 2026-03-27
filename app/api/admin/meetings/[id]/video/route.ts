@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/utils/auth-utils";
-import { createClient } from "@/lib/utils/supabase/server";
+import { supabaseAdmin as supabase } from "@/lib/utils/supabase-admin";
 
 export async function POST(
     request: Request,
@@ -14,8 +14,6 @@ export async function POST(
         if (!videoId) {
             return NextResponse.json({ error: "Missing videoId" }, { status: 400 });
         }
-
-        const supabase = await createClient();
 
         // Update the meeting with the new Granicus video ID
         const normalizedId = videoId.trim();
