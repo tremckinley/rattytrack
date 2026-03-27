@@ -57,7 +57,7 @@ export async function runScraperAgent({
 
         // 2. Extract structured data using Anthropic Tool Use
         const completion = await anthropic.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
+            model: 'claude-sonnet-4-5-20250929',
             max_tokens: 1024,
             temperature: 0.1,
             system: `You are an expert AI data extraction agent. You are looking at the exact Markdown representation of a local government website. Your goal is to identify the most recent city/county meeting and extract its media URLs (video, agenda, minutes). Use absolute URLs if relative ones are found. Note: A lot of local government websites are messy. Look for keywords like "Agenda", "Video", "Watch", "Minutes".`,

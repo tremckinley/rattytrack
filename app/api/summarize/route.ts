@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
         // Call Anthropic API using Tool Use for guaranteed structured output
         const completion = await anthropic.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
+            model: 'claude-sonnet-4-5-20250929',
             max_tokens: 4096,
             system: SYSTEM_PROMPT,
             messages: [
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
             keyPoints: parsedResponse.key_points || [],
             decisions: parsedResponse.decisions || [],
             votesOverview: parsedResponse.votes_overview || [],
-            aiModelVersion: 'claude-3-5-sonnet-20241022',
+            aiModelVersion: 'claude-sonnet-4-5-20250929',
         });
 
         if (!summary) {

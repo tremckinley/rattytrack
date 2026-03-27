@@ -21,7 +21,7 @@ const CONFIG = {
     MAX_ISSUES_PER_SEGMENT: 3,
 
     // Anthropic Model
-    MODEL: 'claude-3-5-sonnet-20241022'
+    MODEL: 'claude-sonnet-4-5-20250929'
 };
 
 /**
