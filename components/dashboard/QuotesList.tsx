@@ -110,7 +110,7 @@ function ProfileQuotesList({ quotes, maxQuotes = 10 }: ProfileQuotesListProps) {
                     if (hasLink) {
                         const timestamp = quote.start_time ? `#t=${Math.floor(quote.start_time)}` : '';
                         return (
-                            <Link key={quote.id} href={`/transcripts/${quote.video_id}${timestamp}`} className="block">
+                            <Link key={quote.id} href={`/meetings/${quote.video_id}${timestamp}`} className="block">
                                 {content}
                             </Link>
                         );
@@ -192,7 +192,7 @@ function DashboardQuotesList({ quotes }: DashboardQuotesListProps) {
                     if (quote.video_id) {
                         const timestamp = quote.start_time ? `#t=${Math.floor(quote.start_time)}` : '';
                         return (
-                            <Link key={quote.id} href={`/transcripts/${quote.video_id}${timestamp}`} className="block">
+                            <Link key={quote.id} href={`/meetings/${quote.video_id}${timestamp}`} className="block">
                                 {content}
                             </Link>
                         );

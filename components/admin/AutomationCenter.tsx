@@ -34,6 +34,20 @@ const TASKS: AutomationTask[] = [
         icon: <FontAwesomeIcon icon={faMicrochip} className="text-lg" />,
         endpoint: "/api/admin/automate/analyze-transcripts",
     },
+    {
+        id: "sync-transcriptions",
+        name: "Sync Transcriptions",
+        description: "Transcribe 2 meetings that have a Granicus ID but no transcript.",
+        icon: <FontAwesomeIcon icon={faArrowsRotate} className="text-lg" />,
+        endpoint: "/api/admin/automate/sync-transcriptions",
+    },
+    {
+        id: "stop-transcriptions",
+        name: "Stop Transcriptions",
+        description: "Emergency stop: Reset all 'queued' transcriptions back to pending.",
+        icon: <FontAwesomeIcon icon={faExclamationCircle} className="text-lg" />,
+        endpoint: "/api/admin/automate/stop-transcriptions",
+    },
 ];
 
 export default function AutomationCenter() {

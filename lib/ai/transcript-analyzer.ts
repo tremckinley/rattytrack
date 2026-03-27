@@ -1,13 +1,14 @@
-// AI-powered transcript analysis using Transformers.js
-// Provides issue categorization and sentiment analysis for civic meeting transcripts
+// AI-powered transcript analysis using Anthropic (Claude) and AssemblyAI.
+// Provides issue categorization and sentiment analysis for civic meeting transcripts.
+// Optimized for Vercel Serverless (no local model loading).
 
-
-import { pipeline } from '@xenova/transformers';
+import Anthropic from '@anthropic-ai/sdk';
 import { ISSUE_CATEGORIES, type IssueCategory } from './issue-categories';
 
-// Lazy-loaded model pipelines
-let classificationPipeline: any = null;
-let sentimentPipeline: any = null;
+// Initialize Anthropic client
+const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
+});
 
 /**
  * Configuration for AI analysis
@@ -16,15 +17,11 @@ const CONFIG = {
     // Minimum confidence threshold for issue categorization (0-1)
     MIN_ISSUE_CONFIDENCE: 0.3,
 
-    // Minimum confidence threshold for sentiment analysis (0-1)
-    MIN_SENTIMENT_CONFIDENCE: 0.5,
-
     // Maximum number of issues to return per segment
     MAX_ISSUES_PER_SEGMENT: 3,
 
-    // Model names
-    CLASSIFICATION_MODEL: 'Xenova/bart-large-mnli',
-    SENTIMENT_MODEL: 'Xenova/distilbert-base-uncased-finetuned-sst-2-english'
+    // Anthropic Model
+    MODEL: 'claude-sonnet-4-5-20250929'
 };
 
 /**
@@ -55,39 +52,7 @@ export interface SegmentAnalysis {
 }
 
 /**
- * Initialize the classification model (lazy loading)
- */
-async function getClassificationPipeline(): Promise<any> {
-    if (!classificationPipeline) {
-        console.log('Loading classification model (first run only, ~400MB)...');
-        const startTime = Date.now();
-        classificationPipeline = await pipeline(
-            'zero-shot-classification',
-            CONFIG.CLASSIFICATION_MODEL
-        );
-        console.log(`Classification model loaded in ${Date.now() - startTime}ms`);
-    }
-    return classificationPipeline;
-}
-
-/**
- * Initialize the sentiment model (lazy loading)
- */
-async function getSentimentPipeline(): Promise<any> {
-    if (!sentimentPipeline) {
-        console.log('Loading sentiment model (first run only, ~250MB)...');
-        const startTime = Date.now();
-        sentimentPipeline = await pipeline(
-            'sentiment-analysis',
-            CONFIG.SENTIMENT_MODEL
-        );
-        console.log(`Sentiment model loaded in ${Date.now() - startTime}ms`);
-    }
-    return sentimentPipeline;
-}
-
-/**
- * Categorize a transcript segment into relevant issue categories
+ * Categorize a transcript segment into relevant issue categories using Claude
  * 
  * @param text - The transcript segment text
  * @returns Array of issue categories with confidence scores
@@ -98,108 +63,172 @@ export async function categorizeIssues(text: string): Promise<IssueCategorizatio
     }
 
     try {
-        const classifier = await getClassificationPipeline();
-
-        // Run zero-shot classification
-        const result = await classifier(text, ISSUE_CATEGORIES as unknown as string[], {
-            multi_label: true // Allow multiple categories per segment
+        const response = await anthropic.messages.create({
+            model: CONFIG.MODEL,
+            max_tokens: 1024,
+            system: `You are an expert civic data extraction assistant.`,
+            messages: [
+                {
+                    role: 'user',
+                    content: `Categorize the following transcript segment from a city council meeting into the most relevant issue categories:\n\n${text}`
+                }
+            ],
+            tools: [
+                {
+                    name: 'extract_categories',
+                    description: 'Extract relevant civic issue categories from the text',
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            issues: {
+                                type: 'array',
+                                description: 'List of relevant civic issue categories found in the text',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        category: {
+                                            type: 'string',
+                                            enum: Object.values(ISSUE_CATEGORIES),
+                                            description: 'The standardized civic category.'
+                                        },
+                                        confidence: {
+                                            type: 'number',
+                                            description: 'Confidence score (0 to 1) that this category applies to the text.'
+                                        }
+                                    },
+                                    required: ['category', 'confidence']
+                                }
+                            }
+                        },
+                        required: ['issues']
+                    }
+                }
+            ],
+            tool_choice: { type: 'tool', name: 'extract_categories' }
         });
 
-        // Extract results and filter by confidence
-        const categorizations: IssueCategorization[] = [];
-
-        if (Array.isArray(result.labels) && Array.isArray(result.scores)) {
-            for (let i = 0; i < result.labels.length; i++) {
-                const confidence = result.scores[i];
-
-                if (confidence >= CONFIG.MIN_ISSUE_CONFIDENCE) {
-                    categorizations.push({
-                        category: result.labels[i] as IssueCategory,
-                        confidence
-                    });
-                }
-            }
+        const toolCall = response.content.find(block => block.type === 'tool_use');
+        
+        if (!toolCall || toolCall.type !== 'tool_use') {
+            throw new Error('Anthropic failed to use the extraction tool.');
         }
 
-        // Sort by confidence (highest first) and limit to top N
+        const data = toolCall.input as unknown as { issues: IssueCategorization[] };
+        const categorizations: IssueCategorization[] = (data.issues || [])
+            .filter((item: any) => ISSUE_CATEGORIES.includes(item.category as IssueCategory))
+            .map((item: any) => ({
+                category: item.category as IssueCategory,
+                confidence: item.confidence || 0.5
+            }))
+            .filter((item: any) => item.confidence >= CONFIG.MIN_ISSUE_CONFIDENCE);
+
         return categorizations
             .sort((a, b) => b.confidence - a.confidence)
             .slice(0, CONFIG.MAX_ISSUES_PER_SEGMENT);
 
     } catch (error) {
-        console.error('Issue categorization failed:', error);
+        console.error('Claude issue categorization failed:', error);
         return [];
     }
 }
 
 /**
  * Analyze sentiment of a transcript segment
+ * Note: Now primarily relies on AssemblyAI sentiment passed through, 
+ * but keeps this as a fallback using Claude.
  * 
  * @param text - The transcript segment text
- * @returns Sentiment analysis with label, score, and confidence
+ * @returns Sentiment analysis result
  */
 export async function analyzeSentiment(text: string): Promise<SentimentAnalysis> {
     if (!text || text.trim().length === 0) {
-        return {
-            label: 'neutral',
-            score: 0,
-            confidence: 0
-        };
+        return { label: 'neutral', score: 0, confidence: 0 };
     }
 
     try {
-        const analyzer = await getSentimentPipeline();
+        const response = await anthropic.messages.create({
+            model: CONFIG.MODEL,
+            max_tokens: 512,
+            system: 'You are an expert civic sentiment analyzer.',
+            messages: [
+                {
+                    role: 'user',
+                    content: `Analyze the sentiment of this city council meeting transcript segment:\n\n${text}`
+                }
+            ],
+            tools: [
+                {
+                    name: 'extract_sentiment',
+                    description: 'Extract the overall sentiment from the provided transcript segment',
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            label: {
+                                type: 'string',
+                                enum: ['positive', 'negative', 'neutral'],
+                                description: 'The overarching sentiment classification.'
+                            },
+                            score: {
+                                type: 'number',
+                                description: 'A detailed sentiment score ranging from -1 (extremely negative) to 1 (extremely positive). 0 is neutral.'
+                            },
+                            confidence: {
+                                type: 'number',
+                                description: 'The probability (0 to 1) that this sentiment classification is accurate.'
+                            }
+                        },
+                        required: ['label', 'score', 'confidence']
+                    }
+                }
+            ],
+            tool_choice: { type: 'tool', name: 'extract_sentiment' }
+        });
 
-        // Run sentiment analysis
-        const result = await analyzer(text);
-
-        // Extract result (model returns array with single result)
-        const sentimentResult = Array.isArray(result) ? result[0] : result;
-
-        // Convert to our format
-        const label = sentimentResult.label.toLowerCase() as 'positive' | 'negative' | 'neutral';
-        const confidence = sentimentResult.score;
-
-        // Convert to -1 to 1 scale
-        let score = 0;
-        if (label === 'positive') {
-            score = confidence; // 0 to 1
-        } else if (label === 'negative') {
-            score = -confidence; // 0 to -1
+        const toolCall = response.content.find(block => block.type === 'tool_use');
+        
+        if (!toolCall || toolCall.type !== 'tool_use') {
+            throw new Error('Anthropic failed to use the extraction tool.');
         }
 
+        const data = toolCall.input as unknown as SentimentAnalysis;
         return {
-            label,
-            score,
-            confidence
+            label: data.label || 'neutral',
+            score: data.score || 0,
+            confidence: data.confidence || 0.5
         };
-
     } catch (error) {
-        console.error('Sentiment analysis failed:', error);
-        return {
-            label: 'neutral',
-            score: 0,
-            confidence: 0
-        };
+        console.error('Claude sentiment analysis failed:', error);
+        return { label: 'neutral', score: 0, confidence: 0 };
     }
 }
 
 /**
  * Perform complete analysis on a transcript segment
- * Combines issue categorization and sentiment analysis
  * 
  * @param text - The transcript segment text
- * @returns Complete analysis results with timing
+ * @param precomputedSentiment - Optional pre-computed sentiment from AssemblyAI
+ * @returns Complete analysis results
  */
-export async function analyzeSegment(text: string): Promise<SegmentAnalysis> {
+export async function analyzeSegment(text: string, precomputedSentiment?: any): Promise<SegmentAnalysis> {
     const startTime = Date.now();
 
-    // Run both analyses in parallel for better performance
-    const [issues, sentiment] = await Promise.all([
-        categorizeIssues(text),
-        analyzeSentiment(text)
-    ]);
+    // If sentiment is provided from AssemblyAI, we map it.
+    // AssemblyAI sentiment format: { sentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL', confidence: number }
+    let sentiment: SentimentAnalysis;
+    
+    if (precomputedSentiment) {
+        const label = precomputedSentiment.sentiment?.toLowerCase() || 'neutral';
+        const confidence = precomputedSentiment.confidence || 1.0;
+        sentiment = {
+            label: label as any,
+            score: label === 'positive' ? confidence : (label === 'negative' ? -confidence : 0),
+            confidence
+        };
+    } else {
+        sentiment = await analyzeSentiment(text);
+    }
 
+    const issues = await categorizeIssues(text);
     const processingTimeMs = Date.now() - startTime;
 
     return {
@@ -212,20 +241,18 @@ export async function analyzeSegment(text: string): Promise<SegmentAnalysis> {
 
 /**
  * Batch analyze multiple segments
- * Processes segments sequentially to avoid memory issues
  * 
- * @param segments - Array of transcript segment texts
- * @param onProgress - Optional callback for progress updates
- * @returns Array of analysis results
+ * @param segments - Array of objects with text and optional precomputed sentiment
  */
 export async function analyzeSegments(
-    segments: string[],
+    segments: Array<{ text: string; sentiment?: any }>,
     onProgress?: (current: number, total: number) => void
 ): Promise<SegmentAnalysis[]> {
     const results: SegmentAnalysis[] = [];
 
+    // Process in smaller batches
     for (let i = 0; i < segments.length; i++) {
-        const result = await analyzeSegment(segments[i]);
+        const result = await analyzeSegment(segments[i].text, segments[i].sentiment);
         results.push(result);
 
         if (onProgress) {
@@ -241,11 +268,4 @@ export async function analyzeSegments(
  */
 export function getConfig() {
     return { ...CONFIG };
-}
-
-/**
- * Update configuration values
- */
-export function updateConfig(updates: Partial<typeof CONFIG>) {
-    Object.assign(CONFIG, updates);
 }

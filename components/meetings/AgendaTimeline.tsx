@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import type { AgendaItem } from '@/types/LegislatorIntelligence';
-import type { TranscriptSegment } from '@/lib/types/youtube';
+import type { TranscriptSegment } from '@/lib/types/transcription';
 
 interface AgendaTimelineProps {
     agendaItems: AgendaItem[];

@@ -14,7 +14,7 @@ export interface SystemHealthData {
         };
     };
     services: {
-        openai: { status: 'operational' | 'degraded' | 'down'; latencyMs: number };
+        anthropic: { status: 'operational' | 'degraded' | 'down'; latencyMs: number };
         stripe: { status: 'operational' | 'degraded' | 'down' };
     };
     storage: {
@@ -35,22 +35,29 @@ async function countRows(table: string): Promise<number> {
 }
 
 /**
- * Check OpenAI API reachability by listing models (lightweight call).
+ * Check Anthropic API reachability.
  */
-async function checkOpenAI(): Promise<{ status: 'operational' | 'degraded' | 'down'; latencyMs: number }> {
-    const apiKey = process.env.OPENAI_API_KEY;
+async function checkAnthropic(): Promise<{ status: 'operational' | 'degraded' | 'down'; latencyMs: number }> {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return { status: 'down', latencyMs: 0 };
 
     const start = Date.now();
     try {
-        const res = await fetch('https://api.openai.com/v1/models', {
+        // A simple GET request will inherently return a 404/405 from the Anthropic router 
+        // if the network is up, taking <100ms and proving reachability.
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'GET',
-            headers: { Authorization: `Bearer ${apiKey}` },
+            headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
             signal: AbortSignal.timeout(5000),
         });
         const latencyMs = Date.now() - start;
 
-        if (res.ok) return { status: 'operational', latencyMs };
+        // 404 or 405 means the API router is online and rejecting the GET, which is expected.
+        if (res.status === 404 || res.status === 405) return { status: 'operational', latencyMs };
+        
+        // If we get 401, the network is up but key might be invalid, we'll call it degraded.
+        if (res.status === 401) return { status: 'degraded', latencyMs };
+        
         return { status: 'degraded', latencyMs };
     } catch {
         return { status: 'down', latencyMs: Date.now() - start };
@@ -76,7 +83,7 @@ export async function getSystemHealth(): Promise<SystemHealthData> {
     const dbLatency = Date.now() - dbStart;
 
     // Check external services in parallel
-    const openai = await checkOpenAI();
+    const anthropic = await checkAnthropic();
 
     // Stripe is considered operational if the key is set
     const stripeStatus = process.env.STRIPE_SECRET_KEY ? 'operational' : 'down';
@@ -88,7 +95,7 @@ export async function getSystemHealth(): Promise<SystemHealthData> {
             counts: { meetings, transcriptions, segments, legislators, users, bills },
         },
         services: {
-            openai,
+            anthropic,
             stripe: { status: stripeStatus as 'operational' | 'degraded' | 'down' },
         },
         storage: {

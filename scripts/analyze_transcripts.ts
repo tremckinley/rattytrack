@@ -11,15 +11,14 @@
  *   tsx scripts/analyze_transcripts.ts
  */
 
-// Load environment variables first
-require('dotenv').config({ path: '.env.local' });
-require('dotenv').config();
-
-async function analyzeUntaggedSegments() {
-    console.log('🔍 Finding untagged transcript segments...\n');
+export async function analyzeUntaggedSegments() {
+    let output = '';
+    const log = (msg: string) => { console.log(msg); output += msg + '\n'; };
+    
+    log('🔍 Finding untagged transcript segments...\n');
 
     try {
-        // Dynamic imports after env is loaded
+        // Dynamic imports are still fine, or we could lift them up
         const { supabaseAdmin } = await import('../lib/utils/supabase-admin');
         const { analyzeSegment } = await import('../lib/ai/transcript-analyzer');
         const { saveSegmentAnalysis } = await import('../lib/data/ai-analysis');
@@ -30,19 +29,19 @@ async function analyzeUntaggedSegments() {
             .from('transcription_segments')
             .select('id, text, speaker_id')
             .not('text', 'is', null)
-            .limit(100); // Process in batches of 100
+            .limit(10); // Reduce batch limit for serverless timeout safety
 
         if (fetchError) {
             console.error('Error fetching segments:', fetchError);
-            process.exit(1);
+            return { success: false, error: 'Error fetching segments', stderr: fetchError.message };
         }
 
         if (!allSegments || allSegments.length === 0) {
-            console.log('No segments found to analyze.');
-            process.exit(0);
+            log('No segments found to analyze.');
+            return { success: true, stdout: output };
         }
 
-        console.log(`Found ${allSegments.length} segments total`);
+        log(`Found ${allSegments.length} segments total`);
 
         // Get segments that already have analysis
         const { data: analyzedSegments } = await supabaseAdmin
@@ -58,11 +57,11 @@ async function analyzeUntaggedSegments() {
             seg => !analyzedIds.has(seg.id.toString())
         );
 
-        console.log(`${unanalyzedSegments.length} segments need analysis\n`);
+        log(`${unanalyzedSegments.length} segments need analysis\n`);
 
         if (unanalyzedSegments.length === 0) {
-            console.log('✅ All segments are already analyzed!');
-            process.exit(0);
+            log('✅ All segments are already analyzed!');
+            return { success: true, stdout: output };
         }
 
         // Process each segment
@@ -73,21 +72,21 @@ async function analyzeUntaggedSegments() {
             const segment = unanalyzedSegments[i];
             const progress = `[${i + 1}/${unanalyzedSegments.length}]`;
 
-            console.log(`${progress} Analyzing segment ${segment.id}...`);
-            console.log(`  Text: "${segment.text.substring(0, 80)}..."`);
+            log(`${progress} Analyzing segment ${segment.id}...`);
+            log(`  Text: "${segment.text.substring(0, 80)}..."`);
 
             try {
                 // Run AI analysis
                 const analysis = await analyzeSegment(segment.text);
 
-                console.log(`  Issues found: ${analysis.issues.length}`);
+                log(`  Issues found: ${analysis.issues.length}`);
                 if (analysis.issues.length > 0) {
                     analysis.issues.forEach(issue => {
-                        console.log(`    - ${issue.category} (${(issue.confidence * 100).toFixed(1)}%)`);
+                        log(`    - ${issue.category} (${(issue.confidence * 100).toFixed(1)}%)`);
                     });
                 }
-                console.log(`  Sentiment: ${analysis.sentiment.label} (score: ${analysis.sentiment.score.toFixed(2)})`);
-                console.log(`  Processing time: ${analysis.processingTimeMs}ms`);
+                log(`  Sentiment: ${analysis.sentiment.label} (score: ${analysis.sentiment.score.toFixed(2)})`);
+                log(`  Processing time: ${analysis.processingTimeMs}ms`);
 
                 // Save to database
                 const result = await saveSegmentAnalysis(
@@ -97,10 +96,10 @@ async function analyzeUntaggedSegments() {
                 );
 
                 if (result.success) {
-                    console.log(`  ✅ Saved ${result.issuesSaved} issue tags\n`);
+                    log(`  ✅ Saved ${result.issuesSaved} issue tags\n`);
                     successCount++;
                 } else {
-                    console.log(`  ❌ Failed to save: ${result.error}\n`);
+                    log(`  ❌ Failed to save: ${result.error}\n`);
                     failCount++;
                 }
 
@@ -110,19 +109,17 @@ async function analyzeUntaggedSegments() {
             }
         }
 
-        console.log('\n' + '='.repeat(50));
-        console.log('📊 Analysis Complete!');
-        console.log('='.repeat(50));
-        console.log(`✅ Successfully analyzed: ${successCount}`);
-        console.log(`❌ Failed: ${failCount}`);
-        console.log(`📈 Total processed: ${successCount + failCount}`);
+        log('\n' + '='.repeat(50));
+        log('📊 Analysis Complete!');
+        log('='.repeat(50));
+        log(`✅ Successfully analyzed: ${successCount}`);
+        log(`❌ Failed: ${failCount}`);
+        log(`📈 Total processed: ${successCount + failCount}`);
 
-        process.exit(0);
+        return { success: true, stdout: output };
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Fatal error:', error);
-        process.exit(1);
+        return { success: false, error: 'Fatal error', stderr: error.message };
     }
 }
-
-analyzeUntaggedSegments();

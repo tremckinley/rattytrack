@@ -1,5 +1,5 @@
 // Meeting Video Section Component
-// Displays embedded YouTube player or fallback UI
+// Displays embedded Granicus player or fallback UI
 
 interface MeetingVideoSectionProps {
     videoId: string | null;
@@ -32,7 +32,7 @@ export default function MeetingVideoSection({ videoId, videoUrl, title }: Meetin
                     href={videoUrl || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                     Watch Video ↗
                 </a>
@@ -42,26 +42,25 @@ export default function MeetingVideoSection({ videoId, videoUrl, title }: Meetin
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            {/* YouTube Embed */}
-            <div className="aspect-video w-full">
+            {/* Video Embed */}
+            <div className="aspect-video w-full bg-black">
                 <iframe
-                    src={`https://www.youtube.com/embed/${actualVideoId}`}
+                    src={`https://memphis.granicus.com/MediaPlayer.php?view_id=6&clip_id=${actualVideoId}&embed=1&autostart=0`}
                     title={title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
-                    className="w-full h-full"
+                    className="w-full h-full border-0"
                 />
             </div>
 
             {/* Video Actions */}
-            <div className="p-4 bg-gray-50 flex gap-3">
+            <div className="p-4 bg-gray-50 flex gap-3 border-t border-gray-100">
                 <a
-                    href={`https://www.youtube.com/watch?v=${actualVideoId}`}
+                    href={`https://memphis.granicus.com/MediaPlayer.php?view_id=6&clip_id=${actualVideoId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
                 >
-                    Watch on YouTube ↗
+                    Watch on Granicus Archive ↗
                 </a>
             </div>
         </div>
@@ -69,19 +68,18 @@ export default function MeetingVideoSection({ videoId, videoUrl, title }: Meetin
 }
 
 /**
- * Extract YouTube video ID from various URL formats
+ * Extract Granicus video ID from various URL formats
  */
 function extractVideoId(url: string): string | null {
-    const patterns = [
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/,
-        /^([a-zA-Z0-9_-]{11})$/
-    ];
+    // Checks for standard clipID assignment like clip_id=10666
+    const clipMatch = url.match(/clip_id=(\d+)/);
+    if (clipMatch) {
+        return clipMatch[1];
+    }
 
-    for (const pattern of patterns) {
-        const match = url.match(pattern);
-        if (match) {
-            return match[1];
-        }
+    // If it's just a raw number passed as a URL string magically
+    if (/^\d+$/.test(url)) {
+        return url;
     }
 
     return null;

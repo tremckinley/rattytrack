@@ -216,7 +216,7 @@ export default function IssueSpeakingDashboard({
                                                                 )}
                                                                 {statement.videoId && (
                                                                     <Link
-                                                                        href={`/transcripts/${statement.videoId}${statement.timestamp ? `#t=${statement.timestamp}` : ''}`}
+                                                                        href={`/meetings/${statement.videoId}${statement.timestamp ? `#t=${statement.timestamp}` : ''}`}
                                                                         className="text-blue-600 hover:underline"
                                                                     >
                                                                         View in transcript →

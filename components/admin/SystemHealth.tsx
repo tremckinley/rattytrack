@@ -27,7 +27,7 @@ interface SystemHealthData {
         };
     };
     services: {
-        openai: { status: 'operational' | 'degraded' | 'down'; latencyMs: number };
+        anthropic: { status: 'operational' | 'degraded' | 'down'; latencyMs: number };
         stripe: { status: 'operational' | 'degraded' | 'down' };
     };
     storage: {
@@ -161,11 +161,11 @@ export default function SystemHealth() {
                     <div className="flex justify-between items-center py-2 border-b border-gray-50">
                         <span className="text-sm text-gray-600 flex items-center gap-2">
                             <FontAwesomeIcon icon={faCloud} className="text-purple-500 w-4" />
-                            OpenAI
+                            Anthropic
                         </span>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400">{health.services.openai.latencyMs}ms</span>
-                            <StatusBadge status={health.services.openai.status} />
+                            <span className="text-xs text-gray-400">{health.services.anthropic.latencyMs}ms</span>
+                            <StatusBadge status={health.services.anthropic.status} />
                         </div>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-gray-50">
