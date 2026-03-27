@@ -66,29 +66,55 @@ export async function categorizeIssues(text: string): Promise<IssueCategorizatio
         const response = await anthropic.messages.create({
             model: CONFIG.MODEL,
             max_tokens: 1024,
-            system: `You are a civic data assistant. Categorize the following transcript segment from a city council meeting into the most relevant issue categories.
-Available categories: ${ISSUE_CATEGORIES.join(', ')}.
-Respond ONLY with a JSON array of objects, each containing "category" and "confidence" (0-1 scale).
-Example: [{"category": "Transportation", "confidence": 0.9}, {"category": "Infrastructure", "confidence": 0.4}]`,
+            system: `You are an expert civic data extraction assistant.`,
             messages: [
                 {
                     role: 'user',
-                    content: text
+                    content: `Categorize the following transcript segment from a city council meeting into the most relevant issue categories:\n\n${text}`
                 }
-            ]
+            ],
+            tools: [
+                {
+                    name: 'extract_categories',
+                    description: 'Extract relevant civic issue categories from the text',
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            issues: {
+                                type: 'array',
+                                description: 'List of relevant civic issue categories found in the text',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        category: {
+                                            type: 'string',
+                                            enum: Object.values(ISSUE_CATEGORIES),
+                                            description: 'The standardized civic category.'
+                                        },
+                                        confidence: {
+                                            type: 'number',
+                                            description: 'Confidence score (0 to 1) that this category applies to the text.'
+                                        }
+                                    },
+                                    required: ['category', 'confidence']
+                                }
+                            }
+                        },
+                        required: ['issues']
+                    }
+                }
+            ],
+            tool_choice: { type: 'tool', name: 'extract_categories' }
         });
 
-        const block = (response.content[0] as any);
-        const content = block && block.type === 'text' ? block.text : '';
-        if (!content) return [];
-
-        // Simple JSON extraction in case Claude adds markdown or text
-        // Use [\s\S] instead of . with /s flag for ES2017 compatibility
-        const jsonMatch = content.match(/\[[\s\S]*\]/);
-        const jsonStr = jsonMatch ? jsonMatch[0] : content;
+        const toolCall = response.content.find(block => block.type === 'tool_use');
         
-        const data = JSON.parse(jsonStr);
-        const categorizations: IssueCategorization[] = (Array.isArray(data) ? data : [])
+        if (!toolCall || toolCall.type !== 'tool_use') {
+            throw new Error('Anthropic failed to use the extraction tool.');
+        }
+
+        const data = toolCall.input as unknown as { issues: IssueCategorization[] };
+        const categorizations: IssueCategorization[] = (data.issues || [])
             .filter((item: any) => ISSUE_CATEGORIES.includes(item.category as IssueCategory))
             .map((item: any) => ({
                 category: item.category as IssueCategory,
@@ -123,23 +149,48 @@ export async function analyzeSentiment(text: string): Promise<SentimentAnalysis>
         const response = await anthropic.messages.create({
             model: CONFIG.MODEL,
             max_tokens: 512,
-            system: 'Analyze the sentiment of this city council meeting transcript segment. Respond with a JSON object: {"label": "positive"|"negative"|"neutral", "score": number (-1 to 1), "confidence": number (0-1)}',
+            system: 'You are an expert civic sentiment analyzer.',
             messages: [
                 {
                     role: 'user',
-                    content: text
+                    content: `Analyze the sentiment of this city council meeting transcript segment:\n\n${text}`
                 }
-            ]
+            ],
+            tools: [
+                {
+                    name: 'extract_sentiment',
+                    description: 'Extract the overall sentiment from the provided transcript segment',
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            label: {
+                                type: 'string',
+                                enum: ['positive', 'negative', 'neutral'],
+                                description: 'The overarching sentiment classification.'
+                            },
+                            score: {
+                                type: 'number',
+                                description: 'A detailed sentiment score ranging from -1 (extremely negative) to 1 (extremely positive). 0 is neutral.'
+                            },
+                            confidence: {
+                                type: 'number',
+                                description: 'The probability (0 to 1) that this sentiment classification is accurate.'
+                            }
+                        },
+                        required: ['label', 'score', 'confidence']
+                    }
+                }
+            ],
+            tool_choice: { type: 'tool', name: 'extract_sentiment' }
         });
 
-        const block = (response.content[0] as any);
-        const content = block && block.type === 'text' ? block.text : '';
-        if (!content) throw new Error('Empty response');
+        const toolCall = response.content.find(block => block.type === 'tool_use');
+        
+        if (!toolCall || toolCall.type !== 'tool_use') {
+            throw new Error('Anthropic failed to use the extraction tool.');
+        }
 
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        const jsonStr = jsonMatch ? jsonMatch[0] : content;
-
-        const data = JSON.parse(jsonStr);
+        const data = toolCall.input as unknown as SentimentAnalysis;
         return {
             label: data.label || 'neutral',
             score: data.score || 0,
