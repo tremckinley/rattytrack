@@ -65,10 +65,15 @@ export async function saveSegmentAnalysis(
             is_manually_verified: false
         }));
 
-        // Insert into database
+        // Deduplicate in case Claude hallucinates the same category multiple times
+        const uniqueSegmentIssues = Array.from(
+            new Map(segmentIssues.map(item => [item.issue_id, item])).values()
+        );
+
+        // Upsert into database to allow safe retries
         const { error } = await supabase
             .from('segment_issues')
-            .insert(segmentIssues);
+            .upsert(uniqueSegmentIssues, { onConflict: 'segment_id, issue_id' });
 
         if (error) {
             console.error('Error saving segment analysis:', error);
