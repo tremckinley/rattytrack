@@ -40,17 +40,28 @@ export default function TranscriptionHub() {
 
     const startTranscription = async (meetingId: string, videoId: string) => {
         setProcessing(meetingId);
+        // Optimistically show processing state
+        setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, transcriptionStatus: 'processing' } : m));
+        
         try {
             const res = await fetch("/api/transcribe/granicus", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ clipId: videoId, forceRetry: true }),
             });
-            if (res.ok) {
-                setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, transcriptionStatus: 'processing' } : m));
+            
+            if (!res.ok) {
+                // Revert state on failure
+                setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, transcriptionStatus: 'failed' } : m));
+                const data = await res.json();
+                alert(`Transcription failed: ${data.error || "Unknown error"}`);
+            } else {
+                alert(`Transcription queued successfully!`);
             }
         } catch (err) {
             console.error("Failed to start transcription", err);
+            setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, transcriptionStatus: 'failed' } : m));
+            alert("Network error: Failed to connect to server.");
         } finally {
             setProcessing(null);
         }
@@ -58,18 +69,27 @@ export default function TranscriptionHub() {
 
     const startAnalysis = async (meetingId: string) => {
         setProcessing(meetingId);
+        // Optimistically show processing state
+        setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, analysisStatus: 'processing' } : m));
+        
         try {
             const res = await fetch(`/api/admin/meetings/${meetingId}/analyze`, {
                 method: "POST"
             });
+            
             if (res.ok) {
                 setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, analysisStatus: 'completed' } : m));
+                alert(`AI Analysis completed successfully!`);
             } else {
+                // Revert state on failure
+                setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, analysisStatus: 'failed' } : m));
                 const data = await res.json();
                 alert(`Analysis failed: ${data.error || "Unknown error"}`);
             }
         } catch (err) {
             console.error("Failed to start analysis", err);
+            setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, analysisStatus: 'failed' } : m));
+            alert("Network error: Failed to connect to server.");
         } finally {
             setProcessing(null);
         }
@@ -194,10 +214,12 @@ export default function TranscriptionHub() {
                                     <button
                                         onClick={() => startTranscription(meeting.id, meeting.videoId!)}
                                         disabled={processing === meeting.id}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-bold hover:bg-amber-700 shadow-sm transition-all"
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all ${
+                                            processing === meeting.id ? 'bg-amber-800 text-white/70 cursor-not-allowed' : 'bg-amber-600 text-white hover:bg-amber-700'
+                                        }`}
                                     >
-                                        <FontAwesomeIcon icon={faPlay} className="text-xs" />
-                                        Transcribe
+                                        {processing === meeting.id ? <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" /> : <FontAwesomeIcon icon={faPlay} className="text-xs" />}
+                                        {processing === meeting.id ? 'Queuing...' : 'Transcribe'}
                                     </button>
                                 )}
 
@@ -205,10 +227,12 @@ export default function TranscriptionHub() {
                                     <button
                                         onClick={() => startAnalysis(meeting.id)}
                                         disabled={processing === meeting.id}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-950 text-white rounded-lg text-xs font-bold hover:bg-rose-900 shadow-sm transition-all"
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all ${
+                                            processing === meeting.id ? 'bg-rose-900 text-white/70 cursor-not-allowed' : 'bg-rose-950 text-white hover:bg-rose-900'
+                                        }`}
                                     >
-                                        <FontAwesomeIcon icon={faMicrochip} className="text-xs" />
-                                        Run AI Analysis
+                                        {processing === meeting.id ? <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" /> : <FontAwesomeIcon icon={faMicrochip} className="text-xs" />}
+                                        {processing === meeting.id ? 'Analyzing...' : 'Run AI Analysis'}
                                     </button>
                                 )}
 

@@ -214,29 +214,36 @@ export async function runIntelligencePipeline(
             const total = input.segments.length;
             onProgress?.('Issue Categorization', 0, total);
 
-            for (let i = 0; i < input.segments.length; i++) {
-                const segment = input.segments[i];
+            const CHUNK_SIZE = 20;
+            for (let i = 0; i < input.segments.length; i += CHUNK_SIZE) {
+                const chunk = input.segments.slice(i, i + CHUNK_SIZE);
+                // Concatenate the segments into a unified block for deeper context
+                const chunkText = chunk.map(s => s.text).join('\n---\n');
 
                 try {
-                    // Run AI analysis with precomputed sentiment if available
-                    const analysis = await analyzeSegment(segment.text, segment.sentiment);
+                    // Run AI analysis on the entire combined block
+                    const analysis = await analyzeSegment(chunkText, chunk[0].sentiment);
 
-                    // Save to database
-                    const result = await saveSegmentAnalysis(
-                        String(segment.id),
-                        analysis.issues,
-                        analysis.sentiment
-                    );
+                    // Assign these universal semantic issues to the underlying granular segments
+                    for (const segment of chunk) {
+                        segment.sentiment = analysis.sentiment; // Memoize for Step 3
 
-                    if (result.success) {
-                        output.savedCategorizations += result.issuesSaved;
+                        const result = await saveSegmentAnalysis(
+                            String(segment.id),
+                            analysis.issues,
+                            analysis.sentiment
+                        );
+
+                        if (result.success) {
+                            output.savedCategorizations += result.issuesSaved;
+                        }
                     }
                 } catch (error) {
-                    console.error(`Error categorizing segment ${segment.id}:`, error);
+                    console.error(`Error categorizing chunk at index ${i}:`, error);
                 }
 
-                if (i % CONFIG.PROGRESS_INTERVAL === 0) {
-                    onProgress?.('Issue Categorization', i + 1, total);
+                if (i % (CHUNK_SIZE * 5) === 0) {
+                    onProgress?.('Issue Categorization', Math.min(i + CHUNK_SIZE, total), total);
                 }
             }
 
@@ -254,27 +261,36 @@ export async function runIntelligencePipeline(
             const quoteSegments = input.segments.map(s => ({
                 id: String(s.id),
                 text: s.text,
-                speaker_id: s.speaker_id
+                speaker_id: s.speaker_id,
+                sentiment_score: s.sentiment?.score ?? null
             }));
 
-            // Detect quotes with sentiment analysis
+            // Pre-fetch all Segment Issues simultaneously to skip 1000 sequential DB connections
+            const { supabaseAdmin } = await import('@/lib/utils/supabase-admin');
+            const { data: allSegmentIssues } = await supabaseAdmin
+                .from('segment_issues')
+                .select('segment_id, issue_id')
+                .in('segment_id', input.segments.map(s => s.id))
+                .order('relevance_score', { ascending: false });
+
+            const issueMap = new Map();
+            if (allSegmentIssues) {
+                for (const item of allSegmentIssues) {
+                    if (!issueMap.has(item.segment_id)) {
+                        issueMap.set(item.segment_id, item.issue_id);
+                    }
+                }
+            }
+
+            // Detect quotes without triggering exponential Claude calls
             output.quotesDetected = await detectQuotesFromSegments(
                 quoteSegments,
                 async (text) => {
-                    const result = await analyzeSegment(text); // No precomputed for specific slices
+                    const result = await analyzeSegment(text); 
                     return result.sentiment;
                 },
                 async (segmentId) => {
-                    // Get primary issue from segment_issues
-                    const { supabaseAdmin } = await import('@/lib/utils/supabase-admin');
-                    const { data } = await supabaseAdmin
-                        .from('segment_issues')
-                        .select('issue_id')
-                        .eq('segment_id', parseInt(segmentId))
-                        .order('relevance_score', { ascending: false })
-                        .limit(1)
-                        .single();
-                    return data?.issue_id ?? null;
+                    return issueMap.get(parseInt(segmentId)) ?? null;
                 }
             );
 
