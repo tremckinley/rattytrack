@@ -340,7 +340,13 @@ export default function TranscriptPlayer({
   const handleTimestampClick = (seconds: number) => {
     // Update iframe src to jump to timestamp
     if (iframeRef.current) {
-      const newSrc = `https://www.youtube.com/embed/${videoId}?start=${Math.floor(seconds)}&autoplay=1`;
+      const isGranicus = /^\d+$/.test(videoId) || videoId.includes('clip_id=');
+      const actualId = videoId.replace(/[^\d]/g, ''); // Extract numeric ID for granicus
+      
+      const newSrc = isGranicus 
+        ? `https://memphis.granicus.com/MediaPlayer.php?view_id=6&clip_id=${actualId}&embed=1&autostart=1`
+        : `https://www.youtube.com/embed/${videoId}?start=${Math.floor(seconds)}&autoplay=1`;
+        
       iframeRef.current.src = newSrc;
     }
     setCurrentTime(seconds);
@@ -473,11 +479,15 @@ export default function TranscriptPlayer({
               <div className="aspect-video w-full">
                 <iframe
                   ref={iframeRef}
-                  src={`https://www.youtube.com/embed/${videoId}`}
+                  src={
+                    /^\d+$/.test(videoId) || videoId.includes('clip_id=')
+                      ? `https://memphis.granicus.com/MediaPlayer.php?view_id=6&clip_id=${videoId.replace(/[^\d]/g, '')}&embed=1&autostart=0`
+                      : `https://www.youtube.com/embed/${videoId}`
+                  }
                   title={title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  className="w-full h-full"
+                  className="w-full h-full border-0"
                 />
                 <div className="bg-white shadow-md p-6">
 

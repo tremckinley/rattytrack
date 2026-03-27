@@ -242,6 +242,10 @@ export async function runIntelligencePipeline(
                     console.error(`Error categorizing chunk at index ${i}:`, error);
                 }
 
+                // Sleep to avoid Anthropic/OpenAI token rate limit errors (429)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+
                 if (i % (CHUNK_SIZE * 5) === 0) {
                     onProgress?.('Issue Categorization', Math.min(i + CHUNK_SIZE, total), total);
                 }

@@ -4,6 +4,8 @@ import { createClient } from "@/lib/utils/supabase/server";
 import { getTranscriptSegments } from "@/lib/data/transcriptions";
 import { runIntelligencePipeline } from "@/lib/ai/intelligence-pipeline";
 
+export const maxDuration = 300; // 5 minutes max duration for Vercel
+
 export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }

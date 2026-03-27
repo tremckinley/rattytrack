@@ -10,6 +10,7 @@ import { runIntelligencePipeline } from '@/lib/ai/intelligence-pipeline';
 import { supabaseAdmin } from '@/lib/utils/supabase-admin';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5 minutes max duration for Vercel
 
 const aai = new AssemblyAI({
     apiKey: process.env.ASSEMBLYAI_API_KEY || '',
