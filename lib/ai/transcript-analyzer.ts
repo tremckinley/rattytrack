@@ -4,6 +4,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { ISSUE_CATEGORIES, type IssueCategory } from './issue-categories';
+import { MEMPHIS_SYSTEM_PROMPT } from './memphis-context';
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
@@ -66,7 +67,7 @@ export async function categorizeIssues(text: string): Promise<IssueCategorizatio
         const response = await anthropic.messages.create({
             model: CONFIG.MODEL,
             max_tokens: 1024,
-            system: `You are an expert civic data extraction assistant.`,
+            system: `${MEMPHIS_SYSTEM_PROMPT}\n\nYou are an expert civic data extraction assistant.`,
             messages: [
                 {
                     role: 'user',
@@ -149,7 +150,7 @@ export async function analyzeSentiment(text: string): Promise<SentimentAnalysis>
         const response = await anthropic.messages.create({
             model: CONFIG.MODEL,
             max_tokens: 512,
-            system: 'You are an expert civic sentiment analyzer.',
+            system: `${MEMPHIS_SYSTEM_PROMPT}\n\nYou are an expert civic sentiment analyzer.`,
             messages: [
                 {
                     role: 'user',

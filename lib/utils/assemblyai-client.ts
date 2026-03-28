@@ -1,5 +1,6 @@
 import { AssemblyAI } from 'assemblyai';
 import fs from 'fs';
+import { MEMPHIS_BOOST_WORDS } from '@/lib/ai/memphis-context';
 
 const aai = new AssemblyAI({
     apiKey: process.env.ASSEMBLYAI_API_KEY || '',
@@ -47,6 +48,7 @@ export async function submitToAssemblyAI({ filePath, videoId, source = 'upload' 
         speech_models: ['universal-3-pro', 'universal-2'] as any,
         speaker_labels: true,
         sentiment_analysis: true,
+        word_boost: MEMPHIS_BOOST_WORDS,
         webhook_url: webhookUrl,
         webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
         webhook_auth_header_value: useBypass ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET! : process.env.ASSEMBLYAI_API_KEY!,
@@ -86,6 +88,7 @@ export async function submitBufferToAssemblyAI({ buffer, videoId, source = 'uplo
         speech_models: ['universal-3-pro', 'universal-2'] as any,
         speaker_labels: true,
         sentiment_analysis: true,
+        word_boost: MEMPHIS_BOOST_WORDS,
         webhook_url: webhookUrl,
         webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
         webhook_auth_header_value: useBypass ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET! : process.env.ASSEMBLYAI_API_KEY!,
@@ -126,6 +129,7 @@ export async function submitUrlToAssemblyAI({ remoteUrl, videoId, source = 'gran
         speech_models: ['universal-3-pro', 'universal-2'] as any,
         speaker_labels: true,
         sentiment_analysis: true,
+        word_boost: MEMPHIS_BOOST_WORDS,
         webhook_url: webhookUrl,
         webhook_auth_header_name: useBypass ? 'x-vercel-protection-bypass' : 'x-api-key',
         webhook_auth_header_value: useBypass ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET! : process.env.ASSEMBLYAI_API_KEY!,

@@ -11,7 +11,8 @@ export const ISSUE_CATEGORIES = [
     'Health & Social Services',
     'Environment & Sustainability',
     'Economic Development',
-    'Government Operations'
+    'Government Operations',
+    'Irrelevant / Intermission'
 ] as const;
 
 export type IssueCategory = typeof ISSUE_CATEGORIES[number];
@@ -31,7 +32,8 @@ export const CATEGORY_DESCRIPTIONS: Record<IssueCategory, string> = {
     'Health & Social Services': 'Public health, healthcare access, social programs, mental health, community services, welfare',
     'Environment & Sustainability': 'Environmental protection, climate action, sustainability initiatives, pollution, conservation, green energy',
     'Economic Development': 'Business development, job creation, economic growth, commercial projects, workforce development',
-    'Government Operations': 'Administrative procedures, governance, policy making, council procedures, government efficiency, transparency'
+    'Government Operations': 'Administrative procedures, governance, policy making, council procedures, government efficiency, transparency',
+    'Irrelevant / Intermission': 'Dead air, roll call, breaks, public broadcasting commercials, unrelated chit-chat, meeting adjourned'
 };
 
 /**

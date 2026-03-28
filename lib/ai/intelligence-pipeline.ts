@@ -255,6 +255,30 @@ export async function runIntelligencePipeline(
         }
 
         // ====================================================================
+        // GLOBAL PRE-FETCH: Segment Issues (Optimizes Step 3 & 4)
+        // ====================================================================
+        const { supabaseAdmin } = await import('@/lib/utils/supabase-admin');
+        const { data: allSegmentIssues } = await supabaseAdmin
+            .from('segment_issues')
+            .select('segment_id, issue_id')
+            .in('segment_id', input.segments.map(s => s.id))
+            .order('relevance_score', { ascending: false });
+
+        const issueMap = new Map();
+        const irrelevantSegmentIds = new Set<string>();
+        
+        if (allSegmentIssues) {
+            for (const item of allSegmentIssues) {
+                if (item.issue_id === 'Irrelevant / Intermission') {
+                    irrelevantSegmentIds.add(String(item.segment_id));
+                }
+                if (!issueMap.has(item.segment_id)) {
+                    issueMap.set(item.segment_id, item.issue_id);
+                }
+            }
+        }
+
+        // ====================================================================
         // STEP 3: Key Quote Detection
         // ====================================================================
         if (CONFIG.ENABLE_QUOTE_DETECTION) {
@@ -269,26 +293,11 @@ export async function runIntelligencePipeline(
                 sentiment_score: s.sentiment?.score ?? null
             }));
 
-            // Pre-fetch all Segment Issues simultaneously to skip 1000 sequential DB connections
-            const { supabaseAdmin } = await import('@/lib/utils/supabase-admin');
-            const { data: allSegmentIssues } = await supabaseAdmin
-                .from('segment_issues')
-                .select('segment_id, issue_id')
-                .in('segment_id', input.segments.map(s => s.id))
-                .order('relevance_score', { ascending: false });
-
-            const issueMap = new Map();
-            if (allSegmentIssues) {
-                for (const item of allSegmentIssues) {
-                    if (!issueMap.has(item.segment_id)) {
-                        issueMap.set(item.segment_id, item.issue_id);
-                    }
-                }
-            }
-
-            // Detect quotes without triggering exponential Claude calls
+            // Detect quotes without triggering exponential Claude calls, and explicitly skip irrelevant intermission segments
+            const filteredQuoteSegments = quoteSegments.filter(s => !irrelevantSegmentIds.has(s.id));
+            
             output.quotesDetected = await detectQuotesFromSegments(
-                quoteSegments,
+                filteredQuoteSegments,
                 async (text) => {
                     const result = await analyzeSegment(text); 
                     return result.sentiment;
@@ -370,6 +379,7 @@ export async function runIntelligencePipeline(
 
             for (const segment of input.segments) {
                 if (!segment.speaker_id) continue;
+                if (irrelevantSegmentIds.has(String(segment.id))) continue; // Exclude intermission/dead air from deliberation
 
                 const agenda = await getAgendaItemAtTime(input.videoId, segment.start_time);
 
