@@ -18,6 +18,7 @@ import MeetingSummaryWrapper from '@/components/meetings/MeetingSummaryWrapper';
 import IssueSpeakingDashboard from '@/components/charts/IssueSpeakingDashboard';
 import { getMeetingSummary } from '@/lib/data/meeting-summaries';
 import { getMeetingIssueMetrics } from '@/lib/data/meeting_issue_metrics';
+import { isAdmin } from '@/lib/utils/auth-utils';
 
 interface PageProps {
     params: Promise<{ meetingId: string }>;
@@ -30,7 +31,10 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
     const initialTime = t ? parseInt(t as string) : 0;
 
     // Fetch meeting and associated data
-    const { meeting, documents, attendees, hasTranscript } = await getFullMeetingData(meetingId);
+    const [{ meeting, documents, attendees, hasTranscript }, userIsAdmin] = await Promise.all([
+        getFullMeetingData(meetingId),
+        isAdmin(),
+    ]);
 
     if (!meeting) {
         notFound();
@@ -154,8 +158,8 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
                             )
                         )}
 
-                        {/* Speaker Identification / Mapper */}
-                        {transcription?.status === 'completed' && speakerLabels.length > 0 && meeting.video_id && (
+                        {/* Speaker Identification / Mapper (Admin Only) */}
+                        {userIsAdmin && transcription?.status === 'completed' && speakerLabels.length > 0 && meeting.video_id && (
                             <div className="card overflow-hidden">
                                 <SpeakerMapperWrapper
                                     videoId={meeting.video_id}

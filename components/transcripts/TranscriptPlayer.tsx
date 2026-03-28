@@ -34,7 +34,12 @@ interface FullSegment {
   segment: TranscriptSegment;
 }
 
-type DisplayItem = CondensedSection | FullSegment;
+interface AgendaHeader {
+  type: 'agenda_header';
+  agendaItem: AgendaItem;
+}
+
+type DisplayItem = CondensedSection | FullSegment | AgendaHeader;
 
 /**
  * Merge consecutive segments from the same speaker into single blocks
@@ -137,12 +142,21 @@ function isRollCallStart(text: string): boolean {
  * Process segments to condense opening sections
  * Also skips any content before the first detected opening section (ads, dead time)
  * Merges consecutive segments from the same speaker for better readability
+ * Dynamically injects Agenda Items when timestamps transition segments
  */
-function processSegmentsForDisplay(rawSegments: TranscriptSegment[]): DisplayItem[] {
+function processSegmentsForDisplay(rawSegments: TranscriptSegment[], agendaItems: AgendaItem[] = []): DisplayItem[] {
   // First, merge consecutive segments from the same speaker
   const segments = mergeConsecutiveSpeakerSegments(rawSegments);
 
   const displayItems: DisplayItem[] = [];
+  
+  // Sort agenda items chronologically
+  const sortedAgenda = [...agendaItems]
+    .filter(a => a.start_time !== null)
+    .sort((a, b) => (a.start_time || 0) - (b.start_time || 0));
+    
+  let currentAgendaIndex = 0;
+
   let rollCallFound = false;
   let currentOpeningSection: OpeningSection = null;
   let sectionStart: number | null = null;
@@ -180,6 +194,30 @@ function processSegmentsForDisplay(rawSegments: TranscriptSegment[]): DisplayIte
 
   for (let i = 0; i < segments.length; i++) {
     const segment = segments[i];
+
+    // Inject Agenda Headers checking chronological order
+    while (
+      currentAgendaIndex < sortedAgenda.length &&
+      segment.start_time >= (sortedAgenda[currentAgendaIndex].start_time || 0)
+    ) {
+      // Finalize pending opening section before inserting agenda header
+      if (currentOpeningSection && sectionStart !== null) {
+        displayItems.push({
+          type: 'condensed',
+          sectionName: sectionNames[currentOpeningSection],
+          startTime: sectionStart,
+          endTime: sectionEnd,
+        });
+        currentOpeningSection = null;
+        sectionStart = null;
+      }
+      
+      displayItems.push({
+        type: 'agenda_header',
+        agendaItem: sortedAgenda[currentAgendaIndex]
+      });
+      currentAgendaIndex++;
+    }
 
     // Skip segments before the first detected opening section (pre-meeting content)
     if (firstOpeningSectionIndex !== -1 && i < firstOpeningSectionIndex) {
@@ -303,15 +341,18 @@ export default function TranscriptPlayer({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
 
-  // Process segments to condense opening sections
-  const displayItems = useMemo(() => processSegmentsForDisplay(segments), [segments]);
+  // Process segments to condense opening sections AND inject agenda items
+  const displayItems = useMemo(() => processSegmentsForDisplay(segments, agendaItems), [segments, agendaItems]);
 
-  // Filter segments based on search query (only applies to full segments)
+  // Filter segments based on search query
   const filteredItems = useMemo(() => {
     if (!searchQuery) return displayItems;
     return displayItems.filter((item) => {
       if (item.type === 'condensed') {
         return item.sectionName.toLowerCase().includes(searchQuery.toLowerCase());
+      }
+      if (item.type === 'agenda_header') {
+        return item.agendaItem.title.toLowerCase().includes(searchQuery.toLowerCase());
       }
       return item.segment.text.toLowerCase().includes(searchQuery.toLowerCase());
     });
@@ -549,18 +590,49 @@ export default function TranscriptPlayer({
                       return (
                         <div
                           key={`condensed-${index}`}
-                          className="group cursor-pointer p-3 rounded-lg transition-colors bg-gray-100 hover:bg-gray-200 border border-gray-200"
+                          className="group cursor-pointer p-3 transition-colors bg-gray-50 hover:bg-gray-100 border border-foreground shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
                           onClick={() => handleTimestampClick(item.startTime)}
                         >
                           <div className="flex items-center gap-3">
                             <button
-                              className="font-mono text-sm px-2 py-1 rounded bg-gray-300 text-gray-700 group-hover:bg-blue-600 group-hover:text-white transition-colors"
+                              className="font-mono text-sm px-2 py-1 bg-white border border-foreground shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] text-foreground group-hover:bg-capyred group-hover:text-white transition-colors"
                             >
                               {formatTimestamp(item.startTime)}
                             </button>
-                            <span className="font-medium text-gray-700 italic">
+                            <span className="font-bold opacity-80 uppercase tracking-widest text-xs">
                               {item.sectionName}
                             </span>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    if (item.type === 'agenda_header') {
+                      const agenda = item.agendaItem;
+                      return (
+                        <div 
+                          key={`agenda-${agenda.id}`} 
+                          className="w-full my-6 bg-capyred text-white p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] border border-foreground border-l-8 cursor-pointer hover:bg-rose-900 transition-colors"
+                          style={{ borderLeftColor: '#3a021c' }}
+                          onClick={() => agenda.start_time && handleTimestampClick(agenda.start_time)}
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="bg-white text-capyred font-black text-xl px-3 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-foreground">
+                              {agenda.item_number}
+                            </div>
+                            <div className="flex-1">
+                               <h3 className="font-bold text-lg leading-tight mb-1">{agenda.title}</h3>
+                               {agenda.vote_result && (
+                                 <span className="text-xs font-bold uppercase tracking-widest bg-black bg-opacity-30 px-2 py-0.5 rounded-sm">
+                                    Vote: {agenda.vote_result}
+                                 </span>
+                               )}
+                            </div>
+                            {agenda.start_time && (
+                                <div className="font-mono text-xs opacity-70 self-end">
+                                    {formatTimestamp(agenda.start_time)}
+                                </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -571,45 +643,45 @@ export default function TranscriptPlayer({
                     return (
                       <div
                         key={segment.id}
-                        className={`group cursor-pointer p-3 rounded-lg transition-colors ${isActiveSegment(segment)
-                          ? 'bg-blue-50 border border-blue-200 segment-active'
-                          : 'hover:bg-gray-50'
+                        className={`group cursor-pointer p-4 transition-all border ${isActiveSegment(segment)
+                          ? 'bg-blue-50/50 border-capyred border-l-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] segment-active scale-[1.01] my-2'
+                          : 'border-transparent hover:border-foreground/20 hover:bg-gray-50'
                           }`}
                         onClick={() => handleTimestampClick(segment.start_time)}
                       >
                         <div className="flex items-start gap-3">
                           <div className="flex-shrink-0 flex items-center gap-2">
                             <button
-                              className={`font-mono text-sm px-2 py-1 rounded transition-colors ${isActiveSegment(segment)
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-200 text-gray-700 group-hover:bg-blue-600 group-hover:text-white'
+                              className={`font-mono text-xs font-bold px-2 py-1 transition-colors border shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${isActiveSegment(segment)
+                                ? 'bg-capyred text-white border-foreground'
+                                : 'bg-white border-foreground text-foreground group-hover:bg-capyred group-hover:text-white'
                                 }`}
                             >
                               {formatTimestamp(segment.start_time)}
                             </button>
                             {segment.speaker_name && (
                               <span
-                                className={`text-xs px-2 py-1 font-medium overflow-hidden text-ellipsis ${isActiveSegment(segment)
-                                  ? 'bg-purple-100 text-purple-700'
-                                  : 'bg-gray-100 text-gray-600'
+                                className={`text-xs px-2 py-1 font-bold uppercase tracking-wider overflow-hidden text-ellipsis border ${isActiveSegment(segment)
+                                  ? 'bg-purple-100 text-purple-900 border-purple-900 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]'
+                                  : 'bg-gray-100 text-gray-600 border-gray-300'
                                   }`}
-                                style={{ maxWidth: '100px', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                style={{ maxWidth: '140px', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                               >
                                 {segment.speaker_id && legislatorMap[segment.speaker_id]
-                                  ? legislatorMap[segment.speaker_id].display_name
+                                  ? legislatorMap[segment.speaker_id].display_name.split(' ').pop()
                                   : segment.speaker_name}
                               </span>
                             )}
                           </div>
                           <p
-                            className={`text-sm leading-relaxed ${isActiveSegment(segment) ? 'text-gray-900 font-medium' : 'text-gray-700'
+                            className={`text-sm leading-relaxed ${isActiveSegment(segment) ? 'text-foreground font-medium' : 'text-gray-700'
                               }`}
                           >
                             {searchQuery ? (
                               // Highlight search terms
                               segment.text.split(new RegExp(`(${searchQuery})`, 'gi')).map((part: string, i: number) =>
                                 part.toLowerCase() === searchQuery.toLowerCase() ? (
-                                  <mark key={i} className="bg-yellow-200">
+                                  <mark key={i} className="bg-yellow-200 font-bold px-1">
                                     {part}
                                   </mark>
                                 ) : (

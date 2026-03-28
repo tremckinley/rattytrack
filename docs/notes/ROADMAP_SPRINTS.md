@@ -52,3 +52,23 @@ Based on the strategic thoughts from `PROGRESS_THOUGHTS.md`, this roadmap moves 
 - **Task 7.1:** Implement API models with strictly defined contextual prompts (e.g., defining local legislative terminology, names, and procedures) to improve entity extraction.
 - **Task 7.2:** Integrate Speaker Diarization into the transcription pipeline to recognize and label different legislators' voices.
 - **Task 7.3:** Write AI post-processing functions to identify and crop out irrelevant transcript data (intermissions, commercials, cross-talk).
+
+## Phase 4: User Experience Expansion & Intelligence Discovery
+
+### Sprint 8: Transcript UI & Intelligent Display (Issue 3 & AI Overhaul)
+**Goal:** Translate background AI extractions into public-facing UX/UI data visualizations.
+- **Task 8.1:** Rebuild the `[meetingId]` layout/page to prominently feature the Claude-generated Executive Summaries natively on the dashboard.
+- **Task 8.2:** Implement a "Voting Outcome Scorecard" component on the meeting page that visually tallies (Yea/Nay) the aggregate positions for each agenda item.
+- **Task 8.3:** Overhaul the Transcript Reader component to segment speeches by Agenda Item headers rather than a continuous wall of text.
+- **Task 8.4:** Build interactive highlighting/filtering (e.g., "Jump to vote", "Filter negative sentiments") into the transcript reader.
+
+### Sprint 9: Speaker Mapping & Diarization Logic (Admin + AI)
+**Goal:** Safely map dynamic AssemblyAI speaker tags (Speaker A, Speaker B) definitively to real Memphis Councilmembers.
+- **Task 9.1:** Build a lightweight Admin tool UI that isolates short audio snippets of "Speaker_X" per meeting to allow an admin to bind a voice directly to a `legislator_id` manually.
+- **Task 9.2:** Develop an LLM-driven logical inference system (e.g., matching the phrase "Thank you Councilman Smiley" directly to the preceding speaker) to auto-suggest Speaker-to-Legislator maps when confidence is 95%+.
+- **Task 9.3:** *Crucial Constraint:* Enforce rigid validation loops so "Speaker A" in Meeting 1 is never assumed to be "Speaker A" in Meeting 2 without manual or high-confidence logical verification.
+
+### Sprint 10: Deep Search & Analytics (The Next Level)
+**Goal:** Implement true platform-wide queryability so users can find specific quotes or voting blocks instantly.
+- **Task 10.1:** Implement a vector database (PgVector in Supabase) to convert transcript texts into searchable embeddings for true semantic search.
+- **Task 10.2:** Build a global frontend `/search` experience capable of returning precise timestamps for video playback.

@@ -22,16 +22,16 @@ interface VotingSummaryProps {
 
 // Vote styling
 const voteStyles = {
-    yes: 'bg-green-100 text-green-800 border-green-200',
-    no: 'bg-red-100 text-red-800 border-red-200',
-    abstain: 'bg-gray-100 text-gray-600 border-gray-200',
-    absent: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    present: 'bg-blue-50 text-blue-700 border-blue-200',
+    yes: 'bg-green-100 text-[#528148] border-[#528148]',
+    no: 'bg-red-100 text-rose-900 border-rose-900',
+    abstain: 'bg-gray-100 text-gray-700 border-gray-700',
+    absent: 'bg-yellow-50 text-yellow-800 border-yellow-800',
+    present: 'bg-blue-50 text-indigo-800 border-indigo-800',
 };
 
 const resultStyles = {
-    passed: 'bg-green-500 text-white',
-    failed: 'bg-red-500 text-white',
+    passed: 'bg-green-100 text-[#528148] border-[#528148]',
+    failed: 'bg-red-100 text-rose-900 border-rose-900',
 };
 
 export default function VotingSummary({
@@ -101,13 +101,13 @@ export default function VotingSummary({
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+        <div className="card p-6 mb-6">
+            <div className="flex items-center justify-between mb-4 pb-4 border-b border-foreground">
+                <h2 className="text-2xl font-bold flex items-center gap-2">
                     🗳️ Voting Summary
                 </h2>
-                <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-600">
+                <div className="flex items-center gap-4">
+                    <span className="text-sm font-mono opacity-80 uppercase tracking-widest hidden sm:inline-block">
                         {votedItems.filter(i => i.vote_result === 'passed').length} passed,{' '}
                         {votedItems.filter(i => i.vote_result === 'failed').length} failed
                     </span>
@@ -115,7 +115,7 @@ export default function VotingSummary({
                         <select
                             value={filterLegislatorId || ''}
                             onChange={(e) => setFilterLegislatorId(e.target.value || null)}
-                            className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="text-sm border border-foreground bg-white text-foreground px-3 py-1.5 focus:ring-0 focus:outline-none focus:border-capyred shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer appearance-none"
                         >
                             <option value="">All Legislators</option>
                             {legislators.map(leg => (
@@ -139,7 +139,7 @@ export default function VotingSummary({
                     return (
                         <div
                             key={item.id}
-                            className="border border-gray-200 rounded-lg overflow-hidden"
+                            className="border border-foreground bg-white mb-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-transform"
                         >
                             {/* Vote Header */}
                             <button
@@ -148,23 +148,23 @@ export default function VotingSummary({
                                     } transition-colors`}
                                 disabled={!hasDetailedVotes}
                             >
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${resultStyles[item.vote_result!] || 'bg-gray-200 text-gray-700'
+                                <div className="flex items-center gap-4 flex-1 min-w-0">
+                                    <span className={`text-xs font-bold px-2 py-1 uppercase tracking-wider border ${resultStyles[item.vote_result!] || 'bg-gray-200 text-gray-700 border-gray-700'
                                         }`}>
-                                        {item.vote_result?.toUpperCase()}
+                                        {item.vote_result}
                                     </span>
-                                    <span className="text-sm font-medium text-gray-900 truncate">
+                                    <span className="text-sm font-bold truncate">
                                         {item.title}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 border-l border-foreground pl-4 ml-4">
                                     {tally.yes > 0 || tally.no > 0 ? (
-                                        <span className="text-sm text-gray-600">
-                                            <span className="text-green-600 font-medium">{tally.yes}</span>
-                                            {' - '}
-                                            <span className="text-red-600 font-medium">{tally.no}</span>
+                                        <span className="text-sm font-mono flex items-center gap-2">
+                                            <span className="text-[#528148] font-bold px-1">{tally.yes} YEA</span>
+                                            <span className="text-foreground opacity-30">|</span>
+                                            <span className="text-rose-900 font-bold px-1">{tally.no} NAY</span>
                                             {tally.abstain > 0 && (
-                                                <span className="text-gray-500"> ({tally.abstain} abstain)</span>
+                                                <span className="opacity-60 text-xs ml-1">({tally.abstain} ABS)</span>
                                             )}
                                         </span>
                                     ) : null}
@@ -179,19 +179,19 @@ export default function VotingSummary({
 
                             {/* Expanded Vote Details */}
                             {isExpanded && hasDetailedVotes && (
-                                <div className="border-t border-gray-200 bg-gray-50 p-4">
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                                <div className="border-t border-foreground bg-gray-50 p-4">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                         {itemVotes
                                             .sort((a, b) => a.legislatorName.localeCompare(b.legislatorName))
                                             .map(vote => (
                                                 <div
                                                     key={`${item.id}-${vote.legislatorId}`}
-                                                    className={`text-xs px-2 py-1.5 rounded border ${voteStyles[vote.vote]
+                                                    className={`text-xs px-2 py-1.5 border font-bold uppercase tracking-wide flex justify-between ${voteStyles[vote.vote]
                                                         }`}
                                                 >
-                                                    <span className="font-medium">{vote.legislatorName}</span>
-                                                    <span className="ml-1 opacity-75">
-                                                        ({vote.vote})
+                                                    <span className="truncate mr-2">{vote.legislatorName.split(' ').pop()}</span>
+                                                    <span className="opacity-80">
+                                                        {vote.vote === 'yes' ? 'YEA' : vote.vote === 'no' ? 'NAY' : vote.vote.substring(0,3)}
                                                     </span>
                                                 </div>
                                             ))}
