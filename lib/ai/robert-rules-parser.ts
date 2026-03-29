@@ -422,7 +422,12 @@ export function detectAgendaItemBoundaries(
     // Sort by start time
     boundaries.sort((a, b) => a.startTimestamp - b.startTimestamp);
 
-    return boundaries;
+    // Final deduplication Step: Remove items that have the exact same start time (keeps later one)
+    const uniqueBoundaries = Array.from(
+        new Map(boundaries.map(b => [b.startTimestamp, b])).values()
+    );
+
+    return uniqueBoundaries;
 }
 
 /**

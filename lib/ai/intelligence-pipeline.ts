@@ -14,7 +14,7 @@ import {
 import { analyzeSegment } from './transcript-analyzer';
 
 import { saveSegmentAnalysis } from '@/lib/data/ai-analysis';
-import { createAgendaItems, linkSegmentsToAgendaItems, getAgendaItemsByVideo, getAgendaItemAtTime } from '@/lib/data/agenda-items';
+import { createAgendaItems, linkSegmentsToAgendaItems, getAgendaItemsByVideo, getAgendaItemAtTime, deleteAgendaItemsForVideo } from '@/lib/data/agenda-items';
 import { saveKeyQuotes } from '@/lib/data/key-quotes';
 import { savePositions } from '@/lib/data/legislator-positions';
 
@@ -126,6 +126,9 @@ export async function runIntelligencePipeline(
         // ====================================================================
         if (CONFIG.ENABLE_ROBERT_RULES) {
             onProgress?.('Robert\'s Rules Parsing', 0, input.segments.length);
+
+            // Step 0: Clear existing agenda items (prevents duplicates on retry)
+            await deleteAgendaItemsForVideo(input.videoId);
 
             // Convert segments to parser format
             const parserSegments = input.segments.map(s => ({
