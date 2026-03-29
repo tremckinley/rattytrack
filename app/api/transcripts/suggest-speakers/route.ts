@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         }));
 
         // Get suggestions using the enhanced matcher
-        const suggestionsMap = await suggestSpeakerMatches(transcriptSegments);
+        const suggestionsMap = await suggestSpeakerMatches(transcriptSegments, videoId);
 
         // Build speaker stats
         const speakerData = new Map<string, {
@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
             duration: number;
             texts: string[];
             currentLegislatorId: string | null;
+            timestampSamples: Array<{ startTime: number; text: string; duration: number }>;
         }>();
 
         segments.forEach(seg => {
@@ -83,15 +84,24 @@ export async function GET(request: NextRequest) {
                 duration: 0,
                 texts: [],
                 currentLegislatorId: null,
+                timestampSamples: [],
             };
 
             existing.count++;
-            existing.duration += (seg.end_time || 0) - (seg.start_time || 0);
+            const segDuration = (seg.end_time || 0) - (seg.start_time || 0);
+            existing.duration += segDuration;
 
             // Keep first few text samples
             if (existing.texts.length < 3) {
                 existing.texts.push(seg.text.substring(0, 100));
             }
+
+            // Track timestamp samples (keep the 3 longest segments for admin preview)
+            existing.timestampSamples.push({
+                startTime: seg.start_time || 0,
+                text: seg.text.substring(0, 80),
+                duration: segDuration,
+            });
 
             if (seg.speaker_id && !existing.currentLegislatorId) {
                 existing.currentLegislatorId = seg.speaker_id;
@@ -100,6 +110,12 @@ export async function GET(request: NextRequest) {
             speakerData.set(seg.speaker_name, existing);
         });
 
+        // Sort timestamp samples per speaker to keep only the 3 longest
+        for (const [, data] of speakerData) {
+            data.timestampSamples.sort((a, b) => b.duration - a.duration);
+            data.timestampSamples = data.timestampSamples.slice(0, 3);
+        }
+
         // Build response
         const speakerStats = Array.from(speakerData.entries()).map(([label, data]) => ({
             label,
@@ -107,6 +123,7 @@ export async function GET(request: NextRequest) {
             totalDuration: Math.round(data.duration),
             sampleText: data.texts.join(' | '),
             currentLegislatorId: data.currentLegislatorId,
+            timestampSamples: data.timestampSamples,
             suggestion: suggestionsMap.get(label) || null,
         }));
 

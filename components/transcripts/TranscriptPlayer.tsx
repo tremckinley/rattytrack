@@ -424,6 +424,18 @@ export default function TranscriptPlayer({
     }
   }, [initialTime, videoId]);
 
+  // Listen for external seek requests (e.g., from SpeakerMapper admin preview)
+  useEffect(() => {
+    const handleSeekEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ time: number }>;
+      if (customEvent.detail?.time !== undefined) {
+        handleTimestampClick(customEvent.detail.time);
+      }
+    };
+    window.addEventListener('seekToTimestamp', handleSeekEvent);
+    return () => window.removeEventListener('seekToTimestamp', handleSeekEvent);
+  }, [videoId]);
+
   return (
     <div className="space-y-6">
       {/* Chapter Sidebar Toggle (mobile) */}

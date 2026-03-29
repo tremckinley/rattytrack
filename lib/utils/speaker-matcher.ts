@@ -187,7 +187,7 @@ export interface SpeakerSuggestion {
   legislatorName: string | null;
   confidence: number; // 0-1 score
   reason: string;
-  source: 'learned_pattern' | 'text_analysis' | 'name_match';
+  source: 'learned_pattern' | 'text_analysis' | 'name_match' | 'contextual_address' | 'llm_inference';
 }
 
 export interface TranscriptSegment {
@@ -198,25 +198,43 @@ export interface TranscriptSegment {
 }
 
 /**
- * Check learned patterns from the speaker_patterns table
+ * Check if a speaker label is a generic diarization label (e.g., "Speaker A", "speaker_1")
+ * Generic labels must NOT be trusted across different videos.
+ */
+function isGenericSpeakerLabel(label: string): boolean {
+  return /^speaker[_ ]?[a-z0-9]+$/i.test(label.trim());
+}
+
+/**
+ * Check learned patterns from the speaker_patterns table.
+ * Generic labels ("Speaker A", "speaker_1") are scoped to the same video.
+ * Named labels ("Chairman Smiley") match globally.
  */
 async function matchFromLearnedPatterns(
-  speakerLabel: string
+  speakerLabel: string,
+  videoId?: string
 ): Promise<SpeakerSuggestion | null> {
-  // Check for exact speaker_label match (e.g., "speaker_1" -> known legislator)
-  const { data: patterns, error } = await supabase
+  let query = supabase
     .from('speaker_patterns')
     .select(`
       legislator_id,
       pattern_value,
       confidence_score,
       usage_count,
+      video_id,
       legislators!inner(display_name)
     `)
     .eq('pattern_type', 'speaker_label')
     .eq('pattern_value', speakerLabel.toLowerCase())
     .order('usage_count', { ascending: false })
     .limit(1);
+
+  // Cross-meeting safety: scope generic labels to the same video
+  if (isGenericSpeakerLabel(speakerLabel) && videoId) {
+    query = query.eq('video_id', videoId);
+  }
+
+  const { data: patterns, error } = await query;
 
   if (error || !patterns || patterns.length === 0) {
     return null;
@@ -232,6 +250,126 @@ async function matchFromLearnedPatterns(
     reason: `Matched learned pattern (used ${pattern.usage_count} time${pattern.usage_count > 1 ? 's' : ''})`,
     source: 'learned_pattern',
   };
+}
+
+/**
+ * Contextual Address Pattern Analyzer (Task 9.1)
+ * Analyzes surrounding transcript context to deduce who is speaking.
+ * Key insight: if Speaker B says "Thank you Chairman Smiley" and the
+ * NEXT speaker is Speaker A, then Speaker A is likely Chairman Smiley.
+ * Conversely, "Councilman Ford, you have the floor" → the NEXT speaker is Ford.
+ */
+async function analyzeContextualAddressing(
+  segments: TranscriptSegment[]
+): Promise<Map<string, SpeakerSuggestion>> {
+  const suggestions = new Map<string, SpeakerSuggestion>();
+
+  // Get all legislators for matching
+  const { data: legislators } = await supabase
+    .from('legislators')
+    .select('id, display_name, first_name, last_name')
+    .or('is_active.eq.true,is_active.is.null');
+
+  if (!legislators || legislators.length === 0) return suggestions;
+
+  // Build a last-name lookup for fast matching
+  const lastNameMap = new Map<string, { id: string; displayName: string }>();
+  for (const leg of legislators) {
+    lastNameMap.set(leg.last_name.toLowerCase(), {
+      id: leg.id,
+      displayName: leg.display_name,
+    });
+  }
+
+  // Patterns that address someone who speaks NEXT
+  // "Thank you, Chairman Smiley" → the previous speaker WAS Smiley
+  // "Councilman Ford, you have the floor" → the next speaker IS Ford
+  const addressPatterns = [
+    // "Thank you [title] [name]" → PREVIOUS speaker is [name]
+    { regex: /thank you,?\s+(?:chairman|chairwoman|chair|council\s*(?:man|woman|member)|mr\.|mrs\.|ms\.)\s+(\w+)/gi, direction: 'previous' as const },
+    // "[title] [name], you have the floor / go ahead / please proceed" → NEXT speaker is [name]
+    { regex: /(?:chairman|chairwoman|chair|council\s*(?:man|woman|member)|mr\.|mrs\.|ms\.)\s+(\w+),?\s+(?:you have the floor|go ahead|please proceed|you're recognized|you are recognized|your turn)/gi, direction: 'next' as const },
+    // "I yield to [title] [name]" → NEXT speaker is [name]
+    { regex: /(?:i )?yield(?:s|ing)? (?:to|the floor to)\s+(?:chairman|chairwoman|chair|council\s*(?:man|woman|member)|mr\.|mrs\.|ms\.)\s+(\w+)/gi, direction: 'next' as const },
+    // "[title] [name], would you like to ..." → NEXT speaker is [name]
+    { regex: /(?:chairman|chairwoman|chair|council\s*(?:man|woman|member)|mr\.|mrs\.|ms\.)\s+(\w+),?\s+would you/gi, direction: 'next' as const },
+  ];
+
+  // Tally: speakerLabel → { legislatorId → count }
+  const tally = new Map<string, Map<string, { count: number; legislatorName: string }>>();
+
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    if (!seg.text) continue;
+
+    for (const pattern of addressPatterns) {
+      // Reset regex lastIndex
+      pattern.regex.lastIndex = 0;
+      let match;
+
+      while ((match = pattern.regex.exec(seg.text)) !== null) {
+        const extractedName = match[1]?.toLowerCase();
+        if (!extractedName || extractedName.length < 3) continue;
+
+        const legislator = lastNameMap.get(extractedName);
+        if (!legislator) continue;
+
+        // Determine which speaker this identifies
+        let targetSpeaker: string | undefined;
+        if (pattern.direction === 'previous' && i > 0 && segments[i - 1]?.speaker) {
+          // "Thank you X" → the person who just spoke (previous segment) is X
+          targetSpeaker = segments[i - 1].speaker;
+        } else if (pattern.direction === 'next' && i < segments.length - 1 && segments[i + 1]?.speaker) {
+          // "X, go ahead" → the next person to speak is X
+          targetSpeaker = segments[i + 1].speaker;
+        }
+
+        if (!targetSpeaker) continue;
+
+        // Don't map a speaker to themselves if they're already identified
+        if (targetSpeaker === seg.speaker) continue;
+
+        // Tally this observation
+        if (!tally.has(targetSpeaker)) {
+          tally.set(targetSpeaker, new Map());
+        }
+        const speakerTally = tally.get(targetSpeaker)!;
+        const existing = speakerTally.get(legislator.id) || { count: 0, legislatorName: legislator.displayName };
+        existing.count++;
+        speakerTally.set(legislator.id, existing);
+      }
+    }
+  }
+
+  // Convert tallies to suggestions, picking the highest-count legislator per speaker
+  for (const [speakerLabel, legislatorTally] of tally) {
+    let bestId = '';
+    let bestCount = 0;
+    let bestName = '';
+
+    for (const [legId, data] of legislatorTally) {
+      if (data.count > bestCount) {
+        bestCount = data.count;
+        bestId = legId;
+        bestName = data.legislatorName;
+      }
+    }
+
+    if (bestId && bestCount > 0) {
+      // Confidence scales with observation count: 1 → 0.70, 2 → 0.80, 3+ → 0.85, 5+ → 0.90
+      const confidence = Math.min(0.95, 0.65 + (bestCount * 0.05));
+
+      suggestions.set(speakerLabel, {
+        legislatorId: bestId,
+        legislatorName: bestName,
+        confidence,
+        reason: `Addressed as "${bestName}" by other speakers ${bestCount} time${bestCount > 1 ? 's' : ''} in context`,
+        source: 'contextual_address',
+      });
+    }
+  }
+
+  return suggestions;
 }
 
 /**
@@ -366,10 +504,11 @@ async function analyzeTranscriptForSpeakers(
 
 /**
  * Main function: Generate comprehensive speaker suggestions for a transcript
- * Combines learned patterns, text analysis, and name matching
+ * Combines learned patterns, contextual addressing, LLM inference, text analysis, and name matching
  */
 export async function suggestSpeakerMatches(
-  segments: TranscriptSegment[]
+  segments: TranscriptSegment[],
+  videoId?: string
 ): Promise<Map<string, SpeakerSuggestion>> {
   const suggestions = new Map<string, SpeakerSuggestion>();
   
@@ -379,14 +518,41 @@ export async function suggestSpeakerMatches(
   )];
 
   // Strategy 1: Check learned patterns first (highest confidence)
+  // Cross-meeting safety: generic labels are scoped to same video
   for (const speaker of uniqueSpeakers) {
-    const learnedMatch = await matchFromLearnedPatterns(speaker);
+    const learnedMatch = await matchFromLearnedPatterns(speaker, videoId);
     if (learnedMatch && learnedMatch.confidence > 0.5) {
       suggestions.set(speaker, learnedMatch);
     }
   }
 
-  // Strategy 2: Analyze transcript text for remaining speakers
+  // Strategy 2: Contextual address pattern analysis
+  // Reads "Thank you Chairman X" → maps previous/next speaker to X
+  const contextualSuggestions = await analyzeContextualAddressing(segments);
+  for (const [speaker, suggestion] of contextualSuggestions) {
+    if (!suggestions.has(speaker)) {
+      suggestions.set(speaker, suggestion);
+    }
+  }
+
+  // Strategy 3: LLM-driven inference for remaining unknowns
+  // Imported dynamically to avoid circular deps and only when needed
+  const unmatchedSpeakers = uniqueSpeakers.filter(s => !suggestions.has(s));
+  if (unmatchedSpeakers.length > 0) {
+    try {
+      const { inferSpeakerIdentities } = await import('@/lib/ai/speaker-inference');
+      const llmSuggestions = await inferSpeakerIdentities(segments, unmatchedSpeakers);
+      for (const [speaker, suggestion] of llmSuggestions) {
+        if (!suggestions.has(speaker) && suggestion.confidence >= 0.90) {
+          suggestions.set(speaker, suggestion);
+        }
+      }
+    } catch (err) {
+      console.error('LLM speaker inference failed (non-fatal):', err);
+    }
+  }
+
+  // Strategy 4: Analyze transcript text for remaining speakers
   const textSuggestions = await analyzeTranscriptForSpeakers(
     segments.filter(s => s.speaker && !suggestions.has(s.speaker))
   );
@@ -397,7 +563,7 @@ export async function suggestSpeakerMatches(
     }
   }
 
-  // Strategy 3: Try name-based matching for any remaining (original logic)
+  // Strategy 5: Try name-based matching for any remaining (original logic)
   for (const speaker of uniqueSpeakers) {
     if (suggestions.has(speaker)) continue;
     
