@@ -139,7 +139,7 @@ async function getOrCreateIssue(name: string): Promise<{ id: string; name: strin
             .insert({
                 name,
                 slug,
-                manually_added: false,
+                is_ai_generated: true,
                 is_active: true
             })
             .select('id, name')
