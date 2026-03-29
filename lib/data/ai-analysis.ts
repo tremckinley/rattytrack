@@ -37,6 +37,17 @@ export async function saveSegmentAnalysis(
             return { success: true, issuesSaved: 0 };
         }
 
+        // Guard: segmentId must be an integer (the live transcription_segments.id is bigint,
+        // not UUID). If a UUID is passed here, it will violate the FK constraint.
+        if (!segmentId || !/^\d+$/.test(segmentId)) {
+            console.error(`saveSegmentAnalysis: invalid segment ID "${segmentId}" — must be an integer`);
+            return {
+                success: false,
+                issuesSaved: 0,
+                error: `Invalid segment ID format: expected an integer, got "${segmentId}"`
+            };
+        }
+
         // Get or create issue records for each detected category
         const issueRecords = await Promise.all(
             issues.map(issue => getOrCreateIssue(issue.category))

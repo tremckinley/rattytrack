@@ -1,5 +1,5 @@
 export interface TranscriptSegment {
-  id: number;
+  id: number;  // bigint primary key from transcription_segments (NOT a UUID)
   video_id: string;
   start_time: number;
   end_time: number;
