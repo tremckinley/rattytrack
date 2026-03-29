@@ -76,9 +76,9 @@ export default function SavedTranscripts({ meetings }: SavedTranscriptsProps) {
               filteredMeetings.map((meeting) => (
                 <div
                   key={meeting.id}
-                  className="card p-4 bg-card border border-border hover:border-primary/50 transition-colors cursor-pointer"
+                  className="card p-4 bg-white border border-foreground hover:border-foreground hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer group"
                 >
-                  <h3 className="font-semibold mb-2 line-clamp-1">
+                  <h3 className="font-semibold mb-2 line-clamp-1 group-hover:text-capyred transition-colors">
                     {meeting.title || 'Untitled Meeting'}
                   </h3>
                   

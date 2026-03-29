@@ -52,7 +52,7 @@ export default function UpcomingDocket({ meetings }: UpcomingDocketProps) {
                         <Link
                             key={meeting.id}
                             href={`/meetings/${meeting.id}`}
-                            className="block p-3 border border-gray-200 hover:border-capyred hover:bg-gray-50 transition-all group"
+                            className="block p-4 border-2 border-transparent hover:border-foreground hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:bg-white transition-all group bg-white border-b-gray-200 mb-2 last:mb-0"
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex-1 min-w-0">
@@ -63,7 +63,7 @@ export default function UpcomingDocket({ meetings }: UpcomingDocketProps) {
                                         {formatDate(meeting.scheduled_start)}
                                     </p>
                                     <div className="flex items-center gap-2 mt-2">
-                                        <span className="px-1.5 py-0.5 bg-rose-100 text-rose-800 text-[10px] font-medium rounded">
+                                        <span className="px-1.5 py-0.5 bg-rose-800 text-white text-[10px] font-medium border border-rose-900">
                                             {meeting.meeting_type}
                                         </span>
                                         {meeting.agenda_url && (
@@ -75,7 +75,7 @@ export default function UpcomingDocket({ meetings }: UpcomingDocketProps) {
                                 </div>
                                 <div className="ml-3 shrink-0">
                                     {meeting.scheduled_start && (
-                                        <span className="text-xs font-medium text-capyred bg-rose-50 px-2 py-1 rounded">
+                                        <span className="text-xs font-bold text-white bg-capyred px-2 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                                             {getRelativeDate(meeting.scheduled_start)}
                                         </span>
                                     )}

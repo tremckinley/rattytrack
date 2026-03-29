@@ -11,7 +11,7 @@ export default function MeetingVideoSection({ videoId, videoUrl, title }: Meetin
     // No video available
     if (!videoId && !videoUrl) {
         return (
-            <div className="bg-gray-100 rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px]">
+            <div className="bg-gray-100 border border-foreground p-8 flex flex-col items-center justify-center min-h-[300px]">
                 <div className="text-6xl mb-4">📹</div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">No Video Available</h3>
                 <p className="text-gray-600 text-center">
@@ -26,13 +26,13 @@ export default function MeetingVideoSection({ videoId, videoUrl, title }: Meetin
 
     if (!actualVideoId) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="card p-6">
                 <h3 className="font-semibold text-gray-900 mb-4">Meeting Video</h3>
                 <a
                     href={videoUrl || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors border border-blue-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5"
                 >
                     Watch Video ↗
                 </a>
@@ -41,7 +41,7 @@ export default function MeetingVideoSection({ videoId, videoUrl, title }: Meetin
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="card overflow-hidden">
             {/* Video Embed */}
             <div className="aspect-video w-full bg-black">
                 <iframe
@@ -58,7 +58,7 @@ export default function MeetingVideoSection({ videoId, videoUrl, title }: Meetin
                     href={`https://memphis.granicus.com/MediaPlayer.php?view_id=6&clip_id=${actualVideoId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium border border-blue-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 text-sm"
                 >
                     Watch on Granicus Archive ↗
                 </a>

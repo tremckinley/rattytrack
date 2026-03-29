@@ -80,27 +80,27 @@ export default async function MeetingsPage({ searchParams }: PageProps) {
                             <Link
                                 key={meeting.id}
                                 href={`/meetings/${meeting.id}`}
-                                className="card p-6 hover:shadow-lg transition-shadow block"
+                                className="card p-6 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border border-foreground transition-all block"
                             >
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                     {/* Meeting Info */}
                                     <div className="flex-1">
                                         <div className="flex flex-wrap gap-2 mb-2">
-                                            <span className="px-2 py-1 bg-rose-100 text-rose-800 text-xs font-medium rounded">
+                                            <span className="px-2 py-1 bg-rose-800 text-white text-xs font-medium">
                                                 {meeting.meeting_type}
                                             </span>
                                             {meeting.video_id && (
-                                                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                                                <span className="px-2 py-1 bg-blue-600 text-white text-xs font-medium">
                                                     📹 Video
                                                 </span>
                                             )}
                                             {meeting.has_transcript && (
-                                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
+                                                <span className="px-2 py-1 bg-green-600 text-white text-xs font-medium">
                                                     📝 Transcribed
                                                 </span>
                                             )}
                                             {meeting.has_documents && (
-                                                <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded">
+                                                <span className="px-2 py-1 bg-purple-600 text-white text-xs font-medium">
                                                     📄 Documents
                                                 </span>
                                             )}

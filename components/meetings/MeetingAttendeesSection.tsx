@@ -10,10 +10,10 @@ interface MeetingAttendeesSectionProps {
 
 // Status display styling
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
-    'present': { label: 'Present', className: 'bg-green-100 text-green-800' },
-    'absent': { label: 'Absent', className: 'bg-red-100 text-red-800' },
-    'excused': { label: 'Excused', className: 'bg-yellow-100 text-yellow-800' },
-    'late': { label: 'Late', className: 'bg-orange-100 text-orange-800' },
+    'present': { label: 'Present', className: 'bg-green-600 text-white border-green-800' },
+    'absent': { label: 'Absent', className: 'bg-red-600 text-white border-red-800' },
+    'excused': { label: 'Excused', className: 'bg-yellow-500 text-black border-yellow-700' },
+    'late': { label: 'Late', className: 'bg-orange-500 text-white border-orange-700' },
 };
 
 export default function MeetingAttendeesSection({ attendees }: MeetingAttendeesSectionProps) {
@@ -85,7 +85,7 @@ export default function MeetingAttendeesSection({ attendees }: MeetingAttendeesS
                                 </div>
                             </div>
 
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusInfo.className}`}>
+                            <span className={`text-[10px] px-2 py-1 font-bold uppercase border shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${statusInfo.className}`}>
                                 {statusInfo.label}
                             </span>
                         </div>
