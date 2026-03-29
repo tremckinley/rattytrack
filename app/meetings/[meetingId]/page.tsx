@@ -205,10 +205,6 @@ export default async function MeetingPage({ params, searchParams }: PageProps) {
                                     <span>🧠</span> Meeting Stats
                                 </h3>
                                 <div className="space-y-3 text-sm">
-                                    <div className="flex justify-between border-b border-rose-800 pb-2">
-                                        <span className="opacity-80">Duration</span>
-                                        <span className="font-mono text-rose-200">{Math.round((meeting.video_duration_seconds || 0) / 60)} mins</span>
-                                    </div>
                                     <div className="flex justify-between border-b border-indigo-500 pb-2">
                                         <span className="opacity-80">Topics</span>
                                         <span className="font-mono text-rose-200">{issueMetrics.length} detected</span>

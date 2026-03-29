@@ -36,6 +36,17 @@ function formatTime(dateString: string | null): string {
     });
 }
 
+/**
+ * Format duration in seconds to hh:mm
+ */
+function formatDuration(seconds: number | null): string {
+    if (!seconds) return '';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+}
+
 export default function MeetingHeader({ meeting, hasTranscript, hasDocuments }: MeetingHeaderProps) {
     return (
         <div className="bg-rose-950 text-white shadow-lg p-6 mb-6">
@@ -69,12 +80,17 @@ export default function MeetingHeader({ meeting, hasTranscript, hasDocuments }: 
             {/* Date and Time */}
             <div className="flex items-center gap-4 text-gray-200">
                 <span>{formatDate(meeting.scheduled_start)}</span>
-                {meeting.scheduled_start && (
+                {meeting.video_duration_seconds ? (
+                    <>
+                        <span>•</span>
+                        <span>{formatDuration(meeting.video_duration_seconds)}</span>
+                    </>
+                ) : meeting.scheduled_start ? (
                     <>
                         <span>•</span>
                         <span>{formatTime(meeting.scheduled_start)}</span>
                     </>
-                )}
+                ) : null}
                 {meeting.location && (
                     <>
                         <span>•</span>
